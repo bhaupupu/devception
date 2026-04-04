@@ -4,7 +4,7 @@ dotenv.config();
 export const env = {
   PORT: parseInt(process.env.PORT || '4000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/codecrew',
+  MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URL || process.env.MONGODB_URL || 'mongodb://localhost:27017/codecrew',
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
 
