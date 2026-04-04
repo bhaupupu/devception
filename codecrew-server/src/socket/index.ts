@@ -13,7 +13,14 @@ import { logger } from '../utils/logger';
 export function createSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
     cors: {
-      origin: env.CLIENT_ORIGIN,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if ([env.CLIENT_ORIGIN, 'http://localhost:3000'].includes(origin) || origin.endsWith('.vercel.app')) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS: origin ${origin} not allowed`));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },

@@ -19,9 +19,18 @@ const httpServer = http.createServer(app);
 
 // Security
 app.use(helmet());
+const allowedOrigins = [env.CLIENT_ORIGIN, 'http://localhost:3000'];
 app.use(
   cors({
-    origin: env.CLIENT_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow no-origin requests (curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
     credentials: true,
   })
 );
