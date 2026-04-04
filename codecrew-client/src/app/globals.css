@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #f0ece2;
+  --bg-secondary: #e4dfd3;
+  --bg-card: #faf8f4;
+  --bg-hover: #e8e4da;
+  --accent-blue: #2563eb;
+  --accent-purple: #7c3aed;
+  --accent-green: #16a34a;
+  --accent-red: #dc2626;
+  --accent-yellow: #ca8a04;
+  --text-primary: #1c1917;
+  --text-secondary: #44403c;
+  --text-muted: #78716c;
+  --border: #1c1917;
+  --pixel-shadow: 4px 4px 0px #1c1917;
+  --pixel-shadow-sm: 2px 2px 0px #1c1917;
+  --pixel-shadow-blue: 4px 4px 0px #1d4ed8;
+  --pixel-shadow-green: 4px 4px 0px #15803d;
+  --pixel-shadow-red: 4px 4px 0px #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Space Mono', 'Courier New', monospace;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Pixel font for headings */
+.pixel-font {
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Pixel panel - thick border + offset shadow */
+.game-panel {
+  background: var(--bg-card);
+  border: 3px solid var(--border);
+  box-shadow: var(--pixel-shadow);
+  border-radius: 0;
+}
+
+/* Pixel button base */
+.pixel-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  border: 3px solid var(--border);
+  box-shadow: var(--pixel-shadow);
+  cursor: pointer;
+  transition: transform 0.05s, box-shadow 0.05s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pixel-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.pixel-btn-blue {
+  background: var(--accent-blue);
+  color: #fff;
+  box-shadow: var(--pixel-shadow-blue);
+}
+.pixel-btn-blue:active { box-shadow: none; }
+
+.pixel-btn-green {
+  background: var(--accent-green);
+  color: #fff;
+  box-shadow: var(--pixel-shadow-green);
+}
+.pixel-btn-green:active { box-shadow: none; }
+
+.pixel-btn-red {
+  background: var(--accent-red);
+  color: #fff;
+  box-shadow: var(--pixel-shadow-red);
+}
+.pixel-btn-red:active { box-shadow: none; }
+
+.pixel-btn-light {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--pixel-shadow);
+}
+.pixel-btn-light:active { box-shadow: none; }
+
+/* Pixel input */
+.pixel-input {
+  font-family: 'Space Mono', monospace;
+  background: #fff;
+  border: 3px solid var(--border);
+  box-shadow: inset 2px 2px 0 #d6d0c4;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+}
+.pixel-input:focus {
+  box-shadow: inset 2px 2px 0 #d6d0c4, 0 0 0 3px rgba(37,99,235,0.2);
+}
+
+/* Gradient text (kept for accents) */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pixel grid background pattern */
+.pixel-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    linear-gradient(rgba(28,25,23,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28,25,23,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Screen blur */
+.screen-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Glow effects (used in game) */
+.glow-blue { box-shadow: 0 0 20px rgba(37, 99, 235, 0.3); }
+.glow-red { box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); }
+.glow-green { box-shadow: 0 0 20px rgba(22, 163, 74, 0.3); }
+
+/* Pulse animation */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+.pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+
+/* Pixel tag / badge */
+.pixel-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 4px 8px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  display: inline-block;
+}
+
+/* Walking character sprite placeholder */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blink { animation: blink 1s step-end infinite; }
+
+/* Minecraft loading bar animations */
+@keyframes mc-progress {
+  0%   { width: 5%; }
+  60%  { width: 82%; }
+  85%  { width: 88%; }
+  100% { width: 88%; }
+}
+
+@keyframes mc-shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
