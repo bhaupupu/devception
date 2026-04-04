@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const MESSAGE_RATE_LIMIT = new Map<string, number[]>(); // socketId → timestamps
 
@@ -31,7 +31,7 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket): v
     const sanitized = message.slice(0, 300).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     io.to(roomCode).emit('chat:message', {
-      messageId: uuidv4(),
+      messageId: randomUUID(),
       userId: socket.userId,
       displayName: socket.displayName,
       message: sanitized,

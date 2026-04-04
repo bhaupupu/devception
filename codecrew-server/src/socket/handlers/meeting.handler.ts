@@ -3,7 +3,7 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import * as votingService from '../../services/voting.service';
 import { env } from '../../config/env';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const MEETING_COOLDOWN_MS = 60000; // 1 minute between emergency meetings per room
 const lastMeetingTime = new Map<string, number>(); // roomCode -> timestamp
@@ -27,7 +27,7 @@ export function registerMeetingHandlers(io: Server, socket: AuthenticatedSocket)
 
     lastMeetingTime.set(roomCode, Date.now());
 
-    const meetingId = uuidv4();
+    const meetingId = randomUUID();
     const meeting = {
       _id: meetingId,
       calledBy: socket.userId,

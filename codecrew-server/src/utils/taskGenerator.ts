@@ -1,5 +1,5 @@
 import { ITaskDoc } from '../models/Game.model';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // ---- JavaScript task bank ----
 const JS_TASKS: Omit<ITaskDoc, '_id' | 'assignedTo' | 'completedBy' | 'isCompleted'>[] = [
@@ -1747,7 +1747,7 @@ export function generateTasksForGame(
     for (let i = 0; i < (targets[d] ?? 0); i++) {
       result.push({
         ...pool[i % pool.length],
-        _id: uuidv4(),
+        _id: randomUUID(),
         assignedTo: null,
         completedBy: null,
         isCompleted: false,
