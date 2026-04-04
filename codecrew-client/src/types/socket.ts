@@ -27,7 +27,7 @@ export interface ServerToClientEvents {
   'imposter:cooldown-update': (data: { action: string; remainingMs: number; startCooldown?: boolean; cooldownMs?: number }) => void;
   'imposter:keyboard-locked': (data: { durationMs: number }) => void;
 
-  'meeting:start': (data: { meetingId: string; calledBy: string; calledByName: string; phase: string }) => void;
+  'meeting:start': (data: { meetingId: string; calledBy: string; calledByName: string; phase: string; discussionMs: number; votingMs: number }) => void;
   'meeting:vote-cast': (data: { voterId: string; hasVoted: boolean }) => void;
   'meeting:phase-change': (data: { meetingId: string; phase: string }) => void;
   'meeting:results': (data: { meetingId: string; tally: Record<string, number>; ejected: { userId: string; displayName: string; role: string; wasImposter: boolean } | null; wasTie: boolean }) => void;
