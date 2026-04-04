@@ -79,6 +79,8 @@ export interface IGame extends Document {
     imposterCount: number;
     tasksPerPlayer: number;
     impostorCooldownMs: number;
+    discussionTimeMs: number;
+    votingTimeMs: number;
   };
 }
 
@@ -136,6 +138,8 @@ const GameSchema = new Schema<IGame>(
       imposterCount: { type: Number, default: 1 },
       tasksPerPlayer: { type: Number, default: 5 },
       impostorCooldownMs: { type: Number, default: 60000 },
+      discussionTimeMs: { type: Number, default: 60000 },
+      votingTimeMs: { type: Number, default: 30000 },
     },
   },
   { timestamps: true }

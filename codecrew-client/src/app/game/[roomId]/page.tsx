@@ -20,6 +20,7 @@ import { EmergencyButton } from '@/components/game/EmergencyButton';
 import { ImposterActions } from '@/components/game/ImposterActions';
 import { ScreenBlurOverlay } from '@/components/game/ScreenBlurOverlay';
 import { MeetingModal } from '@/components/meeting/MeetingModal';
+import { GameOverScreen } from '@/components/game/GameOverScreen';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface Props {
@@ -31,7 +32,7 @@ export default function GamePage({ params }: Props) {
   const { data: session } = useSession();
   const router = useRouter();
   const socket = useSocket();
-  const { game, myRole, isLocked } = useGameStore();
+  const { game, myRole, isLocked, reset } = useGameStore();
   const { meeting } = useMeetingStore();
   const [showRoleReveal, setShowRoleReveal] = useState(false);
   const [currentLine, setCurrentLine] = useState(0);
@@ -49,12 +50,10 @@ export default function GamePage({ params }: Props) {
     if (game?.phase === 'role-reveal') setShowRoleReveal(true);
   }, [game?.phase]);
 
-  // Navigate to results when game ends
-  useEffect(() => {
-    if (game?.phase === 'results') {
-      router.push(`/results/${roomId}`);
-    }
-  }, [game?.phase, roomId, router]);
+  const handlePlayAgain = useCallback(() => {
+    reset();
+    router.push(`/lobby/${roomId}`);
+  }, [reset, router, roomId]);
 
   const onCursorMove = useCallback(
     (line: number, column: number) => {
@@ -82,6 +81,17 @@ export default function GamePage({ params }: Props) {
 
       {/* Meeting modal */}
       <MeetingModal socket={socket} roomCode={roomId} myUserId={userId} />
+
+      {/* Game over screen — shown as overlay when phase is results */}
+      {game.phase === 'results' && (
+        <GameOverScreen
+          game={game}
+          myUserId={userId}
+          myRole={myRole}
+          socket={socket}
+          onPlayAgain={handlePlayAgain}
+        />
+      )}
 
       {/* Top HUD */}
       <div className="px-3 py-2 flex-shrink-0">

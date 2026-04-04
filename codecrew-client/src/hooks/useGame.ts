@@ -64,8 +64,12 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
     socket.on('chat:message', (msg) => chatStore.addMessage(msg));
 
     // Meeting events
-    socket.on('meeting:start', ({ meetingId, calledBy, calledByName }) => {
-      meetingStore.startMeeting({ meetingId, calledBy, calledByName });
+    socket.on('meeting:start', ({ meetingId, calledBy, calledByName, discussionMs, votingMs }) => {
+      meetingStore.startMeeting({
+        meetingId, calledBy, calledByName,
+        discussionMs: discussionMs ?? 60000,
+        votingMs: votingMs ?? 30000,
+      });
       gameStore.updatePhase('meeting');
     });
     socket.on('meeting:phase-change', ({ phase }) => {

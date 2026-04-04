@@ -20,6 +20,20 @@ const COOLDOWN_OPTIONS = [
   { label: '90s', value: 90000 },
 ];
 
+const DISCUSSION_OPTIONS = [
+  { label: '30s', value: 30000 },
+  { label: '60s', value: 60000 },
+  { label: '90s', value: 90000 },
+  { label: '2 min', value: 120000 },
+];
+
+const VOTING_OPTIONS = [
+  { label: '15s', value: 15000 },
+  { label: '30s', value: 30000 },
+  { label: '45s', value: 45000 },
+  { label: '60s', value: 60000 },
+];
+
 const TASK_OPTIONS = [3, 5, 7, 10];
 
 export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, onSettingsChange, isReady, isAdmin }: Props) {
@@ -28,7 +42,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
   const readyCount = game.players.filter((p) => p.readyToStart).length;
   const maxPlayers = game.maxPlayers ?? 8;
 
-  const settings = game.settings ?? { imposterCount: 1, tasksPerPlayer: 5, impostorCooldownMs: 60000 };
+  const settings = game.settings ?? { imposterCount: 1, tasksPerPlayer: 5, impostorCooldownMs: 60000, discussionTimeMs: 60000, votingTimeMs: 30000 };
 
   function copyCode() {
     navigator.clipboard.writeText(game.roomCode).catch(() => {});
@@ -184,6 +198,56 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                         background: settings.impostorCooldownMs === value ? '#EF7D0E' : 'transparent',
                         color: settings.impostorCooldownMs === value ? '#fff' : 'var(--text-muted)',
                         borderColor: settings.impostorCooldownMs === value ? '#EF7D0E' : 'var(--border)',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Discussion time */}
+              <div>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
+                  Discussion Time
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DISCUSSION_OPTIONS.map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => onSettingsChange('discussionTimeMs', value)}
+                      className="pixel-btn flex-1"
+                      style={{
+                        fontSize: '10px',
+                        padding: '6px 0',
+                        background: (settings.discussionTimeMs ?? 60000) === value ? '#117F2D' : 'transparent',
+                        color: (settings.discussionTimeMs ?? 60000) === value ? '#fff' : 'var(--text-muted)',
+                        borderColor: (settings.discussionTimeMs ?? 60000) === value ? '#117F2D' : 'var(--border)',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Voting time */}
+              <div>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
+                  Voting Time
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {VOTING_OPTIONS.map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => onSettingsChange('votingTimeMs', value)}
+                      className="pixel-btn flex-1"
+                      style={{
+                        fontSize: '10px',
+                        padding: '6px 0',
+                        background: (settings.votingTimeMs ?? 30000) === value ? '#ED54BA' : 'transparent',
+                        color: (settings.votingTimeMs ?? 30000) === value ? '#fff' : 'var(--text-muted)',
+                        borderColor: (settings.votingTimeMs ?? 30000) === value ? '#ED54BA' : 'var(--border)',
                       }}
                     >
                       {label}

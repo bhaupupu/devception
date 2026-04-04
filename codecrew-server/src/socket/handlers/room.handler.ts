@@ -55,7 +55,7 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     settings,
   }: {
     roomCode: string;
-    settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number }>;
+    settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number }>;
   }) => {
     const game = gameService.getLiveGame(roomCode);
     if (!game || game.phase !== 'waiting') return;
@@ -85,6 +85,14 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
 
     launchGame(io, roomCode);
     logger.info(`${socket.displayName} force-started room ${roomCode}`);
+  });
+
+  // Play Again: reset room back to waiting with same players
+  socket.on('room:reset', ({ roomCode }: { roomCode: string }) => {
+    const game = gameService.resetGame(roomCode);
+    if (!game) return;
+    io.to(roomCode).emit('room:state', game.toObject());
+    logger.info(`${socket.displayName} reset room ${roomCode}`);
   });
 
   socket.on('disconnect', () => {

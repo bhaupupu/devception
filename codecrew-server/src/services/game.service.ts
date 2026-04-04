@@ -267,18 +267,27 @@ export async function endGame(
     sharedProgress: game.sharedProgress,
   });
 
-  // Remove from live cache after a short delay
-  setTimeout(() => liveGames.delete(roomCode), 5 * 60 * 1000);
+  // Remove from live cache after a delay — only if not reset in the meantime
+  setTimeout(() => {
+    const g = liveGames.get(roomCode);
+    if (g && g.phase === 'results') liveGames.delete(roomCode);
+  }, 5 * 60 * 1000);
 }
 
 export function updateGameSettings(
   roomCode: string,
-  settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number }>
+  settings: Partial<{
+    imposterCount: number;
+    tasksPerPlayer: number;
+    impostorCooldownMs: number;
+    discussionTimeMs: number;
+    votingTimeMs: number;
+  }>
 ): void {
   const game = liveGames.get(roomCode);
   if (!game || game.phase !== 'waiting') return;
   if (!game.settings) {
-    (game as any).settings = { imposterCount: 1, tasksPerPlayer: 5, impostorCooldownMs: 60000 };
+    (game as any).settings = { imposterCount: 1, tasksPerPlayer: 5, impostorCooldownMs: 60000, discussionTimeMs: 60000, votingTimeMs: 30000 };
   }
   if (settings.imposterCount !== undefined)
     game.settings.imposterCount = Math.max(1, Math.min(2, settings.imposterCount));
@@ -286,6 +295,36 @@ export function updateGameSettings(
     game.settings.tasksPerPlayer = Math.max(1, Math.min(10, settings.tasksPerPlayer));
   if (settings.impostorCooldownMs !== undefined)
     game.settings.impostorCooldownMs = settings.impostorCooldownMs;
+  if (settings.discussionTimeMs !== undefined)
+    game.settings.discussionTimeMs = settings.discussionTimeMs;
+  if (settings.votingTimeMs !== undefined)
+    game.settings.votingTimeMs = settings.votingTimeMs;
+}
+
+export function resetGame(roomCode: string): IGame | null {
+  const game = liveGames.get(roomCode);
+  if (!game) return null;
+
+  game.phase = 'waiting';
+  (game as any).winner = null;
+  game.tasks = [];
+  game.meetings = [];
+  game.sharedCode = '';
+  game.sharedProgress = 0;
+  game.editorVersion = 0;
+  (game as any).endedAt = null;
+  game.timer = { gameStartedAt: null, gameDurationMs: env.GAME_DURATION_MS, remainingMs: env.GAME_DURATION_MS };
+  game.imposterActions = { lastBugInjectedAt: null, lastBlurAt: null, lastHintAt: null };
+
+  game.players.forEach((p) => {
+    p.role = 'good-coder';
+    p.isAlive = true;
+    p.tasksCompleted = [];
+    p.readyToStart = false;
+    p.cursorPosition = null;
+  });
+
+  return game;
 }
 
 export function getGamePhase(roomCode: string): GamePhase | null {

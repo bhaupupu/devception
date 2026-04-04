@@ -16,23 +16,25 @@ interface Props {
 export function MeetingModal({ socket, roomCode, myUserId }: Props) {
   const { meeting, setMyVote } = useMeetingStore();
   const { game } = useGameStore();
-  const [discussionTime, setDiscussionTime] = useState(60);
-  const [votingTime, setVotingTime] = useState(30);
+  const [discussionTime, setDiscussionTime] = useState(0);
+  const [votingTime, setVotingTime] = useState(0);
 
   useEffect(() => {
     if (!meeting) return;
     let t: ReturnType<typeof setInterval>;
 
     if (meeting.phase === 'discussion') {
-      setDiscussionTime(60);
+      const secs = Math.round(meeting.discussionMs / 1000);
+      setDiscussionTime(secs);
       t = setInterval(() => setDiscussionTime((s) => Math.max(0, s - 1)), 1000);
     } else if (meeting.phase === 'voting') {
-      setVotingTime(30);
+      const secs = Math.round(meeting.votingMs / 1000);
+      setVotingTime(secs);
       t = setInterval(() => setVotingTime((s) => Math.max(0, s - 1)), 1000);
     }
 
     return () => clearInterval(t);
-  }, [meeting?.phase]);
+  }, [meeting?.phase, meeting?.discussionMs, meeting?.votingMs]);
 
   const handleVote = (targetId: string) => {
     if (!meeting || meeting.myVote) return;

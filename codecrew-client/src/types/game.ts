@@ -72,5 +72,7 @@ export interface GameState {
     imposterCount: number;
     tasksPerPlayer: number;
     impostorCooldownMs: number;
+    discussionTimeMs: number;
+    votingTimeMs: number;
   };
 }

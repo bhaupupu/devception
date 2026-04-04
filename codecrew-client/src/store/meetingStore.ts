@@ -5,7 +5,7 @@ export interface MeetingState {
   calledBy: string;
   calledByName: string;
   phase: 'discussion' | 'voting' | 'results';
-  votedPlayers: Set<string>; // userIds who have voted
+  votedPlayers: Set<string>;
   myVote: string | null;
   tally: Record<string, number> | null;
   ejected: {
@@ -15,11 +15,19 @@ export interface MeetingState {
     wasImposter: boolean;
   } | null;
   wasTie: boolean;
+  discussionMs: number;
+  votingMs: number;
 }
 
 interface MeetingStore {
   meeting: MeetingState | null;
-  startMeeting: (data: { meetingId: string; calledBy: string; calledByName: string }) => void;
+  startMeeting: (data: {
+    meetingId: string;
+    calledBy: string;
+    calledByName: string;
+    discussionMs: number;
+    votingMs: number;
+  }) => void;
   setPhase: (phase: MeetingState['phase']) => void;
   markVoted: (userId: string) => void;
   setMyVote: (targetId: string) => void;
@@ -34,7 +42,7 @@ interface MeetingStore {
 export const useMeetingStore = create<MeetingStore>((set) => ({
   meeting: null,
 
-  startMeeting: ({ meetingId, calledBy, calledByName }) =>
+  startMeeting: ({ meetingId, calledBy, calledByName, discussionMs, votingMs }) =>
     set({
       meeting: {
         meetingId,
@@ -46,6 +54,8 @@ export const useMeetingStore = create<MeetingStore>((set) => ({
         tally: null,
         ejected: null,
         wasTie: false,
+        discussionMs,
+        votingMs,
       },
     }),
 
