@@ -16,7 +16,7 @@ export default function ResultsPage({ params }: Props) {
   const { data: session } = useSession();
   const router = useRouter();
   const { game, myRole, reset } = useGameStore();
-  const userId = (session?.user as { id?: string })?.id ?? '';
+  const _userId = (session?.user as { id?: string })?.id ?? '';
 
   if (!game || !game.winner) {
     return (

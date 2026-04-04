@@ -22,7 +22,7 @@ const COOLDOWN_OPTIONS = [
 
 const TASK_OPTIONS = [3, 5, 7, 10];
 
-export function WaitingRoom({ game, myUserId, onReady, onForceStart, onSettingsChange, isReady, isAdmin }: Props) {
+export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, onSettingsChange, isReady, isAdmin }: Props) {
   const slots = Array.from({ length: game.maxPlayers ?? 8 }, (_, i) => game.players[i] ?? null);
   const connectedCount = game.players.filter((p) => p.isConnected).length;
   const readyCount = game.players.filter((p) => p.readyToStart).length;

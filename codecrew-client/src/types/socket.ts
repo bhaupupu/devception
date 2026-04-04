@@ -1,4 +1,4 @@
-import { GameState, PlayerState, Meeting } from './game';
+import { GameState, PlayerState } from './game';
 
 export interface ServerToClientEvents {
   'room:state': (game: GameState) => void;
