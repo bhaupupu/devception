@@ -42,7 +42,8 @@ export interface ClientToServerEvents {
   'room:leave': (data: { roomCode: string }) => void;
   'room:player-ready': (data: { roomCode: string }) => void;
   'room:force-start': (data: { roomCode: string }) => void;
-  'room:update-settings': (data: { roomCode: string; settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number }> }) => void;
+  'room:update-settings': (data: { roomCode: string; settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number }> }) => void;
+  'room:reset': (data: { roomCode: string }) => void;
 
   'editor:change': (data: { roomCode: string; fullContent: string; version: number }) => void;
   'editor:cursor-move': (data: { roomCode: string; line: number; column: number }) => void;
