@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUser extends Document {
   googleId: string;
   email: string;
+  password?: string;
   displayName: string;
   avatarUrl: string;
   skillLevel: 'beginner' | 'intermediate' | 'advanced';
@@ -30,6 +31,7 @@ const UserSchema = new Schema<IUser>(
   {
     googleId: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
+    password: { type: String, select: false },
     displayName: { type: String, required: true },
     avatarUrl: { type: String, default: '' },
     skillLevel: {

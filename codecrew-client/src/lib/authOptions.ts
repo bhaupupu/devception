@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
 
 export const authOptions: NextAuthOptions = {
@@ -7,6 +8,29 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+    }),
+    CredentialsProvider({
+      name: 'Email',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+          const res = await fetch(`${apiUrl}/auth/login-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+          });
+          if (!res.ok) return null;
+          const data = await res.json() as { sub: string; name: string; email: string; picture: string };
+          return { id: data.sub, name: data.name, email: data.email, image: data.picture };
+        } catch {
+          return null;
+        }
+      },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
