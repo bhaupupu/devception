@@ -21,13 +21,9 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     socket.join(roomCode);
     socket.data.roomCode = roomCode;
 
-    socket.emit('room:state', game.toObject());
-    socket.to(roomCode).emit('room:player-joined', {
-      userId: socket.userId,
-      displayName: socket.displayName,
-      avatarUrl: socket.avatarUrl,
-      color: game.players.find((p) => p.userId === socket.userId)?.color,
-    });
+    // Broadcast full authoritative state to everyone in the room (including new player).
+    // This ensures all clients have consistent player list, isConnected flags, etc.
+    io.to(roomCode).emit('room:state', game.toObject());
 
     logger.info(`${socket.displayName} joined room ${roomCode}`);
   });

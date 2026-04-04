@@ -96,14 +96,14 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
           {isReady ? '✓  READY!' : '▶  READY UP'}
         </button>
 
-        {/* Admin force-start */}
+        {/* Admin start */}
         {isAdmin && (
           <button
             onClick={onForceStart}
-            className="pixel-btn pixel-btn-light w-full py-3"
-            style={{ fontSize: '10px', color: 'var(--accent-blue)', borderColor: 'var(--accent-blue)' }}
+            className="pixel-btn pixel-btn-blue w-full py-3"
+            style={{ fontSize: '10px' }}
           >
-            ⚡ FORCE START
+            ▶  START GAME
           </button>
         )}
       </div>
