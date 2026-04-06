@@ -23,6 +23,8 @@ import { MeetingModal } from '@/components/meeting/MeetingModal';
 import { GameOverScreen } from '@/components/game/GameOverScreen';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
+type MobileTab = 'editor' | 'tasks' | 'chat' | 'players';
+
 interface Props {
   params: { roomId: string };
 }
@@ -36,6 +38,7 @@ export default function GamePage({ params }: Props) {
   const { meeting } = useMeetingStore();
   const [showRoleReveal, setShowRoleReveal] = useState(false);
   const [currentLine, setCurrentLine] = useState(0);
+  const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
 
   useGameEvents(socket, roomId);
   const { handleChange, handleCursorMove } = useEditor(socket, roomId);
@@ -45,7 +48,6 @@ export default function GamePage({ params }: Props) {
 
   const handleRoleRevealDone = useCallback(() => setShowRoleReveal(false), []);
 
-  // Show role reveal when phase transitions
   useEffect(() => {
     if (game?.phase === 'role-reveal') setShowRoleReveal(true);
   }, [game?.phase]);
@@ -71,18 +73,19 @@ export default function GamePage({ params }: Props) {
     );
   }
 
+  const mobileTabs: { key: MobileTab; label: string }[] = [
+    { key: 'editor', label: 'CODE' },
+    { key: 'tasks', label: 'TASKS' },
+    { key: 'chat', label: 'CHAT' },
+    { key: 'players', label: 'CREW' },
+  ];
+
   return (
     <div className="pixel-bg h-screen flex flex-col overflow-hidden">
-      {/* Role reveal overlay */}
+      {/* Overlays */}
       {showRoleReveal && <RoleReveal onDone={handleRoleRevealDone} />}
-
-      {/* Screen blur / keyboard lock overlay */}
       <ScreenBlurOverlay socket={socket} myRole={myRole} />
-
-      {/* Meeting modal */}
       <MeetingModal socket={socket} roomCode={roomId} myUserId={userId} />
-
-      {/* Game over screen — shown as overlay when phase is results */}
       {game.phase === 'results' && (
         <GameOverScreen
           game={game}
@@ -94,12 +97,12 @@ export default function GamePage({ params }: Props) {
       )}
 
       {/* Top HUD */}
-      <div className="px-3 py-2 flex-shrink-0">
+      <div className="px-2 md:px-3 py-2 flex-shrink-0">
         <SharedProgress game={game} myRole={myRole} />
       </div>
 
-      {/* Main game layout */}
-      <div className="flex-1 flex gap-2 px-2 pb-2 min-h-0">
+      {/* ── DESKTOP layout (md+) ── */}
+      <div className="hidden md:flex flex-1 gap-2 px-2 pb-2 min-h-0">
         {/* Left: Player list */}
         <div className="w-44 flex-shrink-0">
           <PlayerList players={game.players} myUserId={userId} />
@@ -107,7 +110,6 @@ export default function GamePage({ params }: Props) {
 
         {/* Center: Code editor */}
         <div className="flex-1 flex flex-col gap-2 min-w-0">
-          {/* Toolbar */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs font-mono px-2 py-1 rounded"
               style={{ background: 'var(--bg-card)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
@@ -116,8 +118,6 @@ export default function GamePage({ params }: Props) {
             <div className="flex-1" />
             <EmergencyButton onCall={callMeeting} disabled={!!meeting} />
           </div>
-
-          {/* Editor */}
           <div className="flex-1 min-h-0">
             <CodeEditor
               onChange={handleChange}
@@ -130,7 +130,6 @@ export default function GamePage({ params }: Props) {
 
         {/* Right: Task panel + imposter actions + chat */}
         <div className="w-60 flex-shrink-0 flex flex-col gap-2">
-          {/* Imposter actions (only shown to imposters) */}
           {myRole === 'imposter' && (
             <ImposterActions
               socket={socket}
@@ -140,21 +139,89 @@ export default function GamePage({ params }: Props) {
               currentLine={currentLine}
             />
           )}
-
-          {/* Task panel */}
           <div className="flex-1 min-h-0">
-            <TaskPanel
-              tasks={game.tasks}
-              myUserId={userId}
-              socket={socket}
-              roomCode={roomId}
-            />
+            <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} />
           </div>
-
-          {/* Chat */}
           <div className="h-48 flex-shrink-0">
             <ChatPanel socket={socket} roomCode={roomId} />
           </div>
+        </div>
+      </div>
+
+      {/* ── MOBILE layout ── */}
+      <div className="flex md:hidden flex-1 flex-col min-h-0">
+        {/* Mobile tab content */}
+        <div className="flex-1 min-h-0 px-2">
+          {mobileTab === 'editor' && (
+            <div className="h-full flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+                <span className="text-xs font-mono px-2 py-1 rounded"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  {game.language}
+                </span>
+                <div className="flex-1" />
+                <EmergencyButton onCall={callMeeting} disabled={!!meeting} />
+              </div>
+              <div className="flex-1 min-h-0">
+                <CodeEditor
+                  onChange={handleChange}
+                  onCursorMove={onCursorMove}
+                  language={game.language}
+                  readOnly={isLocked}
+                />
+              </div>
+            </div>
+          )}
+
+          {mobileTab === 'tasks' && (
+            <div className="h-full flex flex-col gap-2 pt-1">
+              {myRole === 'imposter' && (
+                <ImposterActions
+                  socket={socket}
+                  roomCode={roomId}
+                  players={game.players}
+                  myUserId={userId}
+                  currentLine={currentLine}
+                />
+              )}
+              <div className="flex-1 min-h-0">
+                <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} />
+              </div>
+            </div>
+          )}
+
+          {mobileTab === 'chat' && (
+            <div className="h-full pt-1">
+              <ChatPanel socket={socket} roomCode={roomId} />
+            </div>
+          )}
+
+          {mobileTab === 'players' && (
+            <div className="h-full pt-1">
+              <PlayerList players={game.players} myUserId={userId} />
+            </div>
+          )}
+        </div>
+
+        {/* Mobile tab bar */}
+        <div className="flex-shrink-0 flex border-t-[3px] border-[#1c1917]"
+          style={{ background: '#faf8f4' }}>
+          {mobileTabs.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setMobileTab(key)}
+              className="flex-1 py-3"
+              style={{
+                fontFamily: 'Press Start 2P, monospace',
+                fontSize: '8px',
+                color: mobileTab === key ? 'var(--accent-blue)' : 'var(--text-muted)',
+                background: mobileTab === key ? '#e8f0ff' : 'transparent',
+                borderBottom: mobileTab === key ? '3px solid var(--accent-blue)' : '3px solid transparent',
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </div>
