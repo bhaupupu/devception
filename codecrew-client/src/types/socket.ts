@@ -6,7 +6,7 @@ export interface ServerToClientEvents {
   'room:player-left': (data: { userId: string }) => void;
   'room:ready-update': (data: { userId: string; readyToStart: boolean }) => void;
   'room:error': (data: { message: string }) => void;
-  'room:settings-updated': (data: { settings: { imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number } }) => void;
+  'room:settings-updated': (data: { settings: { imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number } }) => void;
 
   'game:start': (data: { phase: string }) => void;
   'game:role-reveal': (data: { role: string; color: string }) => void;

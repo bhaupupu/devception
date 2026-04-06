@@ -283,22 +283,32 @@ export function updateGameSettings(
     discussionTimeMs: number;
     votingTimeMs: number;
   }>
-): void {
+): { imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number } | null {
   const game = liveGames.get(roomCode);
-  if (!game || game.phase !== 'waiting') return;
-  if (!game.settings) {
-    (game as any).settings = { imposterCount: 1, tasksPerPlayer: 5, impostorCooldownMs: 60000, discussionTimeMs: 60000, votingTimeMs: 30000 };
-  }
+  if (!game || game.phase !== 'waiting') return null;
+
+  // Use game.set() so Mongoose subdocument tracks all mutations properly
   if (settings.imposterCount !== undefined)
-    game.settings.imposterCount = Math.max(1, Math.min(2, settings.imposterCount));
+    game.set('settings.imposterCount', Math.max(1, Math.min(2, settings.imposterCount)));
   if (settings.tasksPerPlayer !== undefined)
-    game.settings.tasksPerPlayer = Math.max(1, Math.min(10, settings.tasksPerPlayer));
+    game.set('settings.tasksPerPlayer', Math.max(1, Math.min(10, settings.tasksPerPlayer)));
   if (settings.impostorCooldownMs !== undefined)
-    game.settings.impostorCooldownMs = settings.impostorCooldownMs;
+    game.set('settings.impostorCooldownMs', settings.impostorCooldownMs);
   if (settings.discussionTimeMs !== undefined)
-    game.settings.discussionTimeMs = settings.discussionTimeMs;
+    game.set('settings.discussionTimeMs', settings.discussionTimeMs);
   if (settings.votingTimeMs !== undefined)
-    game.settings.votingTimeMs = settings.votingTimeMs;
+    game.set('settings.votingTimeMs', settings.votingTimeMs);
+
+  game.markModified('settings');
+
+  // Return plain object so callers don't serialize a Mongoose subdocument
+  return {
+    imposterCount: game.settings.imposterCount,
+    tasksPerPlayer: game.settings.tasksPerPlayer,
+    impostorCooldownMs: game.settings.impostorCooldownMs,
+    discussionTimeMs: game.settings.discussionTimeMs,
+    votingTimeMs: game.settings.votingTimeMs,
+  };
 }
 
 export function resetGame(roomCode: string): IGame | null {

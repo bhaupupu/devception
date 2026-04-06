@@ -61,8 +61,9 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     if (!game || game.phase !== 'waiting') return;
     const isAdmin = game.players[0]?.userId === socket.userId;
     if (!isAdmin) return;
-    gameService.updateGameSettings(roomCode, settings);
-    io.to(roomCode).emit('room:settings-updated', { settings: game.settings });
+    const updated = gameService.updateGameSettings(roomCode, settings);
+    if (!updated) return;
+    io.to(roomCode).emit('room:settings-updated', { settings: updated });
   });
 
   // Admin force-start: first player (admin) can start regardless of ready state

@@ -29,7 +29,7 @@ export default function ShopPage() {
           <div>
             <h1 className="text-3xl font-black gradient-text">Shop</h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              Customize your CodeCrew experience
+              Customize your Devception experience
             </p>
           </div>
           <div className="game-panel px-4 py-2">

@@ -54,6 +54,14 @@ function calcXp(player: PlayerState, winner: GameState['winner']): number {
 }
 
 export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlayAgain }: Props) {
+  // If winner hasn't arrived yet, show a brief waiting state
+  if (!game.winner) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.92)' }}>
+        <span className="pixel-font" style={{ fontSize: 10, color: 'var(--text-muted)' }}>GAME OVER...</span>
+      </div>
+    );
+  }
   const winner = game.winner;
   const myPlayer = game.players.find((p) => p.userId === myUserId);
   const iWon = myPlayer
@@ -179,21 +187,21 @@ export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlay
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="flex gap-3 w-full max-w-sm"
+        className="flex flex-col gap-3 w-full max-w-sm"
       >
         <button
           onClick={handlePlayAgain}
-          className="pixel-btn pixel-btn-green flex-1 py-3"
+          className="pixel-btn pixel-btn-green w-full py-3"
           style={{ fontSize: '11px' }}
         >
-          ▶  PLAY AGAIN
+          ▶  RETURN TO LOBBY
         </button>
         <button
           onClick={() => { window.location.href = '/lobby'; }}
-          className="pixel-btn flex-1 py-3"
-          style={{ fontSize: '11px' }}
+          className="pixel-btn pixel-btn-light w-full py-3"
+          style={{ fontSize: '10px' }}
         >
-          MAIN MENU
+          ⬅  MAIN MENU
         </button>
       </motion.div>
     </motion.div>

@@ -57,7 +57,7 @@ export default function LoginPage() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="pixel-font text-xl mb-3" style={{ color: 'var(--text-primary)', lineHeight: 2 }}>
-            CODE<span style={{ color: 'var(--accent-blue)' }}>CREW</span>
+            DEV<span style={{ color: 'var(--accent-blue)' }}>CEPTION</span>
           </h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
             Code together. Find the imposter.

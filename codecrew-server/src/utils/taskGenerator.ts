@@ -285,7 +285,7 @@ const CPP_TASKS: Omit<ITaskDoc, '_id' | 'assignedTo' | 'completedBy' | 'isComple
 
 // ---- Large shared code templates ----
 const JS_MAIN_CODE = `// ============================================================
-//  CODECREW CHALLENGE — Inventory Management System
+//  DEVCEPTION CHALLENGE — Inventory Management System
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -418,7 +418,7 @@ function removeFromCart(cart, productId) {
 }
 
 // ---- Test it out ----
-const store = createStore('CodeCrew Shop');
+const store = createStore('Devception Shop');
 addProduct(store, 'Laptop', 'electronics', 999, 5);
 addProduct(store, 'Keyboard', 'electronics', 79, 20);
 addProduct(store, 'Desk Lamp', 'office', 39, 15);
@@ -434,7 +434,7 @@ console.log('Top products:', getTopProducts(store, 3));
 `;
 
 const PYTHON_MAIN_CODE = `# ============================================================
-#  CODECREW CHALLENGE — Task Manager System
+#  DEVCEPTION CHALLENGE — Task Manager System
 #  Fix all bugs marked "# BUG" and complete all TODOs!
 # ============================================================
 
@@ -567,7 +567,7 @@ print('Stats:', get_completion_stats(mgr))
 `;
 
 const CPP_MAIN_CODE = `// ============================================================
-//  CODECREW CHALLENGE — Bank Account System
+//  DEVCEPTION CHALLENGE — Bank Account System
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -752,7 +752,7 @@ int main() {
 
 // ---- Additional JavaScript code templates ----
 const JS_SOCIAL_CODE = `// ============================================================
-//  CODECREW CHALLENGE — Social Network System
+//  DEVCEPTION CHALLENGE — Social Network System
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -911,7 +911,7 @@ console.log('Alice stats:', getUserStats(net, alice.id));
 `;
 
 const JS_EVENTS_CODE = `// ============================================================
-//  CODECREW CHALLENGE — Event Scheduler System
+//  DEVCEPTION CHALLENGE — Event Scheduler System
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -1034,7 +1034,7 @@ console.log('Report:', getScheduleReport(sched));
 
 // ---- Additional Python code templates ----
 const PYTHON_LIBRARY_CODE = `# ============================================================
-#  CODECREW CHALLENGE — Library Management System
+#  DEVCEPTION CHALLENGE — Library Management System
 #  Fix all bugs marked "# BUG" and complete all TODOs!
 # ============================================================
 
@@ -1164,7 +1164,7 @@ print(get_availability_report(lib))
 `;
 
 const PYTHON_WEATHER_CODE = `# ============================================================
-#  CODECREW CHALLENGE — Weather Analytics System
+#  DEVCEPTION CHALLENGE — Weather Analytics System
 #  Fix all bugs marked "# BUG" and complete all TODOs!
 # ============================================================
 
@@ -1292,7 +1292,7 @@ print('Warnings:', detect_storm_warnings(sys_data))
 
 // ---- Additional C++ code templates ----
 const CPP_GRADES_CODE = `// ============================================================
-//  CODECREW CHALLENGE — Student Grade Management System
+//  DEVCEPTION CHALLENGE — Student Grade Management System
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -1483,7 +1483,7 @@ int main() {
 `;
 
 const CPP_FILESYSTEM_CODE = `// ============================================================
-//  CODECREW CHALLENGE — File System Simulator
+//  DEVCEPTION CHALLENGE — File System Simulator
 //  Fix all bugs marked "// BUG" and complete all TODOs!
 // ============================================================
 
@@ -1655,13 +1655,1659 @@ int main() {
     fs.makeDir("/home/bob", "bob");
     fs.makeDir("/tmp", "root");
 
-    fs.createFile("/home/alice/notes.txt",  "alice", "Hello CodeCrew!");
+    fs.createFile("/home/alice/notes.txt",  "alice", "Hello Devception!");
     fs.createFile("/home/alice/solution.cpp","alice", "#include <iostream>\\nint main(){}");
     fs.createFile("/tmp/debug.log",          "root",  "error: null pointer at line 42");
 
     cout << "notes.txt: " << fs.readFile("/home/alice/notes.txt") << endl;
     cout << "/home/alice size: " << fs.getDirSize("/home/alice") << " bytes" << endl;
     cout << "Nodes in /home: " << fs.countNodes("/home") << endl;
+    return 0;
+}
+`;
+
+// ============================================================
+//  ADDITIONAL JAVASCRIPT TEMPLATES
+// ============================================================
+
+const JS_ECOMMERCE_CODE = `
+// DEVCEPTION CHALLENGE — E-Commerce Cart System
+// Fix bugs and complete missing logic to make all operations work correctly.
+
+class Product {
+  constructor(id, name, price, stock) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.stock = stock; // BUG: should decrement on purchase, currently never changes
+  }
+
+  isAvailable(qty = 1) {
+    // BUG: should return false when stock < qty, currently always returns true
+    return true;
+  }
+
+  applyDiscount(pct) {
+    if (pct < 0 || pct > 100) throw new Error('Invalid discount');
+    // BUG: discount applied twice — fix so new price = price * (1 - pct/100)
+    this.price = this.price - (this.price * pct / 100) - (this.price * pct / 100);
+  }
+}
+
+class Cart {
+  constructor(userId) {
+    this.userId = userId;
+    this.items = []; // { product, qty }
+    this.coupon = null;
+  }
+
+  addItem(product, qty = 1) {
+    if (!product.isAvailable(qty)) throw new Error('Out of stock');
+    const existing = this.items.find(i => i.product.id === product.id);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      // TODO: push new item into this.items
+    }
+  }
+
+  removeItem(productId) {
+    // TODO: filter out item with matching productId
+    this.items = this.items; // BUG: no actual filter
+  }
+
+  updateQty(productId, newQty) {
+    if (newQty <= 0) { this.removeItem(productId); return; }
+    const item = this.items.find(i => i.product.id === productId);
+    if (item) item.qty = newQty;
+  }
+
+  subtotal() {
+    // BUG: multiplies price * qty but forgets to sum — returns last value only
+    let total = 0;
+    for (const item of this.items) {
+      total = item.product.price * item.qty;
+    }
+    return total;
+  }
+
+  applyCoupon(code, discountPct) {
+    this.coupon = { code, discountPct };
+  }
+
+  total() {
+    const sub = this.subtotal();
+    if (!this.coupon) return sub;
+    // TODO: apply coupon discount and return final total
+    return sub;
+  }
+
+  checkout() {
+    if (this.items.length === 0) throw new Error('Cart is empty');
+    const order = {
+      orderId: Math.random().toString(36).slice(2),
+      userId: this.userId,
+      items: this.items.map(i => ({ name: i.product.name, qty: i.qty, price: i.product.price })),
+      total: this.total(),
+      placedAt: new Date().toISOString(),
+    };
+    // TODO: decrement stock for each purchased item
+    this.items = [];
+    return order;
+  }
+}
+
+class OrderHistory {
+  constructor() {
+    this.orders = [];
+  }
+
+  add(order) {
+    this.orders.push(order);
+  }
+
+  getByUser(userId) {
+    // BUG: strict equality check is correct but variable is shadowed — fix
+    return this.orders.filter(o => o.userId = userId);
+  }
+
+  totalSpent(userId) {
+    return this.getByUser(userId)
+      // BUG: uses o.price instead of o.total
+      .reduce((sum, o) => sum + o.price, 0);
+  }
+
+  mostRecent(userId, n = 5) {
+    // TODO: return last n orders for user sorted by placedAt descending
+    return [];
+  }
+}
+
+// ---- Driver ----
+const p1 = new Product('p1', 'Mechanical Keyboard', 120, 10);
+const p2 = new Product('p2', 'Mouse Pad XL', 25, 50);
+const p3 = new Product('p3', 'USB Hub', 35, 5);
+
+const cart = new Cart('user_42');
+cart.addItem(p1, 1);
+cart.addItem(p2, 2);
+cart.applyCoupon('SAVE10', 10);
+
+console.log('Subtotal:', cart.subtotal());
+console.log('Total after coupon:', cart.total());
+
+const history = new OrderHistory();
+const order = cart.checkout();
+history.add(order);
+console.log('Order placed:', order.orderId);
+console.log('Total spent:', history.totalSpent('user_42'));
+`;
+
+const JS_TASKMANAGER_CODE = `
+// DEVCEPTION CHALLENGE — Task Manager & Priority Queue
+// Fix bugs and complete missing functions.
+
+class Task {
+  constructor(id, title, priority, dueDate, tags = []) {
+    this.id = id;
+    this.title = title;
+    // BUG: priority should be 1(high) to 5(low), but stored inverted
+    this.priority = 6 - priority;
+    this.dueDate = new Date(dueDate);
+    this.tags = tags;
+    this.done = false;
+    this.subtasks = [];
+    this.createdAt = new Date();
+  }
+
+  addSubtask(title) {
+    this.subtasks.push({ title, done: false });
+  }
+
+  completeSubtask(title) {
+    const st = this.subtasks.find(s => s.title === title);
+    // BUG: should set st.done = true, currently sets st.done = false
+    if (st) st.done = false;
+  }
+
+  completionRate() {
+    if (this.subtasks.length === 0) return this.done ? 1 : 0;
+    // TODO: return fraction of completed subtasks
+    return 0;
+  }
+
+  isOverdue() {
+    // TODO: return true if dueDate is before now and task is not done
+    return false;
+  }
+}
+
+class TaskManager {
+  constructor() {
+    this.tasks = new Map(); // id -> Task
+  }
+
+  add(task) {
+    this.tasks.set(task.id, task);
+  }
+
+  remove(id) {
+    // TODO: delete from map, throw if not found
+  }
+
+  complete(id) {
+    const t = this.tasks.get(id);
+    if (!t) throw new Error('Task not found');
+    t.done = true;
+  }
+
+  getByTag(tag) {
+    // BUG: uses == instead of includes — won't work for tag arrays
+    return [...this.tasks.values()].filter(t => t.tags == tag);
+  }
+
+  getOverdue() {
+    return [...this.tasks.values()].filter(t => t.isOverdue());
+  }
+
+  sortByPriority() {
+    // TODO: return array of tasks sorted by priority ascending (1 = highest)
+    return [];
+  }
+
+  sortByDueDate() {
+    return [...this.tasks.values()].sort((a, b) => {
+      // BUG: comparison inverted — fix to sort ascending (soonest first)
+      return b.dueDate - a.dueDate;
+    });
+  }
+
+  stats() {
+    const all = [...this.tasks.values()];
+    return {
+      total: all.length,
+      completed: all.filter(t => t.done).length,
+      // TODO: add overdue count
+      overdue: 0,
+      completionRate: 0, // TODO: average completionRate across all tasks
+    };
+  }
+}
+
+class NotificationSystem {
+  constructor(manager) {
+    this.manager = manager;
+    this.subscribers = {};
+  }
+
+  subscribe(event, cb) {
+    if (!this.subscribers[event]) this.subscribers[event] = [];
+    this.subscribers[event].push(cb);
+  }
+
+  emit(event, data) {
+    // TODO: call all subscribers for this event with data
+  }
+
+  checkDueSoon(withinHours = 24) {
+    const cutoff = new Date(Date.now() + withinHours * 3600 * 1000);
+    const dueSoon = [...this.manager.tasks.values()].filter(
+      t => !t.done && t.dueDate <= cutoff
+    );
+    // TODO: emit 'due-soon' event with dueSoon list
+    return dueSoon;
+  }
+}
+
+// ---- Driver ----
+const mgr = new TaskManager();
+const notif = new NotificationSystem(mgr);
+
+notif.subscribe('due-soon', tasks => {
+  console.log('Due soon:', tasks.map(t => t.title));
+});
+
+const t1 = new Task('1', 'Fix login bug', 1, '2025-01-15', ['bug', 'auth']);
+const t2 = new Task('2', 'Write docs', 3, '2025-02-01', ['docs']);
+const t3 = new Task('3', 'Deploy to prod', 1, '2025-01-10', ['devops']);
+
+t1.addSubtask('Reproduce issue');
+t1.addSubtask('Write fix');
+t1.addSubtask('Write test');
+t1.completeSubtask('Reproduce issue');
+
+mgr.add(t1); mgr.add(t2); mgr.add(t3);
+
+console.log('Priority order:', mgr.sortByPriority().map(t => t.title));
+console.log('Overdue:', mgr.getOverdue().map(t => t.title));
+console.log('Stats:', mgr.stats());
+notif.checkDueSoon(48);
+`;
+
+const JS_CHATAPP_CODE = `
+// DEVCEPTION CHALLENGE — Real-Time Chat Room System
+// Fix bugs and complete missing logic.
+
+class Message {
+  constructor(id, roomId, authorId, authorName, text) {
+    this.id = id;
+    this.roomId = roomId;
+    this.authorId = authorId;
+    this.authorName = authorName;
+    this.text = text;
+    this.timestamp = Date.now();
+    this.reactions = {}; // emoji -> Set of userIds
+    this.edited = false;
+    this.replyTo = null;
+  }
+
+  addReaction(emoji, userId) {
+    if (!this.reactions[emoji]) this.reactions[emoji] = new Set();
+    this.reactions[emoji].add(userId);
+  }
+
+  removeReaction(emoji, userId) {
+    // BUG: deletes the whole emoji entry instead of just this user
+    if (this.reactions[emoji]) delete this.reactions[emoji];
+  }
+
+  reactionCount(emoji) {
+    // TODO: return size of the set for emoji, or 0 if none
+    return 0;
+  }
+
+  edit(newText) {
+    if (!newText || newText.trim() === '') throw new Error('Empty message');
+    // BUG: sets edited to false instead of true
+    this.text = newText;
+    this.edited = false;
+  }
+}
+
+class ChatRoom {
+  constructor(id, name, isPrivate = false) {
+    this.id = id;
+    this.name = name;
+    this.isPrivate = isPrivate;
+    this.members = new Set();
+    this.messages = [];
+    this.pinnedMessages = [];
+  }
+
+  join(userId) {
+    this.members.add(userId);
+  }
+
+  leave(userId) {
+    // TODO: remove userId from members set
+  }
+
+  send(message) {
+    if (this.isPrivate && !this.members.has(message.authorId)) {
+      throw new Error('Not a member of this private room');
+    }
+    this.messages.push(message);
+    return message;
+  }
+
+  pin(messageId) {
+    const msg = this.messages.find(m => m.id === messageId);
+    if (!msg) throw new Error('Message not found');
+    // BUG: pushes the message even if already pinned
+    this.pinnedMessages.push(msg);
+  }
+
+  unpin(messageId) {
+    // TODO: remove message with matching id from pinnedMessages
+  }
+
+  getHistory(limit = 50, before = Date.now()) {
+    // BUG: filter uses > instead of < — returns messages AFTER timestamp
+    return this.messages
+      .filter(m => m.timestamp > before)
+      .slice(-limit);
+  }
+
+  search(query) {
+    const q = query.toLowerCase();
+    // TODO: return messages where text includes query (case-insensitive)
+    return [];
+  }
+
+  memberCount() { return this.members.size; }
+}
+
+class ChatServer {
+  constructor() {
+    this.rooms = new Map();
+    this.users = new Map(); // userId -> { name, online }
+    this.dmRooms = new Map(); // 'userId1:userId2' -> roomId
+  }
+
+  registerUser(userId, name) {
+    this.users.set(userId, { name, online: false });
+  }
+
+  setOnline(userId, isOnline) {
+    const u = this.users.get(userId);
+    if (u) u.online = isOnline;
+  }
+
+  createRoom(id, name, isPrivate = false) {
+    const room = new ChatRoom(id, name, isPrivate);
+    this.rooms.set(id, room);
+    return room;
+  }
+
+  getOrCreateDM(userId1, userId2) {
+    const key = [userId1, userId2].sort().join(':');
+    if (this.dmRooms.has(key)) {
+      return this.rooms.get(this.dmRooms.get(key));
+    }
+    // TODO: create a new private room for these two users, store in dmRooms, return it
+    return null;
+  }
+
+  onlineUsers() {
+    // BUG: returns offline users — fix condition
+    return [...this.users.entries()]
+      .filter(([, u]) => !u.online)
+      .map(([id, u]) => ({ id, name: u.name }));
+  }
+}
+
+// ---- Driver ----
+const server = new ChatServer();
+server.registerUser('alice', 'Alice');
+server.registerUser('bob', 'Bob');
+server.registerUser('charlie', 'Charlie');
+server.setOnline('alice', true);
+server.setOnline('bob', true);
+
+const general = server.createRoom('general', 'General');
+general.join('alice'); general.join('bob'); general.join('charlie');
+
+const msgCounter = { n: 0 };
+function mkMsg(roomId, authorId, name, text) {
+  return new Message(\`msg_\${++msgCounter.n}\`, roomId, authorId, name, text);
+}
+
+const m1 = general.send(mkMsg('general', 'alice', 'Alice', 'Hello everyone!'));
+const m2 = general.send(mkMsg('general', 'bob', 'Bob', 'Hey Alice!'));
+
+m1.addReaction('👍', 'bob');
+m1.addReaction('❤️', 'charlie');
+m1.removeReaction('👍', 'bob');
+
+general.pin(m1.id);
+console.log('Pinned:', general.pinnedMessages.map(m => m.text));
+console.log('Online users:', server.onlineUsers().map(u => u.name));
+console.log('History:', general.getHistory(10).map(m => m.text));
+
+const dm = server.getOrCreateDM('alice', 'bob');
+if (dm) {
+  dm.send(mkMsg(dm.id, 'alice', 'Alice', 'Hey Bob, private message!'));
+  console.log('DM sent');
+}
+`;
+
+const JS_RPGGAME_CODE = `
+// DEVCEPTION CHALLENGE — RPG Battle System
+// Fix bugs and complete missing combat logic.
+
+class Character {
+  constructor(name, hp, attack, defense, speed) {
+    this.name = name;
+    this.maxHp = hp;
+    this.hp = hp;
+    this.attack = attack;
+    this.defense = defense;
+    this.speed = speed;
+    this.level = 1;
+    this.xp = 0;
+    this.statusEffects = []; // { type, duration, value }
+    this.skills = [];
+  }
+
+  isAlive() {
+    // BUG: should return true when hp > 0, returns opposite
+    return this.hp <= 0;
+  }
+
+  takeDamage(amount) {
+    const reduced = Math.max(0, amount - this.defense);
+    // BUG: adds damage instead of subtracting
+    this.hp = Math.min(this.maxHp, this.hp + reduced);
+    return reduced;
+  }
+
+  heal(amount) {
+    const before = this.hp;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+    return this.hp - before; // actual healed amount
+  }
+
+  addStatus(type, duration, value = 0) {
+    this.statusEffects.push({ type, duration, value });
+  }
+
+  tickStatuses() {
+    // TODO: decrement duration on each status, remove those with duration <= 0
+    // Apply 'poison' damage (value per tick) and 'regen' healing (value per tick)
+    for (const s of this.statusEffects) {
+      if (s.type === 'poison') this.takeDamage(s.value);
+      if (s.type === 'regen') this.heal(s.value);
+    }
+    this.statusEffects = this.statusEffects; // BUG: should filter expired statuses
+  }
+
+  gainXp(amount) {
+    this.xp += amount;
+    const needed = this.level * 100;
+    if (this.xp >= needed) {
+      this.xp -= needed;
+      this.levelUp();
+    }
+  }
+
+  levelUp() {
+    this.level++;
+    // TODO: increase maxHp by 10, attack by 2, defense by 1, refill hp
+    console.log(\`\${this.name} leveled up to \${this.level}!\`);
+  }
+
+  learnSkill(skill) {
+    this.skills.push(skill);
+  }
+
+  useSkill(skillName, target) {
+    const skill = this.skills.find(s => s.name === skillName);
+    if (!skill) throw new Error('Skill not known');
+    // TODO: apply skill effect to target (damage, heal, or status)
+    console.log(\`\${this.name} uses \${skillName} on \${target.name}\`);
+  }
+}
+
+class Battle {
+  constructor(attacker, defender) {
+    this.attacker = attacker;
+    this.defender = defender;
+    this.log = [];
+    this.turn = 1;
+  }
+
+  doAttack(source, target) {
+    const dmg = source.attack + Math.floor(Math.random() * 6);
+    const actual = target.takeDamage(dmg);
+    this.log.push(\`[T\${this.turn}] \${source.name} hits \${target.name} for \${actual} dmg (HP: \${target.hp}/\${target.maxHp})\`);
+    return actual;
+  }
+
+  runTurn() {
+    // BUG: always attacker goes first regardless of speed — fix to check speed
+    this.doAttack(this.attacker, this.defender);
+    if (this.defender.isAlive()) {
+      this.doAttack(this.defender, this.attacker);
+    }
+    this.attacker.tickStatuses();
+    this.defender.tickStatuses();
+    this.turn++;
+  }
+
+  run(maxTurns = 20) {
+    while (this.attacker.isAlive() && this.defender.isAlive() && this.turn <= maxTurns) {
+      this.runTurn();
+    }
+    return this.result();
+  }
+
+  result() {
+    if (!this.attacker.isAlive() && !this.defender.isAlive()) return { winner: null, log: this.log };
+    if (!this.attacker.isAlive()) return { winner: this.defender, log: this.log };
+    if (!this.defender.isAlive()) return { winner: this.attacker, log: this.log };
+    return { winner: null, log: this.log }; // timeout
+  }
+}
+
+class Inventory {
+  constructor(maxSlots = 10) {
+    this.slots = [];
+    this.maxSlots = maxSlots;
+  }
+
+  addItem(item) {
+    if (this.slots.length >= this.maxSlots) throw new Error('Inventory full');
+    // BUG: pushes item.name instead of item object
+    this.slots.push(item.name);
+  }
+
+  removeItem(itemName) {
+    // TODO: find first item with matching name and remove it, return it
+    return null;
+  }
+
+  useItem(itemName, target) {
+    const item = this.removeItem(itemName);
+    if (!item) throw new Error('Item not in inventory');
+    item.effect(target);
+  }
+}
+
+// ---- Driver ----
+const hero = new Character('Hero', 100, 18, 5, 12);
+const slime = new Character('Slime King', 60, 10, 2, 8);
+
+hero.learnSkill({ name: 'Fireball', type: 'damage', power: 25 });
+slime.addStatus('regen', 5, 3);
+
+const inv = new Inventory();
+inv.addItem({ name: 'Health Potion', effect: (t) => t.heal(30) });
+
+const battle = new Battle(hero, slime);
+const result = battle.run();
+
+console.log('--- Battle Log ---');
+result.log.forEach(l => console.log(l));
+console.log('Winner:', result.winner?.name ?? 'Draw/Timeout');
+`;
+
+// ============================================================
+//  ADDITIONAL PYTHON TEMPLATES
+// ============================================================
+
+const PYTHON_SOCIAL_CODE = `
+# DEVCEPTION CHALLENGE — Social Media Platform
+# Fix bugs and complete missing logic.
+
+from datetime import datetime
+from collections import defaultdict
+
+class User:
+    def __init__(self, user_id, username, email):
+        self.user_id = user_id
+        self.username = username
+        self.email = email
+        self.bio = ""
+        self.following = set()   # user_ids this user follows
+        self.followers = set()   # user_ids that follow this user
+        self.posts = []
+        self.liked_posts = set()
+        self.joined_at = datetime.now()
+
+    def follow(self, other_user):
+        # BUG: adds to own following but doesn't add to other's followers
+        self.following.add(other_user.user_id)
+
+    def unfollow(self, other_user):
+        # TODO: remove from following, remove self from other's followers
+        pass
+
+    def is_following(self, other_user):
+        return other_user.user_id in self.following
+
+    def feed_ids(self):
+        """Return set of user_ids whose posts appear in this user's feed."""
+        # TODO: return following set plus own user_id
+        return set()
+
+
+class Post:
+    def __init__(self, post_id, author, content, tags=None):
+        self.post_id = post_id
+        self.author = author
+        self.content = content
+        self.tags = tags or []
+        self.likes = set()
+        self.comments = []
+        self.created_at = datetime.now()
+        self.shares = 0
+
+    def like(self, user):
+        # BUG: adds user.user_id but should also add post to user.liked_posts
+        self.likes.add(user.user_id)
+
+    def unlike(self, user):
+        self.likes.discard(user.user_id)
+        user.liked_posts.discard(self.post_id)
+
+    def add_comment(self, user, text):
+        # TODO: append dict with user_id, username, text, created_at
+        pass
+
+    def like_count(self):
+        # BUG: returns length of content string instead of likes set
+        return len(self.content)
+
+    def is_trending(self, threshold=10):
+        return self.like_count() >= threshold or self.shares >= threshold // 2
+
+
+class Platform:
+    def __init__(self):
+        self.users = {}    # user_id -> User
+        self.posts = {}    # post_id -> Post
+        self._post_counter = 0
+        self.hashtags = defaultdict(set)  # tag -> set of post_ids
+
+    def register(self, username, email):
+        uid = f"u{len(self.users) + 1}"
+        user = User(uid, username, email)
+        self.users[uid] = user
+        return user
+
+    def create_post(self, author, content, tags=None):
+        self._post_counter += 1
+        pid = f"p{self._post_counter}"
+        post = Post(pid, author, content, tags or [])
+        author.posts.append(pid)
+        self.posts[pid] = post
+        for tag in post.tags:
+            self.hashtags[tag].add(pid)
+        return post
+
+    def get_feed(self, user, limit=20):
+        """Return posts from followed users + own posts, newest first."""
+        feed_ids = user.feed_ids()
+        relevant = [p for p in self.posts.values() if p.author.user_id in feed_ids]
+        # BUG: sorts ascending by created_at (oldest first) — fix to descending
+        return sorted(relevant, key=lambda p: p.created_at)[:limit]
+
+    def trending_posts(self, n=5):
+        # TODO: return top n posts by like_count descending
+        return []
+
+    def search_hashtag(self, tag):
+        pids = self.hashtags.get(tag, set())
+        return [self.posts[pid] for pid in pids if pid in self.posts]
+
+    def suggested_users(self, user, n=5):
+        """Suggest users followed by people user follows but not yet followed."""
+        candidates = set()
+        for fid in user.following:
+            followed = self.users.get(fid)
+            if followed:
+                candidates |= followed.following
+        # TODO: remove already-followed and self, return up to n User objects
+        return []
+
+
+# ---- Driver ----
+platform = Platform()
+alice = platform.register("alice", "alice@example.com")
+bob   = platform.register("bob",   "bob@example.com")
+carol = platform.register("carol", "carol@example.com")
+
+alice.follow(bob)
+alice.follow(carol)
+bob.follow(alice)
+
+p1 = platform.create_post(alice, "Hello world! #python #coding", ["python","coding"])
+p2 = platform.create_post(bob, "Working on a new project #dev", ["dev"])
+p3 = platform.create_post(carol, "Beautiful day #life", ["life"])
+
+p1.like(bob)
+p1.like(carol)
+p2.like(alice)
+
+print("Alice's feed:", [platform.posts[p.post_id].content[:20] for p in platform.get_feed(alice)])
+print("p1 likes:", p1.like_count())
+print("Trending:", [p.content[:20] for p in platform.trending_posts()])
+print("Suggested for carol:", [u.username for u in platform.suggested_users(carol)])
+`;
+
+const PYTHON_SCHEDULER_CODE = `
+# DEVCEPTION CHALLENGE — Job Scheduler & Worker Pool
+# Fix bugs and complete the missing scheduling logic.
+
+import heapq
+from datetime import datetime, timedelta
+from collections import deque
+
+class Job:
+    def __init__(self, job_id, name, func, priority=5, max_retries=3):
+        self.job_id = job_id
+        self.name = name
+        self.func = func
+        self.priority = priority  # 1=highest, 10=lowest
+        self.max_retries = max_retries
+        self.retries = 0
+        self.status = "pending"   # pending | running | done | failed
+        self.result = None
+        self.error = None
+        self.created_at = datetime.now()
+        self.started_at = None
+        self.finished_at = None
+
+    def run(self):
+        self.status = "running"
+        self.started_at = datetime.now()
+        try:
+            self.result = self.func()
+            # BUG: should set status to "done" not "running"
+            self.status = "running"
+        except Exception as e:
+            self.error = str(e)
+            self.retries += 1
+            # BUG: marks failed immediately even if retries remain
+            self.status = "failed"
+        finally:
+            self.finished_at = datetime.now()
+
+    def duration_ms(self):
+        if self.started_at and self.finished_at:
+            return (self.finished_at - self.started_at).total_seconds() * 1000
+        # TODO: return None if not finished yet
+        return 0
+
+    def can_retry(self):
+        # TODO: return True if status is failed and retries < max_retries
+        return False
+
+    def __lt__(self, other):
+        # For heap: lower priority number = higher urgency
+        return self.priority < other.priority
+
+
+class PriorityQueue:
+    def __init__(self):
+        self._heap = []
+
+    def push(self, job):
+        # BUG: should use heapq.heappush, currently appends unsorted
+        self._heap.append(job)
+
+    def pop(self):
+        if not self._heap:
+            return None
+        # TODO: use heapq.heappop
+        return self._heap.pop(0)
+
+    def peek(self):
+        if not self._heap:
+            return None
+        return self._heap[0]
+
+    def __len__(self):
+        return len(self._heap)
+
+
+class Scheduler:
+    def __init__(self, max_workers=4):
+        self.queue = PriorityQueue()
+        self.running = {}      # job_id -> Job
+        self.completed = []
+        self.failed = []
+        self.max_workers = max_workers
+        self._id_counter = 0
+
+    def submit(self, name, func, priority=5, max_retries=3):
+        self._id_counter += 1
+        job = Job(f"job_{self._id_counter}", name, func, priority, max_retries)
+        self.queue.push(job)
+        return job.job_id
+
+    def _can_run_more(self):
+        return len(self.running) < self.max_workers
+
+    def tick(self):
+        """Process one scheduling cycle."""
+        # Complete running jobs
+        done_ids = []
+        for jid, job in self.running.items():
+            # Simulate: jobs finish immediately in this single-threaded version
+            if job.status in ("done", "failed"):
+                done_ids.append(jid)
+
+        for jid in done_ids:
+            job = self.running.pop(jid)
+            if job.status == "done":
+                self.completed.append(job)
+            elif job.can_retry():
+                job.status = "pending"
+                self.queue.push(job)
+            else:
+                # TODO: append to self.failed
+                pass
+
+        # Start new jobs
+        while self._can_run_more() and len(self.queue) > 0:
+            job = self.queue.pop()
+            if job:
+                self.running[job.job_id] = job
+                job.run()
+
+    def run_all(self, max_ticks=100):
+        tick = 0
+        while (len(self.queue) > 0 or len(self.running) > 0) and tick < max_ticks:
+            self.tick()
+            tick += 1
+        return tick
+
+    def stats(self):
+        return {
+            "completed": len(self.completed),
+            "failed": len(self.failed),
+            "pending": len(self.queue),
+            "running": len(self.running),
+            # TODO: average duration of completed jobs in ms
+            "avg_duration_ms": 0,
+        }
+
+
+# ---- Driver ----
+sched = Scheduler(max_workers=2)
+
+def make_job(n):
+    def job():
+        return n * n
+    return job
+
+def failing_job():
+    raise ValueError("Simulated failure")
+
+for i in range(1, 6):
+    sched.submit(f"square_{i}", make_job(i), priority=i)
+
+sched.submit("will_fail", failing_job, priority=2, max_retries=2)
+
+ticks = sched.run_all()
+print(f"Finished in {ticks} ticks")
+print("Stats:", sched.stats())
+print("Completed jobs:", [j.name for j in sched.completed])
+print("Failed jobs:", [j.name for j in sched.failed])
+print("Results:", [j.result for j in sched.completed if j.result is not None])
+`;
+
+const PYTHON_DATAPROCESSOR_CODE = `
+# DEVCEPTION CHALLENGE — Data Pipeline & Analytics Engine
+# Fix bugs and complete missing aggregation logic.
+
+from collections import defaultdict
+import statistics
+
+class Record:
+    def __init__(self, record_id, source, data, timestamp=None):
+        self.record_id = record_id
+        self.source = source
+        self.data = dict(data)
+        self.timestamp = timestamp or 0
+        self.tags = []
+        self.processed = False
+
+    def get(self, key, default=None):
+        return self.data.get(key, default)
+
+    def set(self, key, value):
+        self.data[key] = value
+
+    def tag(self, *tags):
+        for t in tags:
+            if t not in self.tags:
+                self.tags.append(t)
+
+
+class Filter:
+    def __init__(self, field, op, value):
+        self.field = field
+        self.op = op    # 'eq','ne','gt','lt','gte','lte','in','contains'
+        self.value = value
+
+    def matches(self, record):
+        v = record.get(self.field)
+        if v is None:
+            return False
+        if self.op == 'eq':      return v == self.value
+        if self.op == 'ne':      return v != self.value
+        if self.op == 'gt':      return v > self.value
+        if self.op == 'lt':
+            # BUG: uses > instead of <
+            return v > self.value
+        if self.op == 'gte':     return v >= self.value
+        if self.op == 'lte':     return v <= self.value
+        if self.op == 'in':      return v in self.value
+        if self.op == 'contains':
+            # BUG: checks if value contains v, should be v contains self.value
+            return self.value in v
+        return False
+
+
+class Pipeline:
+    def __init__(self, name):
+        self.name = name
+        self.stages = []   # list of (stage_type, config)
+        self.records = []
+        self.errors = []
+
+    def add_stage(self, stage_type, **config):
+        self.stages.append((stage_type, config))
+        return self
+
+    def _apply_filter(self, records, config):
+        f = Filter(config['field'], config['op'], config['value'])
+        return [r for r in records if f.matches(r)]
+
+    def _apply_transform(self, records, config):
+        field = config['field']
+        fn = config['fn']
+        for r in records:
+            try:
+                r.set(field, fn(r.get(field)))
+            except Exception as e:
+                self.errors.append({'record_id': r.record_id, 'error': str(e)})
+        return records
+
+    def _apply_enrich(self, records, config):
+        new_field = config['new_field']
+        fn = config['fn']
+        for r in records:
+            # TODO: set new_field on record using fn(record)
+            pass
+        return records
+
+    def _apply_dedupe(self, records, config):
+        key = config['key']
+        seen = set()
+        result = []
+        for r in records:
+            k = r.get(key)
+            # BUG: adds duplicate instead of skipping — fix logic
+            if k in seen:
+                result.append(r)
+            else:
+                seen.add(k)
+        return result
+
+    def run(self, records):
+        self.records = list(records)
+        current = list(records)
+        for stage_type, config in self.stages:
+            if stage_type == 'filter':    current = self._apply_filter(current, config)
+            elif stage_type == 'transform': current = self._apply_transform(current, config)
+            elif stage_type == 'enrich':  current = self._apply_enrich(current, config)
+            elif stage_type == 'dedupe':  current = self._apply_dedupe(current, config)
+        for r in current:
+            r.processed = True
+        return current
+
+
+class Aggregator:
+    def __init__(self, records):
+        self.records = records
+
+    def group_by(self, field):
+        groups = defaultdict(list)
+        for r in self.records:
+            groups[r.get(field)].append(r)
+        return dict(groups)
+
+    def count(self, group_field=None):
+        if group_field is None:
+            return len(self.records)
+        groups = self.group_by(group_field)
+        return {k: len(v) for k, v in groups.items()}
+
+    def sum(self, value_field, group_field=None):
+        if group_field is None:
+            return sum(r.get(value_field, 0) for r in self.records)
+        groups = self.group_by(group_field)
+        # TODO: return dict of group -> sum of value_field
+        return {}
+
+    def average(self, value_field, group_field=None):
+        if group_field is None:
+            vals = [r.get(value_field) for r in self.records if r.get(value_field) is not None]
+            # BUG: uses sum() instead of statistics.mean() — will fail on empty list
+            return sum(vals) if vals else 0
+        groups = self.group_by(group_field)
+        result = {}
+        for k, recs in groups.items():
+            vals = [r.get(value_field) for r in recs if r.get(value_field) is not None]
+            result[k] = statistics.mean(vals) if vals else 0
+        return result
+
+    def top_n(self, value_field, n=5, descending=True):
+        # TODO: return top n records sorted by value_field
+        return []
+
+
+# ---- Driver ----
+records = [
+    Record("r1", "web",    {"user": "alice", "region": "US", "revenue": 120, "clicks": 5}),
+    Record("r2", "mobile", {"user": "bob",   "region": "EU", "revenue":  80, "clicks": 3}),
+    Record("r3", "web",    {"user": "carol", "region": "US", "revenue": 200, "clicks": 9}),
+    Record("r4", "web",    {"user": "alice", "region": "US", "revenue": 150, "clicks": 7}),
+    Record("r5", "mobile", {"user": "bob",   "region": "EU", "revenue":  60, "clicks": 2}),
+    Record("r6", "web",    {"user": "dave",  "region": "AP", "revenue": 300, "clicks":12}),
+]
+
+pipe = Pipeline("revenue_pipe")
+pipe.add_stage("dedupe", key="user")
+pipe.add_stage("filter", field="revenue", op="gt", value=70)
+pipe.add_stage("enrich", new_field="revenue_per_click",
+               fn=lambda r: round(r.get("revenue",0) / max(r.get("clicks",1),1), 2))
+
+result = pipe.run(records)
+print("Processed:", len(result), "records")
+
+agg = Aggregator(result)
+print("Count by region:", agg.count("region"))
+print("Total revenue:", agg.sum("revenue"))
+print("Avg revenue by source:", agg.average("revenue", "source"))
+print("Top 3 by revenue:", [r.get("user") for r in agg.top_n("revenue", 3)])
+`;
+
+// ============================================================
+//  ADDITIONAL C++ TEMPLATES
+// ============================================================
+
+const CPP_NETWORK_CODE = `
+// DEVCEPTION CHALLENGE — Graph Network & Pathfinding
+// Fix bugs and complete the missing algorithms.
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <queue>
+#include <set>
+#include <climits>
+#include <algorithm>
+using namespace std;
+
+struct Edge {
+    string to;
+    int weight;
+};
+
+class Graph {
+public:
+    unordered_map<string, vector<Edge>> adj;
+    bool directed;
+
+    Graph(bool directed = false) : directed(directed) {}
+
+    void addEdge(const string& from, const string& to, int weight = 1) {
+        adj[from].push_back({to, weight});
+        if (!directed) {
+            // BUG: adds undirected edge with wrong weight (weight+1)
+            adj[to].push_back({from, weight + 1});
+        }
+        // Ensure nodes exist even if no outgoing edges
+        if (adj.find(to) == adj.end()) adj[to] = {};
+    }
+
+    vector<string> nodes() const {
+        vector<string> result;
+        for (auto& [node, _] : adj) result.push_back(node);
+        return result;
+    }
+
+    // BFS shortest path (unweighted)
+    vector<string> bfs(const string& start, const string& end) {
+        unordered_map<string, string> parent;
+        queue<string> q;
+        set<string> visited;
+        q.push(start);
+        visited.insert(start);
+        parent[start] = "";
+
+        while (!q.empty()) {
+            string cur = q.front(); q.pop();
+            if (cur == end) {
+                // Reconstruct path
+                vector<string> path;
+                for (string n = end; n != ""; n = parent[n])
+                    path.push_back(n);
+                // BUG: path is built correctly but needs to be reversed
+                return path;
+            }
+            for (auto& e : adj.at(cur)) {
+                if (visited.find(e.to) == visited.end()) {
+                    visited.insert(e.to);
+                    parent[e.to] = cur;
+                    q.push(e.to);
+                }
+            }
+        }
+        return {}; // no path
+    }
+
+    // Dijkstra shortest weighted path
+    pair<int, vector<string>> dijkstra(const string& start, const string& end) {
+        unordered_map<string, int> dist;
+        unordered_map<string, string> parent;
+        // min-heap: (distance, node)
+        priority_queue<pair<int,string>, vector<pair<int,string>>, greater<>> pq;
+
+        for (auto& [n, _] : adj) dist[n] = INT_MAX;
+        dist[start] = 0;
+        pq.push({0, start});
+        parent[start] = "";
+
+        while (!pq.empty()) {
+            auto [d, cur] = pq.top(); pq.pop();
+            // BUG: missing early termination when cur == end
+            if (d > dist[cur]) continue;
+            for (auto& e : adj.at(cur)) {
+                int newDist = dist[cur] + e.weight;
+                if (newDist < dist[e.to]) {
+                    dist[e.to] = newDist;
+                    parent[e.to] = cur;
+                    pq.push({newDist, e.to});
+                }
+            }
+        }
+
+        if (dist[end] == INT_MAX) return {-1, {}};
+        vector<string> path;
+        for (string n = end; n != ""; n = parent[n]) path.push_back(n);
+        reverse(path.begin(), path.end());
+        return {dist[end], path};
+    }
+
+    bool hasCycle() {
+        set<string> visited, recStack;
+        function<bool(const string&)> dfs = [&](const string& node) -> bool {
+            visited.insert(node);
+            recStack.insert(node);
+            for (auto& e : adj.at(node)) {
+                if (recStack.count(e.to)) return true;
+                // BUG: should also check if not yet visited before recursing
+                if (dfs(e.to)) return true;
+            }
+            recStack.erase(node);
+            return false;
+        };
+        for (auto& [n, _] : adj)
+            if (!visited.count(n) && dfs(n)) return true;
+        return false;
+    }
+
+    // TODO: implement topological sort (Kahn's algorithm)
+    vector<string> topoSort() {
+        return {};
+    }
+
+    int connectedComponents() {
+        set<string> visited;
+        int count = 0;
+        function<void(const string&)> dfs = [&](const string& n) {
+            visited.insert(n);
+            for (auto& e : adj.at(n))
+                if (!visited.count(e.to)) dfs(e.to);
+        };
+        for (auto& [n, _] : adj) {
+            if (!visited.count(n)) {
+                dfs(n);
+                // BUG: forgets to increment count
+            }
+        }
+        return count;
+    }
+};
+
+int main() {
+    Graph g(false);
+    g.addEdge("A", "B", 4);
+    g.addEdge("A", "C", 2);
+    g.addEdge("B", "D", 3);
+    g.addEdge("C", "D", 1);
+    g.addEdge("C", "E", 5);
+    g.addEdge("D", "E", 1);
+
+    auto bfsPath = g.bfs("A", "E");
+    cout << "BFS A->E: ";
+    for (auto& n : bfsPath) cout << n << " ";
+    cout << endl;
+
+    auto [cost, path] = g.dijkstra("A", "E");
+    cout << "Dijkstra A->E cost=" << cost << " path: ";
+    for (auto& n : path) cout << n << " ";
+    cout << endl;
+
+    cout << "Has cycle: " << (g.hasCycle() ? "yes" : "no") << endl;
+    cout << "Components: " << g.connectedComponents() << endl;
+
+    // Directed graph for topo sort
+    Graph dag(true);
+    dag.addEdge("build", "test");
+    dag.addEdge("test", "deploy");
+    dag.addEdge("lint", "test");
+    auto topo = dag.topoSort();
+    cout << "Topo: ";
+    for (auto& n : topo) cout << n << " ";
+    cout << endl;
+
+    return 0;
+}
+`;
+
+const CPP_STRINGPARSER_CODE = `
+// DEVCEPTION CHALLENGE — String Parser & Expression Evaluator
+// Fix bugs and complete missing parsing logic.
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stack>
+#include <unordered_map>
+#include <sstream>
+#include <stdexcept>
+#include <cctype>
+using namespace std;
+
+// ---- Tokenizer ----
+enum class TokenType { NUMBER, IDENT, OP, LPAREN, RPAREN, END };
+
+struct Token {
+    TokenType type;
+    string value;
+};
+
+vector<Token> tokenize(const string& expr) {
+    vector<Token> tokens;
+    size_t i = 0;
+    while (i < expr.size()) {
+        if (isspace(expr[i])) { i++; continue; }
+        if (isdigit(expr[i]) || (expr[i] == '.' && i+1 < expr.size() && isdigit(expr[i+1]))) {
+            size_t j = i;
+            while (j < expr.size() && (isdigit(expr[j]) || expr[j] == '.')) j++;
+            tokens.push_back({TokenType::NUMBER, expr.substr(i, j - i)});
+            i = j;
+        } else if (isalpha(expr[i]) || expr[i] == '_') {
+            size_t j = i;
+            while (j < expr.size() && (isalnum(expr[j]) || expr[j] == '_')) j++;
+            tokens.push_back({TokenType::IDENT, expr.substr(i, j - i)});
+            i = j;
+        } else if (string("+-*/^%").find(expr[i]) != string::npos) {
+            tokens.push_back({TokenType::OP, string(1, expr[i])});
+            i++;
+        } else if (expr[i] == '(') {
+            tokens.push_back({TokenType::LPAREN, "("});
+            i++;
+        } else if (expr[i] == ')') {
+            tokens.push_back({TokenType::RPAREN, ")"});
+            i++;
+        } else {
+            throw runtime_error("Unknown character: " + string(1, expr[i]));
+        }
+    }
+    tokens.push_back({TokenType::END, ""});
+    return tokens;
+}
+
+// ---- Shunting-Yard to RPN ----
+int precedence(const string& op) {
+    if (op == "+" || op == "-") return 1;
+    if (op == "*" || op == "/") return 2;
+    // BUG: ^ (power) should have highest precedence (3), currently returns 2
+    if (op == "^") return 2;
+    return 0;
+}
+
+bool isRightAssoc(const string& op) { return op == "^"; }
+
+vector<Token> toRPN(const vector<Token>& tokens) {
+    vector<Token> output;
+    stack<Token> ops;
+    for (const auto& tok : tokens) {
+        if (tok.type == TokenType::NUMBER || tok.type == TokenType::IDENT) {
+            output.push_back(tok);
+        } else if (tok.type == TokenType::OP) {
+            while (!ops.empty() && ops.top().type == TokenType::OP) {
+                int topPrec = precedence(ops.top().value);
+                int curPrec = precedence(tok.value);
+                // BUG: right-associative check inverted — should pop when topPrec > curPrec
+                // OR (topPrec == curPrec AND NOT rightAssoc)
+                if (topPrec >= curPrec) {
+                    output.push_back(ops.top()); ops.pop();
+                } else break;
+            }
+            ops.push(tok);
+        } else if (tok.type == TokenType::LPAREN) {
+            ops.push(tok);
+        } else if (tok.type == TokenType::RPAREN) {
+            while (!ops.empty() && ops.top().type != TokenType::LPAREN) {
+                output.push_back(ops.top()); ops.pop();
+            }
+            if (ops.empty()) throw runtime_error("Mismatched parentheses");
+            ops.pop(); // discard LPAREN
+        } else if (tok.type == TokenType::END) {
+            break;
+        }
+    }
+    while (!ops.empty()) {
+        if (ops.top().type == TokenType::LPAREN) throw runtime_error("Mismatched parentheses");
+        output.push_back(ops.top()); ops.pop();
+    }
+    return output;
+}
+
+// ---- RPN Evaluator ----
+double evalRPN(const vector<Token>& rpn, const unordered_map<string,double>& vars) {
+    stack<double> s;
+    for (const auto& tok : rpn) {
+        if (tok.type == TokenType::NUMBER) {
+            s.push(stod(tok.value));
+        } else if (tok.type == TokenType::IDENT) {
+            auto it = vars.find(tok.value);
+            if (it == vars.end()) throw runtime_error("Undefined variable: " + tok.value);
+            s.push(it->second);
+        } else if (tok.type == TokenType::OP) {
+            if (s.size() < 2) throw runtime_error("Not enough operands");
+            double b = s.top(); s.pop();
+            double a = s.top(); s.pop();
+            if (tok.value == "+") s.push(a + b);
+            else if (tok.value == "-") s.push(a - b);
+            else if (tok.value == "*") s.push(a * b);
+            else if (tok.value == "/") {
+                // BUG: divides b by a instead of a by b
+                if (b == 0) throw runtime_error("Division by zero");
+                s.push(b / a);
+            }
+            // TODO: handle ^ (power) and % (modulo)
+        }
+    }
+    if (s.size() != 1) throw runtime_error("Invalid expression");
+    return s.top();
+}
+
+double evaluate(const string& expr, const unordered_map<string,double>& vars = {}) {
+    auto tokens = tokenize(expr);
+    auto rpn    = toRPN(tokens);
+    return evalRPN(rpn, vars);
+}
+
+// ---- String Utilities ----
+vector<string> split(const string& s, char delim) {
+    vector<string> result;
+    stringstream ss(s);
+    string token;
+    while (getline(ss, token, delim)) {
+        // BUG: should push token, currently pushes s (the original string)
+        result.push_back(s);
+    }
+    return result;
+}
+
+string trim(const string& s) {
+    // TODO: remove leading and trailing whitespace
+    return s;
+}
+
+string replace_all(string s, const string& from, const string& to) {
+    size_t pos = 0;
+    while ((pos = s.find(from, pos)) != string::npos) {
+        s.replace(pos, from.size(), to);
+        // BUG: pos not advanced — causes infinite loop when 'to' contains 'from'
+        pos += 0;
+    }
+    return s;
+}
+
+int main() {
+    cout << "3 + 4 * 2 = "     << evaluate("3 + 4 * 2")     << endl; // 11
+    cout << "(3+4) * 2 = "     << evaluate("(3 + 4) * 2")   << endl; // 14
+    cout << "10 / 2 - 1 = "    << evaluate("10 / 2 - 1")    << endl; // 4
+    cout << "2 ^ 3 ^ 2 = "     << evaluate("2 ^ 3 ^ 2")     << endl; // 512 (right-assoc)
+
+    unordered_map<string,double> vars = {{"x", 3.0}, {"y", 4.0}};
+    cout << "x*x + y*y = "     << evaluate("x * x + y * y", vars) << endl; // 25
+
+    auto parts = split("hello,world,foo", ',');
+    cout << "Split: ";
+    for (auto& p : parts) cout << "[" << p << "]";
+    cout << endl;
+
+    cout << "Trim: [" << trim("  hello  ") << "]" << endl;
+    cout << "Replace: " << replace_all("aabbaa", "aa", "x") << endl; // xbbx
+
+    return 0;
+}
+`;
+
+const CPP_MEMORYPOOL_CODE = `
+// DEVCEPTION CHALLENGE — Memory Pool & Smart Pointer System
+// Fix bugs and implement missing memory management logic.
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <functional>
+#include <stdexcept>
+#include <cstring>
+using namespace std;
+
+// ---- Memory Pool ----
+class MemoryPool {
+    struct Block { void* ptr; size_t size; bool inUse; };
+    vector<Block> blocks;
+    size_t blockSize;
+    size_t capacity;
+    size_t allocated = 0;
+
+public:
+    MemoryPool(size_t blockSize, size_t capacity)
+        : blockSize(blockSize), capacity(capacity) {
+        blocks.resize(capacity);
+        for (auto& b : blocks) {
+            b.ptr = malloc(blockSize);
+            b.size = blockSize;
+            b.inUse = false;
+        }
+    }
+
+    void* acquire() {
+        for (auto& b : blocks) {
+            if (!b.inUse) {
+                b.inUse = true;
+                allocated++;
+                return b.ptr;
+            }
+        }
+        throw runtime_error("Pool exhausted");
+    }
+
+    void release(void* ptr) {
+        for (auto& b : blocks) {
+            if (b.ptr == ptr) {
+                if (!b.inUse) throw runtime_error("Double free detected");
+                b.inUse = false;
+                // BUG: decrements allocated but doesn't zero the memory
+                allocated--;
+                return;
+            }
+        }
+        throw runtime_error("Pointer not from this pool");
+    }
+
+    size_t usedBlocks()  const { return allocated; }
+    size_t freeBlocks()  const {
+        // BUG: should be capacity - allocated, currently returns allocated
+        return allocated;
+    }
+    size_t totalBlocks() const { return capacity; }
+
+    ~MemoryPool() {
+        for (auto& b : blocks) free(b.ptr);
+    }
+};
+
+// ---- Reference-Counted Smart Pointer ----
+template<typename T>
+class SharedPtr {
+    T* ptr;
+    int* refCount;
+
+public:
+    explicit SharedPtr(T* p = nullptr) : ptr(p), refCount(new int(p ? 1 : 0)) {}
+
+    SharedPtr(const SharedPtr& other) : ptr(other.ptr), refCount(other.refCount) {
+        // BUG: should increment refCount, currently does nothing
+    }
+
+    SharedPtr& operator=(const SharedPtr& other) {
+        if (this == &other) return *this;
+        decrement();
+        ptr = other.ptr;
+        refCount = other.refCount;
+        (*refCount)++;
+        return *this;
+    }
+
+    SharedPtr(SharedPtr&& other) noexcept : ptr(other.ptr), refCount(other.refCount) {
+        other.ptr = nullptr;
+        other.refCount = nullptr;
+    }
+
+    void decrement() {
+        if (!refCount) return;
+        (*refCount)--;
+        if (*refCount == 0) {
+            delete ptr;
+            delete refCount;
+            ptr = nullptr;
+            refCount = nullptr;
+        }
+    }
+
+    ~SharedPtr() { decrement(); }
+
+    T& operator*()  { if (!ptr) throw runtime_error("Null deref"); return *ptr; }
+    T* operator->() { if (!ptr) throw runtime_error("Null deref"); return ptr; }
+    T* get() const  { return ptr; }
+    int useCount() const { return refCount ? *refCount : 0; }
+    bool valid() const { return ptr != nullptr; }
+};
+
+// ---- Object Cache with Eviction ----
+template<typename K, typename V>
+class LRUCache {
+    struct Entry { V value; int lastUsed; };
+    unordered_map<K, Entry> cache;
+    size_t maxSize;
+    int clock = 0;
+
+public:
+    LRUCache(size_t maxSize) : maxSize(maxSize) {}
+
+    void put(const K& key, const V& value) {
+        if (cache.size() >= maxSize && cache.find(key) == cache.end()) {
+            evict();
+        }
+        cache[key] = {value, clock++};
+    }
+
+    bool get(const K& key, V& out) {
+        auto it = cache.find(key);
+        if (it == cache.end()) return false;
+        // TODO: update lastUsed to current clock value before returning
+        out = it->second.value;
+        return true;
+    }
+
+    void evict() {
+        if (cache.empty()) return;
+        auto oldest = cache.begin();
+        for (auto it = cache.begin(); it != cache.end(); ++it) {
+            // BUG: evicts most-recently-used (highest lastUsed) instead of LRU
+            if (it->second.lastUsed > oldest->second.lastUsed) oldest = it;
+        }
+        cache.erase(oldest);
+    }
+
+    size_t size() const { return cache.size(); }
+    bool contains(const K& key) const { return cache.find(key) != cache.end(); }
+};
+
+// ---- Driver ----
+int main() {
+    // Pool test
+    MemoryPool pool(64, 4);
+    cout << "Free blocks: " << pool.freeBlocks() << "/" << pool.totalBlocks() << endl;
+
+    void* a = pool.acquire();
+    void* b = pool.acquire();
+    cout << "After 2 acquires — used: " << pool.usedBlocks() << endl;
+
+    pool.release(a);
+    cout << "After release — free: " << pool.freeBlocks() << endl;
+
+    // SharedPtr test
+    SharedPtr<int> p1(new int(42));
+    cout << "p1 value: " << *p1 << " refcount: " << p1.useCount() << endl;
+    {
+        SharedPtr<int> p2 = p1;
+        cout << "p2 value: " << *p2 << " refcount: " << p1.useCount() << endl;
+    }
+    cout << "After p2 gone, refcount: " << p1.useCount() << endl;
+
+    // LRU Cache test
+    LRUCache<string, int> lru(3);
+    lru.put("a", 1); lru.put("b", 2); lru.put("c", 3);
+    int v;
+    lru.get("a", v); // access a -> now b is LRU
+    lru.put("d", 4); // should evict b
+    cout << "Has 'b': " << (lru.contains("b") ? "yes" : "no") << endl; // no
+    cout << "Has 'a': " << (lru.contains("a") ? "yes" : "no") << endl; // yes
+    cout << "Cache size: " << lru.size() << endl;
+
     return 0;
 }
 `;
@@ -1675,9 +3321,9 @@ const TASK_BANKS: Record<Language, typeof JS_TASKS> = {
 };
 
 const CODE_TEMPLATES: Record<Language, string[]> = {
-  javascript: [JS_MAIN_CODE, JS_SOCIAL_CODE, JS_EVENTS_CODE],
-  python: [PYTHON_MAIN_CODE, PYTHON_LIBRARY_CODE, PYTHON_WEATHER_CODE],
-  cpp: [CPP_MAIN_CODE, CPP_GRADES_CODE, CPP_FILESYSTEM_CODE],
+  javascript: [JS_MAIN_CODE, JS_SOCIAL_CODE, JS_EVENTS_CODE, JS_ECOMMERCE_CODE, JS_TASKMANAGER_CODE, JS_CHATAPP_CODE, JS_RPGGAME_CODE],
+  python: [PYTHON_MAIN_CODE, PYTHON_LIBRARY_CODE, PYTHON_WEATHER_CODE, PYTHON_SOCIAL_CODE, PYTHON_SCHEDULER_CODE, PYTHON_DATAPROCESSOR_CODE],
+  cpp: [CPP_MAIN_CODE, CPP_GRADES_CODE, CPP_FILESYSTEM_CODE, CPP_NETWORK_CODE, CPP_STRINGPARSER_CODE, CPP_MEMORYPOOL_CODE],
 };
 
 // Pick a random code template; for larger groups concatenate two modules for ~2x lines

@@ -7,7 +7,7 @@ const pressStart = Press_Start_2P({ weight: '400', subsets: ['latin'], variable:
 const spaceMono = Space_Mono({ weight: ['400', '700'], subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'CodeCrew — Multiplayer Coding Game',
+  title: 'Devception — Multiplayer Coding Game',
   description: 'Code together. Deceive each other. Find the imposter.',
 };
 
