@@ -99,7 +99,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="flex items-center justify-center py-3 px-4 border-t-[3px] border-[#1c1917]"
+      <footer className="flex flex-col items-center gap-2 py-3 px-4 border-t-[3px] border-[#1c1917]"
         style={{ background: '#faf8f4' }}>
         <a
           href="https://github.com/sponsors/bhaupupu"
@@ -110,6 +110,9 @@ export default function HomePage() {
         >
           ♥ SPONSOR THIS PROJECT
         </a>
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace', fontSize: '9px' }}>
+          Support keeps this free
+        </p>
       </footer>
     </main>
   );
