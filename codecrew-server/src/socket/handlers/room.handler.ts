@@ -121,9 +121,20 @@ function launchGame(io: Server, roomCode: string): void {
   setTimeout(() => {
     gameService.setGamePhase(roomCode, 'in-progress');
     const currentGame = gameService.getLiveGame(roomCode);
+    const gameObj = currentGame ? currentGame.toObject() : undefined;
+    // Ensure settings reflect in-memory values (bypasses Mongoose subdocument serialization quirks)
+    if (gameObj && currentGame) {
+      gameObj.settings = {
+        imposterCount: currentGame.settings.imposterCount,
+        tasksPerPlayer: currentGame.settings.tasksPerPlayer,
+        impostorCooldownMs: currentGame.settings.impostorCooldownMs,
+        discussionTimeMs: currentGame.settings.discussionTimeMs,
+        votingTimeMs: currentGame.settings.votingTimeMs,
+      };
+    }
     io.to(roomCode).emit('game:phase-change', {
       phase: 'in-progress',
-      game: currentGame ? currentGame.toObject() : undefined,
+      game: gameObj,
     });
     startGameTimer(io, roomCode);
   }, 3000);

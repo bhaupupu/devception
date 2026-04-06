@@ -34,7 +34,10 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
     );
     socket.on('game:phase-change', ({ phase, game }) => {
       gameStore.updatePhase(phase as Parameters<typeof gameStore.updatePhase>[0]);
-      if (game) gameStore.setGame(game);
+      if (game) {
+        gameStore.setGame(game);
+        if (game.sharedCode) editorStore.setCode(game.sharedCode, game.editorVersion);
+      }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));
     socket.on('game:end', ({ winner }) => gameStore.setWinner(winner));
