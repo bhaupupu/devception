@@ -97,6 +97,28 @@ export default function HomePage() {
         {/* Version tag */}
         <p className="pixel-font" style={{ fontSize: 8, color: 'var(--text-muted)' }}>v0.1.0 — MVP</p>
       </div>
+
+      {/* Footer */}
+      <footer className="flex flex-col items-center gap-3 py-6 px-4 border-t-[3px] border-[#1c1917]"
+        style={{ background: '#faf8f4' }}>
+        <a
+          href="https://github.com/sponsors/bhaupupu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pixel-btn pixel-btn-light flex items-center gap-2 px-5 py-2"
+          style={{ fontSize: '10px', borderColor: '#e879a0', color: '#e879a0', boxShadow: '3px 3px 0 #e879a0' }}
+        >
+          ♥ SPONSOR THIS PROJECT
+        </a>
+        <p className="text-xs text-center" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace', fontSize: '10px' }}>
+          Built with ❤ by{' '}
+          <a href="https://github.com/bhaupupu" target="_blank" rel="noopener noreferrer"
+            style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
+            bhaupupu
+          </a>
+          {' '}· Support keeps this free
+        </p>
+      </footer>
     </main>
   );
 }
