@@ -52,82 +52,82 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`w-full flex gap-6 items-start ${isAdmin ? 'max-w-4xl' : 'max-w-lg'}`}
+      className="w-full flex flex-col md:flex-row gap-4 md:gap-6 items-start md:max-w-4xl"
     >
       {/* Left column: room + players */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full">
 
-      {/* Room code card */}
-      <div className="game-panel p-6 mb-4 text-center">
-        <p className="pixel-font mb-2" style={{ fontSize: 9, color: 'var(--text-muted)' }}>ROOM CODE</p>
-        <div
-          className="pixel-font text-3xl tracking-widest cursor-pointer hover:opacity-70 transition-opacity"
-          style={{ color: 'var(--accent-blue)', letterSpacing: '0.3em' }}
-          onClick={copyCode}
-          title="Click to copy"
-        >
-          {game.roomCode}
-        </div>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
-          Share this code with friends · click to copy
-        </p>
-      </div>
-
-      {/* Players */}
-      <div className="game-panel p-6 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <span className="pixel-font" style={{ fontSize: 9 }}>PLAYERS</span>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
-            {connectedCount}/{maxPlayers}
-          </span>
-        </div>
-
-        <div className="space-y-2 mb-5">
-          {slots.map((player, i) => (
-            <PlayerSlot key={i} player={player} index={i} />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between text-xs mb-4"
-          style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
-          <span>{readyCount}/{connectedCount} ready</span>
-          <span>
-            {connectedCount < 4
-              ? `Need ${4 - connectedCount} more player(s) to start`
-              : connectedCount >= maxPlayers
-              ? 'Lobby full — all players ready up!'
-              : 'Waiting for players or admin to start'}
-          </span>
-        </div>
-
-        {/* Ready up button */}
-        <button
-          onClick={onReady}
-          disabled={isReady}
-          className={`pixel-btn w-full py-4 mb-2 ${isReady ? 'pixel-btn-light' : 'pixel-btn-green'}`}
-          style={{ fontSize: '11px', opacity: isReady ? 0.6 : 1, cursor: isReady ? 'not-allowed' : 'pointer' }}
-        >
-          {isReady ? '✓  READY!' : '▶  READY UP'}
-        </button>
-
-        {/* Admin start */}
-        {isAdmin && (
-          <button
-            onClick={onForceStart}
-            className="pixel-btn pixel-btn-blue w-full py-3"
-            style={{ fontSize: '10px' }}
+        {/* Room code card */}
+        <div className="game-panel p-4 md:p-6 mb-4 text-center">
+          <p className="pixel-font mb-2" style={{ fontSize: 9, color: 'var(--text-muted)' }}>ROOM CODE</p>
+          <div
+            className="pixel-font text-2xl md:text-3xl tracking-widest cursor-pointer hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--accent-blue)', letterSpacing: '0.3em' }}
+            onClick={copyCode}
+            title="Click to copy"
           >
-            ▶  START GAME
-          </button>
-        )}
-      </div>
+            {game.roomCode}
+          </div>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
+            Share this code · tap to copy
+          </p>
+        </div>
 
-      </div>{/* end left column */}
+        {/* Players */}
+        <div className="game-panel p-4 md:p-6 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <span className="pixel-font" style={{ fontSize: 9 }}>PLAYERS</span>
+            <span className="text-sm font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
+              {connectedCount}/{maxPlayers}
+            </span>
+          </div>
+
+          <div className="space-y-2 mb-5">
+            {slots.map((player, i) => (
+              <PlayerSlot key={i} player={player} index={i} />
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between text-xs mb-4"
+            style={{ color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace' }}>
+            <span>{readyCount}/{connectedCount} ready</span>
+            <span className="text-right">
+              {connectedCount < 4
+                ? `Need ${4 - connectedCount} more`
+                : connectedCount >= maxPlayers
+                ? 'Lobby full!'
+                : 'Waiting...'}
+            </span>
+          </div>
+
+          {/* Ready up button */}
+          <button
+            onClick={onReady}
+            disabled={isReady}
+            className={`pixel-btn w-full py-4 mb-2 ${isReady ? 'pixel-btn-light' : 'pixel-btn-green'}`}
+            style={{ fontSize: '11px', opacity: isReady ? 0.6 : 1, cursor: isReady ? 'not-allowed' : 'pointer' }}
+          >
+            {isReady ? '✓  READY!' : '▶  READY UP'}
+          </button>
+
+          {/* Admin start */}
+          {isAdmin && (
+            <button
+              onClick={onForceStart}
+              className="pixel-btn pixel-btn-blue w-full py-3"
+              style={{ fontSize: '10px' }}
+            >
+              ▶  START GAME
+            </button>
+          )}
+        </div>
+
+      </div>
 
       {/* Right column: Game Settings — admin only */}
       {isAdmin && (
-        <div className="w-72 flex-shrink-0">
-          <div className="game-panel p-5">
+        <div className="w-full md:w-72 md:flex-shrink-0">
+          <div className="game-panel p-4 md:p-5">
             <p className="pixel-font mb-4" style={{ fontSize: 9 }}>GAME SETTINGS</p>
 
             <div className="space-y-5">
@@ -144,7 +144,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                       className="pixel-btn flex-1"
                       style={{
                         fontSize: '10px',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         background: settings.imposterCount === n ? '#C51111' : 'transparent',
                         color: settings.imposterCount === n ? '#fff' : 'var(--text-muted)',
                         borderColor: settings.imposterCount === n ? '#C51111' : 'var(--border)',
@@ -169,7 +169,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                       className="pixel-btn flex-1"
                       style={{
                         fontSize: '10px',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         background: settings.tasksPerPlayer === n ? '#132ED1' : 'transparent',
                         color: settings.tasksPerPlayer === n ? '#fff' : 'var(--text-muted)',
                         borderColor: settings.tasksPerPlayer === n ? '#132ED1' : 'var(--border)',
@@ -194,7 +194,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                       className="pixel-btn flex-1"
                       style={{
                         fontSize: '10px',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         background: settings.impostorCooldownMs === value ? '#EF7D0E' : 'transparent',
                         color: settings.impostorCooldownMs === value ? '#fff' : 'var(--text-muted)',
                         borderColor: settings.impostorCooldownMs === value ? '#EF7D0E' : 'var(--border)',
@@ -219,7 +219,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                       className="pixel-btn flex-1"
                       style={{
                         fontSize: '10px',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         background: (settings.discussionTimeMs ?? 60000) === value ? '#117F2D' : 'transparent',
                         color: (settings.discussionTimeMs ?? 60000) === value ? '#fff' : 'var(--text-muted)',
                         borderColor: (settings.discussionTimeMs ?? 60000) === value ? '#117F2D' : 'var(--border)',
@@ -244,7 +244,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
                       className="pixel-btn flex-1"
                       style={{
                         fontSize: '10px',
-                        padding: '6px 0',
+                        padding: '8px 0',
                         background: (settings.votingTimeMs ?? 30000) === value ? '#ED54BA' : 'transparent',
                         color: (settings.votingTimeMs ?? 30000) === value ? '#fff' : 'var(--text-muted)',
                         borderColor: (settings.votingTimeMs ?? 30000) === value ? '#ED54BA' : 'var(--border)',

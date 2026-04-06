@@ -57,7 +57,7 @@ export default function WaitingRoomPage({ params }: Props) {
   }
 
   return (
-    <main className="pixel-bg min-h-screen flex items-center justify-center p-6">
+    <main className="pixel-bg min-h-screen flex items-start justify-center p-4 md:p-6 md:items-center overflow-y-auto">
       <WaitingRoom
         game={game}
         myUserId={userId}
