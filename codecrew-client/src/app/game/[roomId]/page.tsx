@@ -37,6 +37,7 @@ export default function GamePage({ params }: Props) {
   const { game, myRole, isLocked, reset } = useGameStore();
   const { meeting } = useMeetingStore();
   const [showRoleReveal, setShowRoleReveal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [currentLine, setCurrentLine] = useState(0);
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
 
@@ -50,9 +51,11 @@ export default function GamePage({ params }: Props) {
 
   useEffect(() => {
     if (game?.phase === 'role-reveal') setShowRoleReveal(true);
+    if (game?.phase === 'results') setShowResults(true);
   }, [game?.phase]);
 
   const handlePlayAgain = useCallback(() => {
+    setShowResults(false);
     reset();
     router.push(`/lobby/${roomId}`);
   }, [reset, router, roomId]);
@@ -86,7 +89,7 @@ export default function GamePage({ params }: Props) {
       {showRoleReveal && <RoleReveal onDone={handleRoleRevealDone} />}
       <ScreenBlurOverlay socket={socket} myRole={myRole} />
       <MeetingModal socket={socket} roomCode={roomId} myUserId={userId} />
-      {game.phase === 'results' && (
+      {showResults && (
         <GameOverScreen
           game={game}
           myUserId={userId}

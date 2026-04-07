@@ -315,7 +315,11 @@ export function resetGame(roomCode: string): IGame | null {
   const game = liveGames.get(roomCode);
   if (!game) return null;
 
+  // If already waiting, don't wipe players who have already rejoined
+  if (game.phase === 'waiting') return game;
+
   game.phase = 'waiting';
+  game.players = [];
   (game as any).winner = null;
   game.tasks = [];
   game.meetings = [];
@@ -325,14 +329,6 @@ export function resetGame(roomCode: string): IGame | null {
   (game as any).endedAt = null;
   game.timer = { gameStartedAt: null, gameDurationMs: env.GAME_DURATION_MS, remainingMs: env.GAME_DURATION_MS };
   game.imposterActions = { lastBugInjectedAt: null, lastBlurAt: null, lastHintAt: null };
-
-  game.players.forEach((p) => {
-    p.role = 'good-coder';
-    p.isAlive = true;
-    p.tasksCompleted = [];
-    p.readyToStart = false;
-    p.cursorPosition = null;
-  });
 
   return game;
 }

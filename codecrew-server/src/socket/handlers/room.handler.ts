@@ -92,7 +92,8 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
   socket.on('room:reset', ({ roomCode }: { roomCode: string }) => {
     const game = gameService.resetGame(roomCode);
     if (!game) return;
-    io.to(roomCode).emit('room:state', game.toObject());
+    // Unicast only — don't broadcast to players still on the results screen
+    socket.emit('room:state', game.toObject());
     logger.info(`${socket.displayName} reset room ${roomCode}`);
   });
 
