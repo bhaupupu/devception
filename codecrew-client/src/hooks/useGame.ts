@@ -40,7 +40,11 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));
-    socket.on('game:end', ({ winner }) => gameStore.setWinner(winner));
+    socket.on('game:end', ({ winner }) => {
+      gameStore.setWinner(winner);
+      gameStore.updatePhase('results');
+      meetingStore.endMeeting();
+    });
 
     // Editor events
     socket.on('editor:update', ({ fullContent, version }) => {
