@@ -149,7 +149,7 @@ export function PlayerList({ players, myUserId }: Props) {
 
             {/* Helper tip */}
             <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-              Fix all marked bugs &amp; complete all TODOs to win via main code.
+              Fix all marked bugs and complete all TODOs to win via main code.
             </p>
           </div>
         )}
