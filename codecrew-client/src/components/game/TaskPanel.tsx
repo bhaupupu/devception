@@ -146,7 +146,7 @@ function TaskModal({
                 style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
               >
                 <div className="text-center p-6">
-                  <p className="text-lg mb-2" style={{ color: 'var(--accent-red)' }}>🕵️ You're the Imposter</p>
+                  <p className="text-lg mb-2" style={{ color: 'var(--accent-red)' }}>🕵️ You&apos;re the Imposter</p>
                   <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                     Pretend to work, then mark complete to blend in.
                   </p>
