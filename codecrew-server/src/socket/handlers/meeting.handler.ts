@@ -149,5 +149,5 @@ async function resolveVoting(io: Server, roomCode: string, meetingId: string): P
       io.to(roomCode).emit('game:phase-change', { phase: 'in-progress' });
       io.to(roomCode).emit('meeting:end', { meetingId });
     }
-  }, 5000);
+  }, 3000);
 }
