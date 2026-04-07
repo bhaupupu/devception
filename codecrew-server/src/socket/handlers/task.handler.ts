@@ -50,7 +50,7 @@ export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): v
           io.to(roomCode).emit('task:progress-update', { sharedProgress: result.sharedProgress });
 
           if (result.allDone) {
-            await endGame(roomCode, 'good-coders');
+            try { await endGame(roomCode, 'good-coders'); } catch (err) { console.error('endGame error:', err); }
             io.to(roomCode).emit('game:end', { winner: 'good-coders' });
           }
         }

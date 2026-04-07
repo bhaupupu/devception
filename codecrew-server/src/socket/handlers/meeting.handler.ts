@@ -142,7 +142,7 @@ async function resolveVoting(io: Server, roomCode: string, meetingId: string): P
 
   setTimeout(async () => {
     if (gameOver && winner) {
-      await gameService.endGame(roomCode, winner);
+      try { await gameService.endGame(roomCode, winner); } catch (err) { console.error('endGame error:', err); }
       io.to(roomCode).emit('game:end', { winner });
     } else {
       gameService.setGamePhase(roomCode, 'in-progress');

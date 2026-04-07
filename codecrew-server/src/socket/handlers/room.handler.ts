@@ -160,7 +160,7 @@ function startGameTimer(io: Server, roomCode: string): void {
 
     if (remaining <= 0) {
       clearInterval(interval);
-      await gameService.endGame(roomCode, 'imposters');
+      try { await gameService.endGame(roomCode, 'imposters'); } catch (err) { console.error('endGame error:', err); }
       io.to(roomCode).emit('game:end', { winner: 'imposters' });
     }
   }, 1000);
