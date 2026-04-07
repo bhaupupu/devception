@@ -3385,15 +3385,14 @@ export function generateTasksForGame(
     }
   }
 
-  // Build result — cap each difficulty to pool size so no task content is duplicated
+  // Build result cycling through each difficulty pool
   const result: ITaskDoc[] = [];
   for (const d of allowed) {
     const pool = byDiff[d];
     if (!pool || pool.length === 0) continue;
-    const count = Math.min(targets[d] ?? 0, pool.length);
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < (targets[d] ?? 0); i++) {
       result.push({
-        ...pool[i],
+        ...pool[i % pool.length],
         _id: randomUUID(),
         assignedTo: null,
         completedBy: null,

@@ -49,7 +49,6 @@ export interface ClientToServerEvents {
   'editor:cursor-move': (data: { roomCode: string; line: number; column: number }) => void;
 
   'task:submit': (data: { roomCode: string; taskId: string; submittedCode: string }) => void;
-  'task:fake-complete': (data: { roomCode: string; taskId: string }) => void;
 
   'imposter:inject-bug': (data: { roomCode: string; targetLine: number; bugCode: string }) => void;
   'imposter:blur-screen': (data: { roomCode: string; targetUserId: string }) => void;

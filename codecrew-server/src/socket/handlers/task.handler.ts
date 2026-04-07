@@ -10,37 +10,6 @@ function validateSolution(submittedCode: string, solutionCode: string): boolean 
 }
 
 export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): void {
-  // Imposter fake-complete: marks task as done without validation, no progress increment
-  socket.on(
-    'task:fake-complete',
-    ({ roomCode, taskId }: { roomCode: string; taskId: string }) => {
-      const game = gameService.getLiveGame(roomCode);
-      if (!game) return;
-
-      const player = game.players.find((p) => p.userId === socket.userId);
-      if (!player || player.role !== 'imposter') return;
-
-      const task = game.tasks.find((t) => t._id === taskId && t.assignedTo === socket.userId);
-      if (!task || task.isCompleted) return;
-
-      task.isCompleted = true;
-      task.completedBy = socket.userId;
-      if (!player.tasksCompleted.includes(taskId)) {
-        player.tasksCompleted.push(taskId);
-      }
-
-      // Notify the imposter that their task is done
-      socket.emit('task:result', { taskId, passed: true, feedback: 'Task marked complete.' });
-      // Broadcast to room so others see progress (progress value unchanged — imposter doesn't help)
-      io.to(roomCode).emit('task:completed', {
-        taskId,
-        completedBy: socket.userId,
-        completedByName: socket.displayName,
-        sharedProgress: game.sharedProgress,
-      });
-    }
-  );
-
   socket.on(
     'task:submit',
     async ({

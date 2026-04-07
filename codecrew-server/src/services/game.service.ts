@@ -122,12 +122,10 @@ export function startGame(roomCode: string): IGame | null {
   const tasksPerPlayer = game.settings?.tasksPerPlayer ?? 5;
   const totalTasksNeeded = game.players.length * tasksPerPlayer;
   const tasks = generateTasksForGame(game.language, game.skillLevel, totalTasksNeeded);
-
-  // Ensure unique tasks per player — if pool was smaller than requested, distribute evenly
-  const actualPerPlayer = Math.max(1, Math.floor(tasks.length / game.players.length));
+  // Assign tasksPerPlayer tasks to each player
   game.players.forEach((player, playerIdx) => {
-    for (let t = 0; t < actualPerPlayer; t++) {
-      const taskIdx = playerIdx * actualPerPlayer + t;
+    for (let t = 0; t < tasksPerPlayer; t++) {
+      const taskIdx = playerIdx * tasksPerPlayer + t;
       if (tasks[taskIdx]) tasks[taskIdx].assignedTo = player.userId;
     }
   });

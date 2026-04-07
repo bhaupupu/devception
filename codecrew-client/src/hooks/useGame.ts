@@ -40,11 +40,7 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));
-    socket.on('game:end', ({ winner }) => {
-      // Set winner AND force phase to results (belt-and-suspenders)
-      gameStore.setWinner(winner);
-      gameStore.updatePhase('results');
-    });
+    socket.on('game:end', ({ winner }) => gameStore.setWinner(winner));
 
     // Editor events
     socket.on('editor:update', ({ fullContent, version }) => {

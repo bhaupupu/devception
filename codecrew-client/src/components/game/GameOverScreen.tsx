@@ -57,7 +57,7 @@ export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlay
   // If winner hasn't arrived yet, show a brief waiting state
   if (!game.winner) {
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.92)' }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.92)' }}>
         <span className="pixel-font" style={{ fontSize: 10, color: 'var(--text-muted)' }}>GAME OVER...</span>
       </div>
     );
@@ -79,7 +79,7 @@ export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlay
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[70] flex flex-col items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 overflow-y-auto"
       style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(6px)' }}
     >
       {/* Winner banner */}
