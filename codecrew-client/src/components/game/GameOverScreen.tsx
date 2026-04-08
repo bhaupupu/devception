@@ -54,7 +54,7 @@ function calcXp(player: PlayerState, winner: GameState['winner']): number {
   return 50 + player.tasksCompleted.length * 15 + (isWinner ? 100 : 0);
 }
 
-const IDLE_TIMEOUT_MS = 60000;
+const IDLE_TIMEOUT_MS = 120000;
 
 export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlayAgain }: Props) {
   const router = useRouter();
@@ -182,8 +182,8 @@ export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlay
                 transition={{ delay: 0.7 + i * 0.08 }}
                 className="flex items-center gap-3 p-3 rounded-lg"
                 style={{
-                  background: p.userId === myUserId ? 'rgba(59,130,246,0.15)' : 'var(--bg-card, #0d0d1a)',
-                  border: `1px solid ${p.userId === myUserId ? '#3b82f6' : 'var(--border)'}`,
+                  background: p.userId === myUserId ? '#dbeafe' : 'white',
+                  border: `1px solid ${p.userId === myUserId ? '#3b82f6' : '#e2e8f0'}`,
                 }}
               >
                 <div
