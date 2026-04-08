@@ -147,9 +147,9 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
               </div>
 
               {/* Monaco editor */}
-              <div className="flex-1 min-h-0" style={{ height: '350px' }}>
+              <div style={{ height: '350px', flexShrink: 0 }}>
                 <MonacoEditor
-                  height="100%"
+                  height="350px"
                   language={language}
                   value={code}
                   onChange={(val) => setCode(val ?? '')}

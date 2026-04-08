@@ -17,13 +17,16 @@ export function useImposter(socket: AppSocket | null, roomCode: string) {
 
     socket.on('imposter:cooldown-update', ({ action, remainingMs, startCooldown, cooldownMs }) => {
       if (startCooldown && cooldownMs) {
-        setCooldowns((prev) => ({ ...prev, [action]: cooldownMs }));
-        // Count down locally
+        // All abilities share the same cooldown
+        setCooldowns({ bug: cooldownMs, blur: cooldownMs, hint: cooldownMs, lock: cooldownMs });
         const interval = setInterval(() => {
           setCooldowns((prev) => {
             const next = Math.max(0, prev[action as keyof CooldownState] - 1000);
-            if (next <= 0) clearInterval(interval);
-            return { ...prev, [action]: next };
+            if (next <= 0) {
+              clearInterval(interval);
+              return { bug: 0, blur: 0, hint: 0, lock: 0 };
+            }
+            return { bug: next, blur: next, hint: next, lock: next };
           });
         }, 1000);
       } else {
