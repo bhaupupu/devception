@@ -51,6 +51,7 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       editorStore.setCode(fullContent, version);
     });
     socket.on('editor:cursor-update', (cursor) => editorStore.updateCursor(cursor));
+    socket.on('editor:test-results', ({ testCases }) => gameStore.updateTestCases(testCases));
 
     // Task events
     socket.on('task:completed', ({ taskId, completedBy, sharedProgress }) => {
@@ -105,6 +106,7 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       socket.off('game:end');
       socket.off('editor:update');
       socket.off('editor:cursor-update');
+      socket.off('editor:test-results');
       socket.off('task:completed');
       socket.off('task:progress-update');
       socket.off('imposter:keyboard-locked');

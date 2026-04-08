@@ -108,7 +108,7 @@ export default function GamePage({ params }: Props) {
       <div className="hidden md:flex flex-1 gap-2 px-2 pb-2 min-h-0">
         {/* Left: Player list */}
         <div className="w-44 flex-shrink-0">
-          <PlayerList players={game.players} myUserId={userId} />
+          <PlayerList players={game.players} myUserId={userId} testCases={game.mainTestCases ?? []} />
         </div>
 
         {/* Center: Code editor */}
@@ -143,7 +143,7 @@ export default function GamePage({ params }: Props) {
             />
           )}
           <div className="flex-1 min-h-0">
-            <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} />
+            <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} language={game.language} />
           </div>
           <div className="h-48 flex-shrink-0">
             <ChatPanel socket={socket} roomCode={roomId} />
@@ -188,7 +188,7 @@ export default function GamePage({ params }: Props) {
                 />
               )}
               <div className="flex-1 min-h-0">
-                <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} />
+                <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} language={game.language} />
               </div>
             </div>
           )}
@@ -201,7 +201,7 @@ export default function GamePage({ params }: Props) {
 
           {mobileTab === 'players' && (
             <div className="h-full pt-1">
-              <PlayerList players={game.players} myUserId={userId} />
+              <PlayerList players={game.players} myUserId={userId} testCases={game.mainTestCases ?? []} />
             </div>
           )}
         </div>

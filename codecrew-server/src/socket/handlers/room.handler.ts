@@ -23,7 +23,7 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
 
     // Broadcast full authoritative state to everyone in the room (including new player).
     // This ensures all clients have consistent player list, isConnected flags, etc.
-    io.to(roomCode).emit('room:state', game.toObject());
+    io.to(roomCode).emit('room:state', gameService.sanitizeGame(game));
 
     logger.info(`${socket.displayName} joined room ${roomCode}`);
   });
@@ -122,8 +122,7 @@ function launchGame(io: Server, roomCode: string): void {
   setTimeout(() => {
     gameService.setGamePhase(roomCode, 'in-progress');
     const currentGame = gameService.getLiveGame(roomCode);
-    const gameObj = currentGame ? currentGame.toObject() : undefined;
-    // Ensure settings reflect in-memory values (bypasses Mongoose subdocument serialization quirks)
+    const gameObj = currentGame ? gameService.sanitizeGame(currentGame) as any : undefined;
     if (gameObj && currentGame) {
       gameObj.settings = {
         imposterCount: currentGame.settings.imposterCount,

@@ -50,6 +50,12 @@ export interface Meeting {
   wasImposter: boolean | null;
 }
 
+export interface MainTestCaseState {
+  id: string;
+  description: string;
+  passed: boolean;
+}
+
 export interface GameState {
   roomCode: string;
   phase: GamePhase;
@@ -58,6 +64,7 @@ export interface GameState {
   maxPlayers: number;
   players: PlayerState[];
   tasks: Task[];
+  mainTestCases: MainTestCaseState[];
   sharedCode: string;
   sharedProgress: number;
   editorVersion: number;

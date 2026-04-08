@@ -1,11 +1,14 @@
-import { Game, IGame, IPlayerState, GamePhase } from '../models/Game.model';
+import { Game, IGame, IMainTestCaseState, IPlayerState, GamePhase } from '../models/Game.model';
 import { GameHistory } from '../models/GameHistory.model';
 import { User } from '../models/User.model';
 import { generateRoomCode } from '../utils/roomCodeGenerator';
 import { assignRoles } from '../utils/roleAssigner';
-import { generateTasksForGame, getMainCodeTemplate } from '../utils/taskGenerator';
+import { generateTasksForGame, getMainCodeTemplate, MainTestCase } from '../utils/taskGenerator';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+
+// In-memory test case patterns per room (not persisted — derived at startGame)
+const liveTestPatterns = new Map<string, MainTestCase[]>();
 
 // Player colors (Among Us-inspired)
 const PLAYER_COLORS = [
@@ -131,7 +134,10 @@ export function startGame(roomCode: string): IGame | null {
   });
 
   game.tasks = tasks;
-  game.sharedCode = getMainCodeTemplate(game.language, game.players.length);
+  const { code, testCases } = getMainCodeTemplate(game.language, game.players.length);
+  game.sharedCode = code;
+  game.mainTestCases = testCases.map(tc => ({ id: tc.id, description: tc.description, passed: false }));
+  liveTestPatterns.set(roomCode, testCases);
   game.phase = 'role-reveal';
   game.timer.gameStartedAt = new Date();
 
@@ -322,6 +328,8 @@ export function resetGame(roomCode: string): IGame | null {
   game.players = [];
   (game as any).winner = null;
   game.tasks = [];
+  game.mainTestCases = [];
+  liveTestPatterns.delete(roomCode);
   game.meetings = [];
   game.sharedCode = '';
   game.sharedProgress = 0;
@@ -331,6 +339,37 @@ export function resetGame(roomCode: string): IGame | null {
   game.imposterActions = { lastBugInjectedAt: null, lastBlurAt: null, lastHintAt: null };
 
   return game;
+}
+
+export function checkMainTestCases(
+  roomCode: string,
+  code: string
+): { changed: boolean; allPassed: boolean; testCases: IMainTestCaseState[] } {
+  const game = liveGames.get(roomCode);
+  if (!game || game.mainTestCases.length === 0) {
+    return { changed: false, allPassed: false, testCases: [] };
+  }
+  const patterns = liveTestPatterns.get(roomCode) ?? [];
+  let changed = false;
+  for (const tc of game.mainTestCases) {
+    const pattern = patterns.find(p => p.id === tc.id)?.pattern;
+    const nowPassed = pattern ? pattern.test(code) : false;
+    if (nowPassed !== tc.passed) {
+      tc.passed = nowPassed;
+      changed = true;
+    }
+  }
+  const allPassed = game.mainTestCases.length > 0 && game.mainTestCases.every(tc => tc.passed);
+  return { changed, allPassed, testCases: game.mainTestCases };
+}
+
+// Strip solutionCode from tasks before sending to clients
+export function sanitizeGame(game: IGame): object {
+  const obj = game.toObject();
+  return {
+    ...obj,
+    tasks: (obj.tasks as any[]).map(({ solutionCode: _sc, ...rest }: any) => rest),
+  };
 }
 
 export function getGamePhase(roomCode: string): GamePhase | null {

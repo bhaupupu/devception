@@ -2,6 +2,9 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 
+// Per-room debounce timers for test case checking
+const testCheckTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket): void {
   socket.on(
     'editor:change',
@@ -13,6 +16,23 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
           version: result.currentVersion,
           userId: socket.userId,
         });
+
+        // Debounced main-code test case check (runs 2s after last keystroke)
+        if (testCheckTimers.has(roomCode)) clearTimeout(testCheckTimers.get(roomCode)!);
+        testCheckTimers.set(roomCode, setTimeout(async () => {
+          testCheckTimers.delete(roomCode);
+          const game = gameService.getLiveGame(roomCode);
+          if (!game || game.phase !== 'in-progress') return;
+
+          const checkResult = gameService.checkMainTestCases(roomCode, fullContent);
+          if (checkResult.changed) {
+            io.to(roomCode).emit('editor:test-results', { testCases: checkResult.testCases });
+          }
+          if (checkResult.allPassed) {
+            try { await gameService.endGame(roomCode, 'good-coders'); } catch (e) { /* db error, still emit */ }
+            io.to(roomCode).emit('game:end', { winner: 'good-coders' });
+          }
+        }, 2000));
       } else {
         // Send the authoritative version back to the sender
         const game = gameService.getLiveGame(roomCode);

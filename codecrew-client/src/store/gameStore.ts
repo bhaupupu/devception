@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameState, PlayerState } from "@/types/game";
+import { GameState, MainTestCaseState, PlayerState } from "@/types/game";
 
 interface GameStore {
   game: GameState | null;
@@ -19,6 +19,7 @@ interface GameStore {
   setWinner: (winner: 'good-coders' | 'imposters') => void;
   setLocked: (locked: boolean) => void;
   setSettings: (settings: Partial<GameState['settings']>) => void;
+  updateTestCases: (testCases: MainTestCaseState[]) => void;
   reset: () => void;
 }
 
@@ -113,6 +114,9 @@ export const useGameStore = create<GameStore>((set) => ({
 
   setSettings: (settings) =>
     set((s) => s.game ? { game: { ...s.game, settings: { ...s.game.settings, ...settings } } } : {}),
+
+  updateTestCases: (testCases) =>
+    set((s) => s.game ? { game: { ...s.game, mainTestCases: testCases } } : {}),
 
   reset: () => set({ game: null, myRole: null, myColor: null, isLocked: false }),
 }));

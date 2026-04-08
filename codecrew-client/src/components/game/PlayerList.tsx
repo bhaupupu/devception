@@ -1,15 +1,18 @@
-import { PlayerState } from '@/types/game';
+import { MainTestCaseState, PlayerState } from '@/types/game';
 import { Avatar } from '@/components/ui/Avatar';
 
 interface Props {
   players: PlayerState[];
   myUserId: string;
+  testCases?: MainTestCaseState[];
 }
 
-export function PlayerList({ players, myUserId }: Props) {
+export function PlayerList({ players, myUserId, testCases = [] }: Props) {
+  const passedCount = testCases.filter(tc => tc.passed).length;
+
   return (
     <div className="game-panel h-full flex flex-col overflow-hidden">
-      <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+      <div className="p-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
         <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
           Players ({players.filter((p) => p.isConnected).length})
         </h3>
@@ -37,11 +40,55 @@ export function PlayerList({ players, myUserId }: Props) {
               )}
             </div>
             <div
-              className="w-2 h-2 rounded-full"
+              className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ background: player.isConnected && player.isAlive ? '#22c55e' : '#475569' }}
             />
           </div>
         ))}
+
+        {testCases.length > 0 && (
+          <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between px-2 mb-2">
+              <p
+                className="font-bold uppercase tracking-wider"
+                style={{ color: 'var(--text-muted)', fontSize: '9px' }}
+              >
+                Main Code Tests
+              </p>
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: '9px',
+                  color: passedCount === testCases.length ? 'var(--accent-green)' : 'var(--text-muted)',
+                }}
+              >
+                {passedCount}/{testCases.length}
+              </span>
+            </div>
+            {testCases.map((tc) => (
+              <div key={tc.id} className="flex items-start gap-1.5 px-2 py-1">
+                <span
+                  className="flex-shrink-0 font-bold mt-0.5"
+                  style={{
+                    fontSize: '10px',
+                    color: tc.passed ? 'var(--accent-green)' : 'var(--text-muted)',
+                  }}
+                >
+                  {tc.passed ? '✓' : '○'}
+                </span>
+                <span
+                  className="leading-tight"
+                  style={{
+                    fontSize: '9px',
+                    color: tc.passed ? 'var(--text-primary)' : 'var(--text-muted)',
+                  }}
+                >
+                  {tc.description}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

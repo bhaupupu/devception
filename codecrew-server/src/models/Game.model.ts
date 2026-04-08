@@ -50,6 +50,12 @@ export interface IMeetingDoc {
   wasImposter: boolean | null;
 }
 
+export interface IMainTestCaseState {
+  id: string;
+  description: string;
+  passed: boolean;
+}
+
 export interface IGame extends Document {
   roomCode: string;
   phase: GamePhase;
@@ -58,6 +64,7 @@ export interface IGame extends Document {
   maxPlayers: number;
   players: IPlayerState[];
   tasks: ITaskDoc[];
+  mainTestCases: IMainTestCaseState[];
   sharedCode: string;
   sharedProgress: number;
   editorVersion: number;
@@ -118,6 +125,7 @@ const GameSchema = new Schema<IGame>(
     maxPlayers: { type: Number, default: 8, min: 4, max: 10 },
     players: { type: [PlayerStateSchema], default: [] },
     tasks: { type: Schema.Types.Mixed, default: [] },
+    mainTestCases: { type: Schema.Types.Mixed, default: [] },
     sharedCode: { type: String, default: '' },
     sharedProgress: { type: Number, default: 0 },
     editorVersion: { type: Number, default: 0 },

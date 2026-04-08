@@ -1,6 +1,12 @@
 import { ITaskDoc } from '../models/Game.model';
 import { randomUUID } from 'crypto';
 
+export interface MainTestCase {
+  id: string;
+  description: string;
+  pattern: RegExp;
+}
+
 // ---- JavaScript task bank ----
 const JS_TASKS: Omit<ITaskDoc, '_id' | 'assignedTo' | 'completedBy' | 'isCompleted'>[] = [
   {
@@ -3326,8 +3332,127 @@ const CODE_TEMPLATES: Record<Language, string[]> = {
   cpp: [CPP_MAIN_CODE, CPP_GRADES_CODE, CPP_FILESYSTEM_CODE, CPP_NETWORK_CODE, CPP_STRINGPARSER_CODE, CPP_MEMORYPOOL_CODE],
 };
 
+// Per-template test cases: regex patterns that match FIXED code (not buggy code)
+const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
+  [JS_MAIN_CODE, [
+    { id: 'js_inv_1', description: 'addToCart: Stock check before adding item', pattern: /product\.stock\s*[<>]=?\s*quantity/ },
+    { id: 'js_inv_2', description: 'calculateCartTotal: Discount is subtracted, not added', pattern: /subtotal\s*-\s*discountAmount/ },
+    { id: 'js_inv_3', description: 'getTopProducts: Does not mutate original array', pattern: /\[\.\.\..*products\]|products\.slice\s*\(\s*\)/ },
+    { id: 'js_inv_4', description: 'getLowStockAlerts: Threshold is stock < 10', pattern: /p\.stock\s*<\s*10/ },
+    { id: 'js_inv_5', description: 'addReview: avgRating uses correct divisor', pattern: /reviews\.length(?!\s*-\s*1)/ },
+    { id: 'js_inv_6', description: 'restockProduct: Increments product.stock (not sold)', pattern: /product\.stock\s*\+=/ },
+    { id: 'js_inv_7', description: 'checkout: Function implemented', pattern: /function checkout[\s\S]{40,}/ },
+  ]],
+  [JS_SOCIAL_CODE, [
+    { id: 'js_soc_1', description: 'followUser: Prevents duplicate follows', pattern: /includes\s*\(\s*targetId\s*\)|\.has\s*\(\s*targetId\s*\)/ },
+    { id: 'js_soc_2', description: 'getFeed: Filters posts by followed users', pattern: /following\.includes|user\.following/ },
+    { id: 'js_soc_3', description: 'likePost: Prevents duplicate likes', pattern: /likedBy|likes.*includes|\.has\s*\(\s*userId\s*\)/ },
+    { id: 'js_soc_4', description: 'getTopPosts: Score includes comment weight', pattern: /comments\.length/ },
+    { id: 'js_soc_5', description: 'isFollowing: Checks correct user\'s following list', pattern: /users\.get\s*\(\s*userId\s*\)|\.get\s*\(\s*userId\s*\)/ },
+    { id: 'js_soc_6', description: 'getStats: avgLikesPerPost uses correct divisor', pattern: /posts\.length(?!\s*-\s*1)/ },
+  ]],
+  [JS_EVENTS_CODE, [
+    { id: 'js_evt_1', description: 'registerForEvent: Capacity check before enrolling', pattern: /capacity|maxCapacity|maxAttendees/ },
+    { id: 'js_evt_2', description: 'getUpcomingEvents: Excludes cancelled events', pattern: /!.*isCancelled|isCancelled.*!/ },
+    { id: 'js_evt_3', description: 'getEventDuration: Duration clamped to 0 minimum', pattern: /Math\.max\s*\(\s*0/ },
+    { id: 'js_evt_4', description: 'getMostPopularEvents: Sorts by fill percentage', pattern: /attendees\.length\s*\/.*capacity|\/\s*capacity/ },
+  ]],
+  [JS_ECOMMERCE_CODE, [
+    { id: 'js_eco_1', description: 'Product: Stock decrements on purchase', pattern: /this\.stock\s*-=|stock\s*-=\s*qty/ },
+    { id: 'js_eco_2', description: 'Cart.removeItem: Actually filters items', pattern: /this\.items\s*=\s*this\.items\.filter/ },
+    { id: 'js_eco_3', description: 'Cart.getTotal: Correctly sums all items', pattern: /\.reduce\s*\(|reduce\s*\(.*sum/ },
+    { id: 'js_eco_4', description: 'Order: Uses order total, not item price', pattern: /o\.total|order\.total/ },
+  ]],
+  [JS_TASKMANAGER_CODE, [
+    { id: 'js_tm_1', description: 'completeSubtask: Sets st.done = true', pattern: /st\.done\s*=\s*true/ },
+    { id: 'js_tm_2', description: 'getByPriority: Sorts ascending (1=highest)', pattern: /a\.priority\s*-\s*b\.priority|a\.priority\s*<\s*b\.priority/ },
+    { id: 'js_tm_3', description: 'filterByTag: Uses includes for array match', pattern: /\.includes\s*\(\s*tag\s*\)/ },
+    { id: 'js_tm_4', description: 'getDueSoon: Sorts by dueDate ascending', pattern: /a\.dueDate\s*-\s*b\.dueDate/ },
+  ]],
+  [JS_CHATAPP_CODE, [
+    { id: 'js_chat_1', description: 'removeReaction: Removes user from set, not whole emoji', pattern: /reactions.*delete\s*\(userId\)|delete.*userId/ },
+    { id: 'js_chat_2', description: 'editMessage: Sets edited = true', pattern: /this\.edited\s*=\s*true/ },
+    { id: 'js_chat_3', description: 'getMessagesBefore: Filters messages with timestamp <', pattern: /m\.timestamp\s*<\s*timestamp|timestamp.*<.*m\.timestamp/ },
+    { id: 'js_chat_4', description: 'getOnlineUsers: Returns online users', pattern: /\.isOnline|status.*online/ },
+  ]],
+  [JS_RPGGAME_CODE, [
+    { id: 'js_rpg_1', description: 'isAlive: Returns true when hp > 0', pattern: /this\.hp\s*>\s*0/ },
+    { id: 'js_rpg_2', description: 'takeDamage: Subtracts damage from hp', pattern: /this\.hp\s*-=/ },
+    { id: 'js_rpg_3', description: 'tickStatusEffects: Filters expired statuses', pattern: /\.filter\s*\(.*duration|duration.*filter/ },
+    { id: 'js_rpg_4', description: 'battle: Faster unit attacks first', pattern: /speed|initiative/ },
+  ]],
+  [PYTHON_MAIN_CODE, [
+    { id: 'py_tm_1', description: 'get_high_priority_tasks: Uses >= for high priority check', pattern: />=\s*order\.index|order\.index\s*\(['"']high['"']\)|>=\s*2/ },
+    { id: 'py_tm_2', description: 'get_overdue_tasks: due_date < now (not >)', pattern: /due_date\s*<\s*now/ },
+    { id: 'py_tm_3', description: 'log_time: Uses += to accumulate time', pattern: /time_spent\s*\+=/ },
+    { id: 'py_tm_4', description: 'get_completion_stats: Divides by total (not total-1)', pattern: /completed\s*\/\s*total(?!\s*-\s*1)/ },
+    { id: 'py_tm_5', description: 'filter_by_tag: Keeps tasks WITH the tag', pattern: /tag\s+in\s+t\.tags/ },
+    { id: 'py_tm_6', description: 'extend_due_date: Uses timedelta(days=...)', pattern: /timedelta\s*\(\s*days\s*=/ },
+  ]],
+  [PYTHON_LIBRARY_CODE, [
+    { id: 'py_lib_1', description: 'borrow_book: Checks available_copies > 0', pattern: /available_copies\s*>\s*0/ },
+    { id: 'py_lib_2', description: 'search_books: Case-insensitive substring match', pattern: /\.lower\s*\(\s*\)|casefold\s*\(\s*\)/ },
+    { id: 'py_lib_3', description: 'get_members_in_good_standing: Fines == 0 filter', pattern: /fines\s*==\s*0/ },
+    { id: 'py_lib_4', description: 'get_avg_rating: Divides by len(ratings)', pattern: /len\s*\(\s*book\.ratings\s*\)(?!\s*-\s*1)/ },
+    { id: 'py_lib_5', description: 'get_available_books: Counts available_copies', pattern: /available_copies(?!.*total_copies)/ },
+  ]],
+  [PYTHON_WEATHER_CODE, [
+    { id: 'py_wx_1', description: 'celsius_to_fahrenheit: Correct formula (×9/5 + 32)', pattern: /9\s*\/\s*5|9\/5/ },
+    { id: 'py_wx_2', description: 'get_max_temp: Uses max() not min()', pattern: /max\s*\(\s*r\.temp_c/ },
+    { id: 'py_wx_3', description: 'analyze_temp_trend: Compares temp_c values', pattern: /temp_c(?!.*humidity)/ },
+    { id: 'py_wx_4', description: 'get_dominant_condition: Returns condition string', pattern: /max\s*\([^)]+key\s*=/ },
+  ]],
+  [PYTHON_SOCIAL_CODE, [
+    { id: 'py_soc_1', description: 'follow: Also adds self to other\'s followers', pattern: /followers\.add\s*\(\s*self\.user_id\s*\)/ },
+    { id: 'py_soc_2', description: 'like_post: Adds to user\'s liked_posts', pattern: /liked_posts/ },
+    { id: 'py_soc_3', description: 'get_timeline: Sorts newest first (descending)', pattern: /reverse\s*=\s*True|key.*created_at.*reverse/ },
+  ]],
+  [PYTHON_SCHEDULER_CODE, [
+    { id: 'py_sch_1', description: 'run_job: Sets status to "done" on success', pattern: /status\s*=\s*['"]done['"]/ },
+    { id: 'py_sch_2', description: 'add_job: Uses heapq.heappush for priority queue', pattern: /heapq\.heappush/ },
+    { id: 'py_sch_3', description: 'get_next_job: Uses heapq.heappop', pattern: /heapq\.heappop/ },
+  ]],
+  [PYTHON_DATAPROCESSOR_CODE, [
+    { id: 'py_dp_1', description: 'FilterStep: Uses < for less-than comparison', pattern: /['"']<['"]|operator.*lt/ },
+    { id: 'py_dp_2', description: 'ContainsFilter: Checks if value contains pattern', pattern: /self\.value\s+in\s+v|value.*in.*self\.value/ },
+    { id: 'py_dp_3', description: 'TransformStep.update_field: Applies transform fn', pattern: /setattr|record\[.*\]\s*=\s*fn\s*\(|fn\s*\(record/ },
+  ]],
+  [CPP_MAIN_CODE, [
+    { id: 'cpp_bank_1', description: 'deposit: Checks account is not frozen', pattern: /frozen.*return\s+false|if\s*\(.*frozen/ },
+    { id: 'cpp_bank_2', description: 'withdraw: Correct overdraft comparison (>=)', pattern: /overdraftLimit\s*>=\s*amount|balance\s*\+\s*overdraftLimit\s*>=/ },
+    { id: 'cpp_bank_3', description: 'getStats: avgBalance divides by count', pattern: /total\s*\/\s*count(?!\s*-\s*1)/ },
+    { id: 'cpp_bank_4', description: 'getStatement: Returns all transaction types', pattern: /(?<!type\s*==\s*")withdrawal(?!")/ },
+    { id: 'cpp_bank_5', description: 'getTopAccounts: Sorts descending by balance', pattern: /a->balance\s*>\s*b->balance|b->balance\s*<\s*a->balance/ },
+    { id: 'cpp_bank_6', description: 'applyInterest: Function implemented', pattern: /void applyInterest[\s\S]{40,}balance\s*\+=/ },
+  ]],
+  [CPP_GRADES_CODE, [
+    { id: 'cpp_grd_1', description: 'enroll: Checks maxCapacity before enrolling', pattern: /enrolledStudents\.size\s*\(\s*\)\s*<\s*maxCapacity|maxCapacity/ },
+    { id: 'cpp_grd_2', description: 'calculateGrade: Divides by totalWeight', pattern: /totalWeight(?!\s*==\s*0)/ },
+    { id: 'cpp_grd_3', description: 'getTopPerformers: Sorts descending', pattern: /a\.second\s*>\s*b\.second/ },
+    { id: 'cpp_grd_4', description: 'addScore: Clamps score to maxScore', pattern: /score\s*<=\s*a\.maxScore|score\s*>\s*a\.maxScore/ },
+    { id: 'cpp_grd_5', description: 'getOverallGPA: Divides by count (not enrolledCourses.size)', pattern: /total\s*\/\s*count(?!\s*-\s*1)/ },
+  ]],
+  [CPP_FILESYSTEM_CODE, [
+    { id: 'cpp_fs_1', description: 'createFile: Updates parent directory size', pattern: /parent->size\s*\+=|size\s*\+=.*size/ },
+    { id: 'cpp_fs_2', description: 'deleteNode: Frees memory before erasing', pattern: /delete\s+it->second|delete.*->second/ },
+    { id: 'cpp_fs_3', description: 'getDirSize: Recursively sums subdirectory sizes', pattern: /getDirSize\s*\(|recursive|getSize\s*\(/ },
+  ]],
+  [CPP_NETWORK_CODE, [
+    { id: 'cpp_net_1', description: 'Connection: Tracks byte counts correctly', pattern: /bytesReceived\s*\+=|bytesSent\s*\+=/ },
+    { id: 'cpp_net_2', description: 'Server: Handles connection errors', pattern: /catch|error.*conn|conn.*error/ },
+  ]],
+  [CPP_STRINGPARSER_CODE, [
+    { id: 'cpp_str_1', description: 'Parser: Handles edge cases', pattern: /empty\s*\(\s*\)|\.size\s*\(\s*\)\s*==\s*0/ },
+    { id: 'cpp_str_2', description: 'tokenize: Splits correctly on delimiter', pattern: /delimiter|delim|split/ },
+  ]],
+  [CPP_MEMORYPOOL_CODE, [
+    { id: 'cpp_mem_1', description: 'MemoryPool: Tracks free blocks correctly', pattern: /freeBlocks\s*\(\s*\)|free.*blocks/ },
+    { id: 'cpp_mem_2', description: 'SharedPtr: Reference count increments on copy', pattern: /refCount\s*\+\+|\+\+.*refCount|useCount/ },
+  ]],
+]);
+
 // Pick a random code template; for larger groups concatenate two modules for ~2x lines
-export function getMainCodeTemplate(language: string, playerCount: number = 4): string {
+export function getMainCodeTemplate(language: string, playerCount: number = 4): { code: string; testCases: MainTestCase[] } {
   const templates = CODE_TEMPLATES[language as Language] ?? CODE_TEMPLATES.javascript;
   const shuffled = [...templates].sort(() => Math.random() - 0.5);
   const primary = shuffled[0];
@@ -3337,13 +3462,18 @@ export function getMainCodeTemplate(language: string, playerCount: number = 4): 
     const sep = language === 'python'
       ? '\n\n# ============================================================\n#  MODULE 2 — Additional Challenges Below!\n# ============================================================\n\n'
       : '\n\n// ============================================================\n//  MODULE 2 — Additional Challenges Below!\n// ============================================================\n\n';
-    return primary + sep + secondary;
+    const combinedTestCases = [
+      ...(TEMPLATE_TEST_CASES.get(primary) ?? []),
+      ...(TEMPLATE_TEST_CASES.get(secondary) ?? []),
+    ];
+    return { code: primary + sep + secondary, testCases: combinedTestCases };
   }
 
-  return primary;
+  return { code: primary, testCases: TEMPLATE_TEST_CASES.get(primary) ?? [] };
 }
 
 // 50% easy · 30% medium · 20% hard (normalized to allowed difficulties per skill level)
+// Tasks are globally deduplicated by title — no two players receive the same task.
 export function generateTasksForGame(
   language: string,
   skillLevel: 'beginner' | 'intermediate' | 'advanced',
@@ -3365,13 +3495,13 @@ export function generateTasksForGame(
   const weights: Record<string, number> = {};
   for (const d of allowed) weights[d] = (baseWeights[d] ?? 0) / totalW;
 
-  // Shuffle each difficulty group independently for variety
+  // Shuffle each difficulty pool independently
   const byDiff: Record<string, typeof JS_TASKS> = {};
   for (const d of allowed) {
     byDiff[d] = [...bank.filter((t) => t.difficulty === d)].sort(() => Math.random() - 0.5);
   }
 
-  // Calculate per-difficulty task counts, giving remainder to largest weight bucket
+  // Calculate per-difficulty task counts
   const sortedByWeight = [...allowed].sort((a, b) => weights[b] - weights[a]);
   const targets: Record<string, number> = {};
   let assigned = 0;
@@ -3385,22 +3515,32 @@ export function generateTasksForGame(
     }
   }
 
-  // Build result cycling through each difficulty pool
-  const result: ITaskDoc[] = [];
+  // Build a globally deduplicated candidate pool (by title)
+  const usedTitles = new Set<string>();
+  const uniquePool: ITaskDoc[] = [];
+
+  // First pass: pick unique tasks from each difficulty pool
   for (const d of allowed) {
     const pool = byDiff[d];
-    if (!pool || pool.length === 0) continue;
-    for (let i = 0; i < (targets[d] ?? 0); i++) {
-      result.push({
-        ...pool[i % pool.length],
-        _id: randomUUID(),
-        assignedTo: null,
-        completedBy: null,
-        isCompleted: false,
-      });
+    if (!pool) continue;
+    for (const task of pool) {
+      if (!usedTitles.has(task.title)) {
+        usedTitles.add(task.title);
+        uniquePool.push({ ...task, _id: randomUUID(), assignedTo: null, completedBy: null, isCompleted: false });
+      }
     }
   }
 
-  // Interleave difficulties randomly
-  return result.sort(() => Math.random() - 0.5);
+  // Shuffle the unique pool, then slice to totalTasksNeeded.
+  // If pool is smaller than needed, cycle through again (different UUIDs, same content) —
+  // this only happens when bank is very small relative to player count.
+  uniquePool.sort(() => Math.random() - 0.5);
+
+  const result: ITaskDoc[] = [];
+  for (let i = 0; i < totalTasksNeeded; i++) {
+    const source = uniquePool[i % uniquePool.length];
+    result.push({ ...source, _id: randomUUID() });
+  }
+
+  return result;
 }
