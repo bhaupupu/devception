@@ -16,6 +16,7 @@ export interface ServerToClientEvents {
 
   'editor:update': (data: { fullContent: string; version: number; userId: string }) => void;
   'editor:cursor-update': (data: { userId: string; line: number; column: number; color: string; displayName: string }) => void;
+  'editor:test-results': (data: { testCases: { id: string; description: string; passed: boolean }[] }) => void;
 
   'task:result': (data: { taskId: string; passed: boolean; feedback: string }) => void;
   'task:completed': (data: { taskId: string; completedBy: string; completedByName: string; sharedProgress: number }) => void;
