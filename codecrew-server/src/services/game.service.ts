@@ -55,7 +55,14 @@ export function getLiveGame(roomCode: string): IGame | undefined {
 export async function getOrLoadGame(roomCode: string): Promise<IGame | null> {
   if (liveGames.has(roomCode)) return liveGames.get(roomCode)!;
   const game = await Game.findOne({ roomCode });
-  if (game) liveGames.set(roomCode, game);
+  if (game) {
+    liveGames.set(roomCode, game);
+    // Repopulate in-memory test patterns if server restarted mid-game
+    if (game.phase === 'in-progress' && game.mainTestCases.length > 0 && !liveTestPatterns.has(roomCode)) {
+      const { testCases } = getMainCodeTemplate(game.language, game.players.length);
+      liveTestPatterns.set(roomCode, testCases);
+    }
+  }
   return game;
 }
 

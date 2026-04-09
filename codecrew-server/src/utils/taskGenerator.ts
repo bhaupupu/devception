@@ -3341,7 +3341,7 @@ const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
     { id: 'js_inv_4', description: 'getLowStockAlerts: Threshold is stock < 10', pattern: /p\.stock\s*<\s*10/ },
     { id: 'js_inv_5', description: 'addReview: avgRating uses correct divisor', pattern: /reviews\.length(?!\s*-\s*1)/ },
     { id: 'js_inv_6', description: 'restockProduct: Increments product.stock (not sold)', pattern: /product\.stock\s*\+=/ },
-    { id: 'js_inv_7', description: 'checkout: Function implemented', pattern: /function checkout[\s\S]{40,}/ },
+    { id: 'js_inv_7', description: 'checkout: Function implemented with orderId', pattern: /function checkout[\s\S]*?orderId\s*[:=]/ },
   ]],
   [JS_SOCIAL_CODE, [
     { id: 'js_soc_1', description: 'followUser: Prevents duplicate follows', pattern: /includes\s*\(\s*targetId\s*\)|\.has\s*\(\s*targetId\s*\)/ },

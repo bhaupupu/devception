@@ -34,8 +34,9 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         }
       }
 
+      const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
-        action: 'bug', remainingMs: 0, startCooldown: true, cooldownMs: 45000,
+        action: 'bug', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
       });
     }
   );
@@ -62,8 +63,9 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         targetSocket?.emit('imposter:screen-blurred', { durationMs: 8000 });
       }
 
+      const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
-        action: 'blur', remainingMs: 0, startCooldown: true, cooldownMs: 60000,
+        action: 'blur', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
       });
     }
   );
@@ -88,8 +90,9 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         sender: 'anonymous',
       });
 
+      const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
-        action: 'hint', remainingMs: 0, startCooldown: true, cooldownMs: 30000,
+        action: 'hint', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
       });
     }
   );
@@ -117,8 +120,9 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         targetSocket?.emit('imposter:keyboard-locked', { durationMs: 15000 });
       }
 
+      const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
-        action: 'lock', remainingMs: 0, startCooldown: true, cooldownMs: 45000,
+        action: 'lock', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
       });
     }
   );
