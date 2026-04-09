@@ -42,17 +42,15 @@ export function checkCooldown(
   return { allowed: remaining <= 0, remainingMs: Math.max(0, remaining) };
 }
 
-export function recordAction(roomCode: string, action: ImposterAction): void {
-  if (action === 'lock') {
-    lockCooldowns.set(roomCode, Date.now());
-    return;
-  }
+export function recordAction(roomCode: string, _action: ImposterAction): void {
+  // Shared cooldown — any ability used locks ALL abilities
+  const now = new Date();
+  lockCooldowns.set(roomCode, Date.now());
 
   const game = getLiveGame(roomCode);
   if (!game) return;
 
-  const now = new Date();
-  if (action === 'bug') game.imposterActions.lastBugInjectedAt = now;
-  else if (action === 'blur') game.imposterActions.lastBlurAt = now;
-  else game.imposterActions.lastHintAt = now;
+  game.imposterActions.lastBugInjectedAt = now;
+  game.imposterActions.lastBlurAt = now;
+  game.imposterActions.lastHintAt = now;
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppSocket } from '@/lib/socket';
 
 interface CooldownState {
@@ -11,31 +11,36 @@ interface CooldownState {
 
 export function useImposter(socket: AppSocket | null, roomCode: string) {
   const [cooldowns, setCooldowns] = useState<CooldownState>({ bug: 0, blur: 0, hint: 0, lock: 0 });
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!socket) return;
 
     socket.on('imposter:cooldown-update', ({ action, remainingMs, startCooldown, cooldownMs }) => {
       if (startCooldown && cooldownMs) {
+        // Clear any existing countdown before starting a new one
+        if (intervalRef.current) clearInterval(intervalRef.current);
         // All abilities share the same cooldown
         setCooldowns({ bug: cooldownMs, blur: cooldownMs, hint: cooldownMs, lock: cooldownMs });
-        const interval = setInterval(() => {
+        intervalRef.current = setInterval(() => {
           setCooldowns((prev) => {
-            const next = Math.max(0, prev[action as keyof CooldownState] - 1000);
+            const next = Math.max(0, prev.bug - 1000);
             if (next <= 0) {
-              clearInterval(interval);
+              clearInterval(intervalRef.current!);
+              intervalRef.current = null;
               return { bug: 0, blur: 0, hint: 0, lock: 0 };
             }
             return { bug: next, blur: next, hint: next, lock: next };
           });
         }, 1000);
       } else {
-        setCooldowns((prev) => ({ ...prev, [action]: remainingMs }));
+        setCooldowns({ bug: remainingMs, blur: remainingMs, hint: remainingMs, lock: remainingMs });
       }
     });
 
     return () => {
       socket.off('imposter:cooldown-update');
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [socket]);
 

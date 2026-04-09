@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { MainTestCaseState, PlayerState } from '@/types/game';
 import { Avatar } from '@/components/ui/Avatar';
 
@@ -9,6 +10,9 @@ interface Props {
 
 export function PlayerList({ players, myUserId, testCases = [] }: Props) {
   const passedCount = testCases.filter(tc => tc.passed).length;
+  const total = testCases.length;
+  const progressPct = total > 0 ? (passedCount / total) * 100 : 0;
+  const allPassed = total > 0 && passedCount === total;
 
   return (
     <div className="game-panel h-full flex flex-col overflow-hidden">
@@ -46,46 +50,59 @@ export function PlayerList({ players, myUserId, testCases = [] }: Props) {
           </div>
         ))}
 
-        {testCases.length > 0 && (
-          <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+        {total > 0 && (
+          <div className="mt-3 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+            {/* Header + counter */}
             <div className="flex items-center justify-between px-2 mb-2">
-              <p
-                className="font-bold uppercase tracking-wider"
-                style={{ color: 'var(--text-muted)', fontSize: '9px' }}
-              >
+              <p className="font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', fontSize: '9px' }}>
                 Main Code Tests
               </p>
               <span
-                className="font-mono"
-                style={{
-                  fontSize: '9px',
-                  color: passedCount === testCases.length ? 'var(--accent-green)' : 'var(--text-muted)',
-                }}
+                className="font-mono font-bold"
+                style={{ fontSize: '10px', color: allPassed ? '#22c55e' : 'var(--text-muted)' }}
               >
-                {passedCount}/{testCases.length}
+                {passedCount}/{total}
               </span>
             </div>
+
+            {/* Progress bar */}
+            <div className="mx-2 mb-2 rounded-full overflow-hidden" style={{ height: 4, background: 'var(--bg-secondary, #1a1a2e)' }}>
+              <motion.div
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                style={{
+                  height: '100%',
+                  background: allPassed ? '#22c55e' : 'linear-gradient(90deg, #3b82f6, #22c55e)',
+                  borderRadius: 9999,
+                }}
+              />
+            </div>
+
+            {/* Test case list */}
             {testCases.map((tc) => (
-              <div key={tc.id} className="flex items-start gap-1.5 px-2 py-1">
+              <motion.div
+                key={tc.id}
+                layout
+                className="flex items-start gap-2 px-2 py-1 rounded"
+                style={{ background: tc.passed ? 'rgba(34,197,94,0.06)' : 'transparent' }}
+              >
                 <span
                   className="flex-shrink-0 font-bold mt-0.5"
-                  style={{
-                    fontSize: '10px',
-                    color: tc.passed ? 'var(--accent-green)' : 'var(--text-muted)',
-                  }}
+                  style={{ fontSize: '11px', color: tc.passed ? '#22c55e' : '#475569', minWidth: 12 }}
                 >
                   {tc.passed ? '✓' : '○'}
                 </span>
                 <span
-                  className="leading-tight"
+                  className="leading-snug"
                   style={{
-                    fontSize: '9px',
+                    fontSize: '10px',
                     color: tc.passed ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontWeight: tc.passed ? 500 : 400,
                   }}
                 >
                   {tc.description}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
