@@ -6,9 +6,10 @@ import { AppSocket } from '@/lib/socket';
 interface Props {
   socket: AppSocket | null;
   roomCode: string;
+  disabled?: boolean;
 }
 
-export function ChatPanel({ socket, roomCode }: Props) {
+export function ChatPanel({ socket, roomCode, disabled = false }: Props) {
   const { messages, sendMessage } = useChat(socket, roomCode);
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -18,6 +19,7 @@ export function ChatPanel({ socket, roomCode }: Props) {
   }, [messages]);
 
   const handleSend = () => {
+    if (disabled) return;
     sendMessage(input);
     setInput('');
   };
@@ -50,19 +52,28 @@ export function ChatPanel({ socket, roomCode }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Message..."
+            placeholder={disabled ? 'Eliminated — spectator' : 'Message...'}
             maxLength={300}
+            disabled={disabled}
             className="flex-1 px-3 py-1.5 rounded text-xs"
             style={{
               background: 'var(--bg-hover)',
               border: '1px solid var(--border)',
               color: 'var(--text-primary)',
+              opacity: disabled ? 0.5 : 1,
+              cursor: disabled ? 'not-allowed' : 'text',
             }}
           />
           <button
             onClick={handleSend}
+            disabled={disabled}
             className="px-3 py-1.5 rounded text-xs font-semibold"
-            style={{ background: 'var(--accent-blue)', color: '#fff' }}
+            style={{
+              background: 'var(--accent-blue)',
+              color: '#fff',
+              opacity: disabled ? 0.5 : 1,
+              cursor: disabled ? 'not-allowed' : 'pointer',
+            }}
           >
             Send
           </button>

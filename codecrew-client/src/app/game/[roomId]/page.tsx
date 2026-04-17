@@ -46,6 +46,8 @@ export default function GamePage({ params }: Props) {
   const { callMeeting } = useVoting(socket, roomId);
 
   const userId = (session?.user as { id?: string })?.id ?? '';
+  const me = game?.players.find((p) => p.userId === userId);
+  const canEdit = !!me?.isAlive;
 
   const handleRoleRevealDone = useCallback(() => setShowRoleReveal(false), []);
 
@@ -126,7 +128,7 @@ export default function GamePage({ params }: Props) {
               onChange={handleChange}
               onCursorMove={onCursorMove}
               language={game.language}
-              readOnly={isLocked}
+              readOnly={isLocked || !canEdit}
             />
           </div>
         </div>
@@ -146,7 +148,7 @@ export default function GamePage({ params }: Props) {
             <TaskPanel tasks={game.tasks} myUserId={userId} socket={socket} roomCode={roomId} language={game.language} />
           </div>
           <div className="h-48 flex-shrink-0">
-            <ChatPanel socket={socket} roomCode={roomId} />
+            <ChatPanel socket={socket} roomCode={roomId} disabled={!canEdit} />
           </div>
         </div>
       </div>
@@ -170,7 +172,7 @@ export default function GamePage({ params }: Props) {
                   onChange={handleChange}
                   onCursorMove={onCursorMove}
                   language={game.language}
-                  readOnly={isLocked}
+                  readOnly={isLocked || !canEdit}
                 />
               </div>
             </div>
@@ -195,7 +197,7 @@ export default function GamePage({ params }: Props) {
 
           {mobileTab === 'chat' && (
             <div className="h-full pt-1">
-              <ChatPanel socket={socket} roomCode={roomId} />
+              <ChatPanel socket={socket} roomCode={roomId} disabled={!canEdit} />
             </div>
           )}
 

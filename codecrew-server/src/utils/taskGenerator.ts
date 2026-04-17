@@ -3341,7 +3341,7 @@ const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
     { id: 'js_inv_4', description: 'getLowStockAlerts: Threshold is stock < 10', pattern: /p\.stock\s*<\s*10/ },
     { id: 'js_inv_5', description: 'addReview: avgRating uses correct divisor', pattern: /reviews\.length(?!\s*-\s*1)/ },
     { id: 'js_inv_6', description: 'restockProduct: Increments product.stock (not sold)', pattern: /product\.stock\s*\+=/ },
-    { id: 'js_inv_7', description: 'checkout: Function implemented with orderId', pattern: /function checkout[\s\S]*?orderId\s*[:=]/ },
+    { id: 'js_inv_7', description: 'checkout: Function implemented with orderId', pattern: /function checkout[\s\S]*?\borderId\b/ },
   ]],
   [JS_SOCIAL_CODE, [
     { id: 'js_soc_1', description: 'followUser: Prevents duplicate follows', pattern: /includes\s*\(\s*targetId\s*\)|\.has\s*\(\s*targetId\s*\)/ },
@@ -3451,14 +3451,63 @@ const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
   ]],
 ]);
 
-// Pick a random code template; for larger groups concatenate two modules for ~2x lines
-export function getMainCodeTemplate(language: string, playerCount: number = 4): { code: string; testCases: MainTestCase[] } {
-  const templates = CODE_TEMPLATES[language as Language] ?? CODE_TEMPLATES.javascript;
-  const shuffled = [...templates].sort(() => Math.random() - 0.5);
-  const primary = shuffled[0];
+// Stable keys → template code. Used to persist the chosen template across server restarts
+// so that test patterns reloaded from DB match the same IDs as the saved mainTestCases.
+export const TEMPLATE_KEYS: Record<string, string> = {
+  js_main: JS_MAIN_CODE,
+  js_social: JS_SOCIAL_CODE,
+  js_events: JS_EVENTS_CODE,
+  js_ecommerce: JS_ECOMMERCE_CODE,
+  js_taskmanager: JS_TASKMANAGER_CODE,
+  js_chatapp: JS_CHATAPP_CODE,
+  js_rpggame: JS_RPGGAME_CODE,
+  py_main: PYTHON_MAIN_CODE,
+  py_library: PYTHON_LIBRARY_CODE,
+  py_weather: PYTHON_WEATHER_CODE,
+  py_social: PYTHON_SOCIAL_CODE,
+  py_scheduler: PYTHON_SCHEDULER_CODE,
+  py_dataprocessor: PYTHON_DATAPROCESSOR_CODE,
+  cpp_main: CPP_MAIN_CODE,
+  cpp_grades: CPP_GRADES_CODE,
+  cpp_filesystem: CPP_FILESYSTEM_CODE,
+  cpp_network: CPP_NETWORK_CODE,
+  cpp_stringparser: CPP_STRINGPARSER_CODE,
+  cpp_memorypool: CPP_MEMORYPOOL_CODE,
+};
 
-  if (playerCount >= 6 && shuffled.length >= 2) {
-    const secondary = shuffled[1];
+const CODE_TO_KEY = new Map<string, string>(
+  Object.entries(TEMPLATE_KEYS).map(([k, v]) => [v, k])
+);
+
+// Pick a random code template; for larger groups concatenate two modules for ~2x lines.
+// If primaryKey (and optionally secondaryKey) are supplied, use them instead of random selection —
+// this is how `getOrLoadGame` repopulates test patterns after a server restart.
+export function getMainCodeTemplate(
+  language: string,
+  playerCount: number = 4,
+  opts?: { primaryKey?: string; secondaryKey?: string | null }
+): { code: string; testCases: MainTestCase[]; primaryKey: string; secondaryKey: string | null } {
+  const templates = CODE_TEMPLATES[language as Language] ?? CODE_TEMPLATES.javascript;
+
+  const primary = opts?.primaryKey && TEMPLATE_KEYS[opts.primaryKey]
+    ? TEMPLATE_KEYS[opts.primaryKey]
+    : [...templates].sort(() => Math.random() - 0.5)[0];
+  const primaryKey = CODE_TO_KEY.get(primary) ?? '';
+
+  const shouldCombine = playerCount >= 6 && templates.length >= 2;
+  let secondary: string | null = null;
+
+  if (opts?.secondaryKey && TEMPLATE_KEYS[opts.secondaryKey]) {
+    secondary = TEMPLATE_KEYS[opts.secondaryKey];
+  } else if (shouldCombine && !opts?.primaryKey) {
+    // Only auto-pick secondary on fresh start (not on reload with only primaryKey)
+    const others = templates.filter(t => t !== primary).sort(() => Math.random() - 0.5);
+    secondary = others[0] ?? null;
+  }
+
+  const secondaryKey = secondary ? (CODE_TO_KEY.get(secondary) ?? null) : null;
+
+  if (secondary) {
     const sep = language === 'python'
       ? '\n\n# ============================================================\n#  MODULE 2 — Additional Challenges Below!\n# ============================================================\n\n'
       : '\n\n// ============================================================\n//  MODULE 2 — Additional Challenges Below!\n// ============================================================\n\n';
@@ -3466,10 +3515,10 @@ export function getMainCodeTemplate(language: string, playerCount: number = 4): 
       ...(TEMPLATE_TEST_CASES.get(primary) ?? []),
       ...(TEMPLATE_TEST_CASES.get(secondary) ?? []),
     ];
-    return { code: primary + sep + secondary, testCases: combinedTestCases };
+    return { code: primary + sep + secondary, testCases: combinedTestCases, primaryKey, secondaryKey };
   }
 
-  return { code: primary, testCases: TEMPLATE_TEST_CASES.get(primary) ?? [] };
+  return { code: primary, testCases: TEMPLATE_TEST_CASES.get(primary) ?? [], primaryKey, secondaryKey: null };
 }
 
 // 50% easy · 30% medium · 20% hard (normalized to allowed difficulties per skill level)
