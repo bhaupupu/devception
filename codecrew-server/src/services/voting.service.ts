@@ -45,6 +45,9 @@ export function addVote(
   const game = getLiveGame(roomCode);
   if (!game) return false;
 
+  const voter = game.players.find((p) => p.userId === voterId);
+  if (!voter?.isAlive) return false;
+
   const meeting = game.meetings.find((m) => m._id === meetingId);
   if (!meeting) return false;
 

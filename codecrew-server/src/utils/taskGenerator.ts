@@ -3352,7 +3352,7 @@ const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
     { id: 'js_soc_6', description: 'getStats: avgLikesPerPost uses correct divisor', pattern: /posts\.length(?!\s*-\s*1)/ },
   ]],
   [JS_EVENTS_CODE, [
-    { id: 'js_evt_1', description: 'registerForEvent: Capacity check before enrolling', pattern: /capacity|maxCapacity|maxAttendees/ },
+    { id: 'js_evt_1', description: 'registerForEvent: Capacity check before enrolling', pattern: /attendees\.length\s*[<>]=?\s*[a-zA-Z_$][\w.$]*capacity|capacity\s*[<>]=?\s*[a-zA-Z_$][\w.$]*attendees\.length/ },
     { id: 'js_evt_2', description: 'getUpcomingEvents: Excludes cancelled events', pattern: /!.*isCancelled|isCancelled.*!/ },
     { id: 'js_evt_3', description: 'getEventDuration: Duration clamped to 0 minimum', pattern: /Math\.max\s*\(\s*0/ },
     { id: 'js_evt_4', description: 'getMostPopularEvents: Sorts by fill percentage', pattern: /attendees\.length\s*\/.*capacity|\/\s*capacity/ },
@@ -3438,16 +3438,25 @@ const TEMPLATE_TEST_CASES: Map<string, MainTestCase[]> = new Map([
     { id: 'cpp_fs_3', description: 'getDirSize: Recursively sums subdirectory sizes', pattern: /getDirSize\s*\(|recursive|getSize\s*\(/ },
   ]],
   [CPP_NETWORK_CODE, [
-    { id: 'cpp_net_1', description: 'Connection: Tracks byte counts correctly', pattern: /bytesReceived\s*\+=|bytesSent\s*\+=/ },
-    { id: 'cpp_net_2', description: 'Server: Handles connection errors', pattern: /catch|error.*conn|conn.*error/ },
+    { id: 'cpp_net_1', description: 'addEdge: Undirected edge preserves weight', pattern: /adj\[to\]\.push_back\s*\(\s*\{\s*from\s*,\s*weight\s*\}/ },
+    { id: 'cpp_net_2', description: 'bfs: Reverses path before returning', pattern: /vector<string>\s+bfs[\s\S]*?reverse\s*\(\s*path/ },
+    { id: 'cpp_net_3', description: 'dijkstra: Early termination when end reached', pattern: /dijkstra[\s\S]*?if\s*\(\s*cur\s*==\s*end\s*\)/ },
+    { id: 'cpp_net_4', description: 'hasCycle: Checks unvisited before recursing', pattern: /hasCycle[\s\S]*?!\s*visited\.count\s*\(\s*e\.to\s*\)/ },
+    { id: 'cpp_net_5', description: 'topoSort: Implements Kahn\'s algorithm', pattern: /topoSort[\s\S]*?(?:queue<|in_degree|inDegree|indegree)/ },
+    { id: 'cpp_net_6', description: 'connectedComponents: Increments count after dfs', pattern: /dfs\s*\(\s*n\s*\)\s*;\s*count\s*\+\+/ },
   ]],
   [CPP_STRINGPARSER_CODE, [
-    { id: 'cpp_str_1', description: 'Parser: Handles edge cases', pattern: /empty\s*\(\s*\)|\.size\s*\(\s*\)\s*==\s*0/ },
-    { id: 'cpp_str_2', description: 'tokenize: Splits correctly on delimiter', pattern: /delimiter|delim|split/ },
+    { id: 'cpp_str_1', description: 'precedence: ^ returns 3 (highest)', pattern: /op\s*==\s*"\^"\s*\)\s*return\s+3/ },
+    { id: 'cpp_str_2', description: 'evalRPN: Division computes a / b (not b / a)', pattern: /s\.push\s*\(\s*a\s*\/\s*b\s*\)/ },
+    { id: 'cpp_str_3', description: 'split: Pushes token (not original string)', pattern: /result\.push_back\s*\(\s*token\s*\)/ },
+    { id: 'cpp_str_4', description: 'replace_all: Advances pos to avoid infinite loop', pattern: /pos\s*\+=\s*to\.(size|length)\s*\(\s*\)/ },
+    { id: 'cpp_str_5', description: 'trim: Strips leading/trailing whitespace', pattern: /trim[\s\S]*?(?:isspace|find_first_not_of|find_last_not_of)/ },
   ]],
   [CPP_MEMORYPOOL_CODE, [
-    { id: 'cpp_mem_1', description: 'MemoryPool: Tracks free blocks correctly', pattern: /freeBlocks\s*\(\s*\)|free.*blocks/ },
-    { id: 'cpp_mem_2', description: 'SharedPtr: Reference count increments on copy', pattern: /refCount\s*\+\+|\+\+.*refCount|useCount/ },
+    { id: 'cpp_mem_1', description: 'freeBlocks: Returns capacity - allocated', pattern: /return\s+capacity\s*-\s*allocated/ },
+    { id: 'cpp_mem_2', description: 'SharedPtr copy ctor: Increments refCount', pattern: /SharedPtr\s*\(\s*const\s+SharedPtr[^)]*\)\s*:[^{]*\{[^}]*\(\s*\*\s*refCount\s*\)\s*\+\+/ },
+    { id: 'cpp_mem_3', description: 'LRUCache::get: Updates lastUsed on access', pattern: /bool\s+get\s*\([\s\S]*?it->second\.lastUsed\s*=\s*clock/ },
+    { id: 'cpp_mem_4', description: 'LRUCache::evict: Removes least-recently-used', pattern: /void\s+evict[\s\S]*?lastUsed\s*<\s*oldest->second\.lastUsed/ },
   ]],
 ]);
 

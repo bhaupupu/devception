@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task } from '@/types/game';
@@ -28,8 +28,18 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
   const [selected, setSelected] = useState<Task | null>(null);
   const [code, setCode] = useState('');
   const [feedback, setFeedback] = useState<{ passed: boolean; text: string } | null>(null);
+  const [editorReady, setEditorReady] = useState(false);
 
   const myTasks = tasks.filter((t) => t.assignedTo === myUserId);
+
+  useEffect(() => {
+    if (!selected) {
+      setEditorReady(false);
+      return;
+    }
+    const t = setTimeout(() => setEditorReady(true), 200);
+    return () => clearTimeout(t);
+  }, [selected]);
 
   const openTask = (task: Task) => {
     setSelected(task);
@@ -116,15 +126,15 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
             style={{ background: 'rgba(0,0,0,0.75)' }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
               className="w-full max-w-3xl flex flex-col rounded-xl overflow-hidden"
               style={{
                 background: 'var(--bg-card)',
                 border: '2px solid var(--border)',
-                maxHeight: '85vh',
+                height: '85vh',
               }}
             >
               {/* Header */}
@@ -154,29 +164,35 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
               </div>
 
               {/* Monaco editor */}
-              <div style={{ height: '350px', flexShrink: 0 }}>
-                <MonacoEditor
-                  height="350px"
-                  language={language}
-                  value={code}
-                  onChange={(val) => setCode(val ?? '')}
-                  theme="vs-dark"
-                  onMount={(editor) => {
-                    setTimeout(() => editor.layout(), 150);
-                    editor.focus();
-                  }}
-                  options={{
-                    fontSize: 13,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on',
-                    tabSize: 2,
-                    insertSpaces: true,
-                    lineNumbers: 'on',
-                    folding: true,
-                    automaticLayout: true,
-                  }}
-                />
+              <div style={{ flex: 1, minHeight: 0, background: '#1e1e1e' }}>
+                {editorReady ? (
+                  <MonacoEditor
+                    height="100%"
+                    language={language}
+                    value={code}
+                    onChange={(val) => setCode(val ?? '')}
+                    theme="vs-dark"
+                    onMount={(editor) => {
+                      setTimeout(() => editor.layout(), 50);
+                      editor.focus();
+                    }}
+                    options={{
+                      fontSize: 13,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      wordWrap: 'on',
+                      tabSize: 2,
+                      insertSpaces: true,
+                      lineNumbers: 'on',
+                      folding: true,
+                      automaticLayout: true,
+                    }}
+                  />
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 12, fontFamily: 'monospace' }}>
+                    Loading editor…
+                  </div>
+                )}
               </div>
 
               {/* Footer */}

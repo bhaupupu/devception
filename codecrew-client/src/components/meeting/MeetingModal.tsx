@@ -5,6 +5,7 @@ import { useMeetingStore } from '@/store/meetingStore';
 import { useGameStore } from '@/store/gameStore';
 import { VotingCard } from './VotingCard';
 import { VoteResults } from './VoteResults';
+import { ChatPanel } from '@/components/game/ChatPanel';
 import { AppSocket } from '@/lib/socket';
 
 interface Props {
@@ -36,8 +37,11 @@ export function MeetingModal({ socket, roomCode, myUserId }: Props) {
     return () => clearInterval(t);
   }, [meeting?.phase, meeting?.discussionMs, meeting?.votingMs]);
 
+  const me = game?.players.find((p) => p.userId === myUserId);
+  const canAct = !!me?.isAlive;
+
   const handleVote = (targetId: string) => {
-    if (!meeting || meeting.myVote) return;
+    if (!meeting || meeting.myVote || !canAct) return;
     setMyVote(targetId);
     socket?.emit('meeting:vote', { roomCode, meetingId: meeting.meetingId, targetId });
   };
@@ -58,11 +62,11 @@ export function MeetingModal({ socket, roomCode, myUserId }: Props) {
             initial={{ scale: 0.8, y: 40 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 40 }}
-            className="game-panel max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            style={{ border: '1px solid #ef4444' }}
+            className="game-panel max-w-2xl w-full flex flex-col"
+            style={{ border: '1px solid #ef4444', height: '90vh' }}
           >
             {/* Header */}
-            <div className="p-6 border-b text-center" style={{ borderColor: 'var(--border)' }}>
+            <div className="p-6 border-b text-center flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
               <p className="text-4xl mb-2">🚨</p>
               <h2 className="text-2xl font-black" style={{ color: '#ef4444' }}>EMERGENCY MEETING</h2>
               <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
@@ -91,8 +95,16 @@ export function MeetingModal({ socket, roomCode, myUserId }: Props) {
               )}
             </div>
 
-            {/* Content */}
-            <div className="p-6">
+            {/* Content — voting (scrolls) */}
+            <div className="p-6 overflow-y-auto flex-1 min-h-0">
+              {!canAct && meeting.phase !== 'results' && (
+                <div
+                  className="mb-4 text-center text-xs font-semibold py-2 rounded"
+                  style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
+                >
+                  Spectating — you were eliminated. You cannot vote or chat.
+                </div>
+              )}
               {meeting.phase === 'results' ? (
                 <VoteResults
                   ejected={meeting.ejected}
@@ -109,7 +121,7 @@ export function MeetingModal({ socket, roomCode, myUserId }: Props) {
                       isMe={p.userId === myUserId}
                       hasVoted={meeting.votedPlayers.has(p.userId)}
                       myVote={meeting.myVote}
-                      onVote={meeting.phase === 'voting' ? handleVote : undefined}
+                      onVote={canAct && meeting.phase === 'voting' ? handleVote : undefined}
                     />
                   ))}
                   {meeting.phase === 'voting' && (
@@ -118,13 +130,20 @@ export function MeetingModal({ socket, roomCode, myUserId }: Props) {
                       isMe={false}
                       hasVoted={false}
                       myVote={meeting.myVote}
-                      onVote={handleVote}
+                      onVote={canAct ? handleVote : undefined}
                       isSkip
                     />
                   )}
                 </div>
               )}
             </div>
+
+            {/* Chat panel — available throughout the meeting */}
+            {meeting.phase !== 'results' && (
+              <div className="flex-shrink-0 border-t" style={{ borderColor: 'var(--border)', height: '200px' }}>
+                <ChatPanel socket={socket} roomCode={roomCode} disabled={!canAct} />
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}
