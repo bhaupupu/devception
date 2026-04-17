@@ -28,6 +28,11 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket): v
     const game = gameService.getLiveGame(roomCode);
     const player = game?.players.find((p) => p.userId === socket.userId);
 
+    if (!player?.isAlive) {
+      socket.emit('chat:error', { message: 'Eliminated players cannot chat.' });
+      return;
+    }
+
     const sanitized = message.slice(0, 300).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     io.to(roomCode).emit('chat:message', {

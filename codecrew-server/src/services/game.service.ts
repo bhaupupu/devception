@@ -59,7 +59,10 @@ export async function getOrLoadGame(roomCode: string): Promise<IGame | null> {
     liveGames.set(roomCode, game);
     // Repopulate in-memory test patterns if server restarted mid-game
     if (game.phase === 'in-progress' && game.mainTestCases.length > 0 && !liveTestPatterns.has(roomCode)) {
-      const { testCases } = getMainCodeTemplate(game.language, game.players.length);
+      const { testCases } = getMainCodeTemplate(game.language, game.players.length, {
+        primaryKey: game.mainCodeTemplateKey ?? undefined,
+        secondaryKey: game.mainCodeSecondaryKey ?? undefined,
+      });
       liveTestPatterns.set(roomCode, testCases);
     }
   }
@@ -130,10 +133,11 @@ export function startGame(roomCode: string): IGame | null {
   });
 
   const tasksPerPlayer = game.settings?.tasksPerPlayer ?? 5;
-  const totalTasksNeeded = game.players.length * tasksPerPlayer;
+  // Only good-coders receive tasks — imposters have sabotage abilities instead.
+  const coders = game.players.filter((p) => p.role === 'good-coder');
+  const totalTasksNeeded = coders.length * tasksPerPlayer;
   const tasks = generateTasksForGame(game.language, game.skillLevel, totalTasksNeeded);
-  // Assign tasksPerPlayer tasks to each player
-  game.players.forEach((player, playerIdx) => {
+  coders.forEach((player, playerIdx) => {
     for (let t = 0; t < tasksPerPlayer; t++) {
       const taskIdx = playerIdx * tasksPerPlayer + t;
       if (tasks[taskIdx]) tasks[taskIdx].assignedTo = player.userId;
@@ -141,9 +145,11 @@ export function startGame(roomCode: string): IGame | null {
   });
 
   game.tasks = tasks;
-  const { code, testCases } = getMainCodeTemplate(game.language, game.players.length);
+  const { code, testCases, primaryKey, secondaryKey } = getMainCodeTemplate(game.language, game.players.length);
   game.sharedCode = code;
   game.mainTestCases = testCases.map(tc => ({ id: tc.id, description: tc.description, passed: false }));
+  game.mainCodeTemplateKey = primaryKey;
+  game.mainCodeSecondaryKey = secondaryKey;
   liveTestPatterns.set(roomCode, testCases);
   game.phase = 'role-reveal';
   game.timer.gameStartedAt = new Date();

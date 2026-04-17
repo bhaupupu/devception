@@ -9,6 +9,11 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
   socket.on(
     'editor:change',
     ({ roomCode, fullContent, version }: { roomCode: string; fullContent: string; version: number }) => {
+      // Eliminated players are spectators: silently drop their edits.
+      const liveGame = gameService.getLiveGame(roomCode);
+      const sender = liveGame?.players.find((p) => p.userId === socket.userId);
+      if (!sender?.isAlive) return;
+
       const result = gameService.updateSharedCode(roomCode, fullContent, version);
       if (result.accepted) {
         socket.to(roomCode).emit('editor:update', {
