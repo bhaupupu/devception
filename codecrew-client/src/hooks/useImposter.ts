@@ -16,7 +16,7 @@ export function useImposter(socket: AppSocket | null, roomCode: string) {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('imposter:cooldown-update', ({ action, remainingMs, startCooldown, cooldownMs }) => {
+    socket.on('imposter:cooldown-update', ({ remainingMs, startCooldown, cooldownMs }) => {
       if (startCooldown && cooldownMs) {
         // Clear any existing countdown before starting a new one
         if (intervalRef.current) clearInterval(intervalRef.current);
