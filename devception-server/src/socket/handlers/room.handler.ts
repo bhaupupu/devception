@@ -32,6 +32,11 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     gameService.markPlayerDisconnected(roomCode, socket.id);
     socket.leave(roomCode);
     io.to(roomCode).emit('room:player-left', { userId: socket.userId });
+    io.to(roomCode).emit('chat:system', {
+      type: 'leave',
+      message: `${socket.displayName} left the game`,
+      timestamp: Date.now(),
+    });
     logger.info(`${socket.displayName} left room ${roomCode}`);
   });
 
@@ -102,6 +107,11 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     if (roomCode) {
       gameService.markPlayerDisconnected(roomCode, socket.id);
       io.to(roomCode).emit('room:player-left', { userId: socket.userId });
+      io.to(roomCode).emit('chat:system', {
+        type: 'leave',
+        message: `${socket.displayName} left the game`,
+        timestamp: Date.now(),
+      });
     }
   });
 }
@@ -109,6 +119,14 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
 function launchGame(io: Server, roomCode: string): void {
   const started = gameService.startGame(roomCode);
   if (!started) return;
+
+  // Wipe chat for all clients so a fresh game starts with a clean panel.
+  io.to(roomCode).emit('chat:clear', { reason: 'new-game' });
+  io.to(roomCode).emit('chat:system', {
+    type: 'system',
+    message: 'A new game has started.',
+    timestamp: Date.now(),
+  });
 
   io.to(roomCode).emit('game:phase-change', { phase: 'role-reveal' });
 

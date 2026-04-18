@@ -1,5 +1,20 @@
 import { GameState, PlayerState } from './game';
 
+export interface EditorOp {
+  rangeOffset: number;
+  rangeLength: number;
+  text: string;
+}
+
+export interface TaskVerdict {
+  index: number;
+  input: string;
+  expected: string;
+  actual: string;
+  passed: boolean;
+  error?: string;
+}
+
 export interface ServerToClientEvents {
   'room:state': (game: GameState) => void;
   'room:player-joined': (player: Partial<PlayerState> & { userId: string }) => void;
@@ -14,11 +29,13 @@ export interface ServerToClientEvents {
   'game:timer-tick': (data: { remainingMs: number }) => void;
   'game:end': (data: { winner: 'good-coders' | 'imposters' }) => void;
 
-  'editor:update': (data: { fullContent: string; version: number; userId: string }) => void;
+  'editor:op-apply': (data: { userId: string; ops: EditorOp[]; version: number }) => void;
+  'editor:resync': (data: { fullContent: string; version: number }) => void;
+  'editor:protected-violation': (data: { reason: 'protected-violation' | 'min-length'; violationName: string; message: string }) => void;
   'editor:cursor-update': (data: { userId: string; line: number; column: number; color: string; displayName: string }) => void;
   'editor:test-results': (data: { testCases: { id: string; description: string; passed: boolean }[] }) => void;
 
-  'task:result': (data: { taskId: string; passed: boolean; feedback: string }) => void;
+  'task:result': (data: { taskId: string; passed: boolean; feedback: string; verdicts: TaskVerdict[]; supported: boolean }) => void;
   'task:completed': (data: { taskId: string; completedBy: string; completedByName: string; sharedProgress: number }) => void;
   'task:progress-update': (data: { sharedProgress: number }) => void;
 
@@ -35,6 +52,8 @@ export interface ServerToClientEvents {
   'meeting:end': (data: { meetingId: string; phase: string }) => void;
 
   'chat:message': (data: { messageId: string; userId: string; displayName: string; message: string; color: string; timestamp: number }) => void;
+  'chat:system': (data: { type: 'leave' | 'join' | 'system'; message: string; timestamp: number }) => void;
+  'chat:clear': (data: { reason: string }) => void;
   'chat:error': (data: { message: string }) => void;
 }
 
@@ -46,7 +65,7 @@ export interface ClientToServerEvents {
   'room:update-settings': (data: { roomCode: string; settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number }> }) => void;
   'room:reset': (data: { roomCode: string }) => void;
 
-  'editor:change': (data: { roomCode: string; fullContent: string; version: number }) => void;
+  'editor:op': (data: { roomCode: string; ops: EditorOp[]; baseVersion: number }) => void;
   'editor:cursor-move': (data: { roomCode: string; line: number; column: number }) => void;
 
   'task:submit': (data: { roomCode: string; taskId: string; submittedCode: string }) => void;

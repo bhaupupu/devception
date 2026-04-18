@@ -22,15 +22,20 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
       if (game) {
         const lines = game.sharedCode.split('\n');
         if (targetLine >= 0 && targetLine < lines.length) {
-          lines[targetLine] = bugCode;
-          const newCode = lines.join('\n');
-          gameService.updateSharedCode(roomCode, newCode, game.editorVersion);
-          io.to(roomCode).emit('editor:update', {
-            fullContent: newCode,
-            version: game.editorVersion,
-            userId: 'imposter',
-          });
-          io.to(roomCode).emit('imposter:bug-injected', { affectedLine: targetLine });
+          // Compute the rangeOffset/rangeLength of the targeted line, then submit an op.
+          let rangeOffset = 0;
+          for (let i = 0; i < targetLine; i++) rangeOffset += lines[i].length + 1; // +1 for '\n'
+          const rangeLength = lines[targetLine].length;
+          const op = { rangeOffset, rangeLength, text: bugCode };
+          const result = gameService.updateSharedCode(roomCode, [op], game.editorVersion, socket.userId);
+          if (result.accepted) {
+            io.to(roomCode).emit('editor:op-apply', {
+              userId: 'imposter',
+              ops: [op],
+              version: result.currentVersion,
+            });
+            io.to(roomCode).emit('imposter:bug-injected', { affectedLine: targetLine });
+          }
         }
       }
 

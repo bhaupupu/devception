@@ -1,28 +1,21 @@
 'use client';
 import { useCallback, useRef } from 'react';
 import { AppSocket } from '@/lib/socket';
+import type { EditorOp } from '@/types/socket';
 import { useEditorStore } from '@/store/editorStore';
 
 export function useEditor(socket: AppSocket | null, roomCode: string) {
-  const { code, version, setCode } = useEditorStore();
-  const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { code } = useEditorStore();
   const cursorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleChange = useCallback(
-    (newCode: string) => {
-      setCode(newCode, version + 1);
-
-      // Throttle: emit max every 50ms
-      if (changeTimerRef.current) clearTimeout(changeTimerRef.current);
-      changeTimerRef.current = setTimeout(() => {
-        socket?.emit('editor:change', {
-          roomCode,
-          fullContent: newCode,
-          version,
-        });
-      }, 50);
+  // Emit a batch of Monaco ops (from one `onDidChangeModelContent` event) together,
+  // tagged with the baseVersion the client had when the edit was authored.
+  const emitOps = useCallback(
+    (ops: EditorOp[], baseVersion: number) => {
+      if (!socket || !ops.length) return;
+      socket.emit('editor:op', { roomCode, ops, baseVersion });
     },
-    [socket, roomCode, version, setCode]
+    [socket, roomCode]
   );
 
   const handleCursorMove = useCallback(
@@ -35,5 +28,5 @@ export function useEditor(socket: AppSocket | null, roomCode: string) {
     [socket, roomCode]
   );
 
-  return { code, handleChange, handleCursorMove };
+  return { code, emitOps, handleCursorMove };
 }

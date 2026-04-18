@@ -103,7 +103,7 @@ When things get suspicious, any player can call an **Emergency Meeting** to disc
 ## Project Structure
 
 ```
-codecrew/
+Devception/
 ├── devception-client/             # Next.js frontend
 │   └── src/
 │       ├── app/                   # Pages (App Router)
@@ -149,8 +149,8 @@ codecrew/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/bhaupupu/codecrew.git
-cd codecrew
+git clone https://github.com/bhaupupu/Devception.git
+cd Devception
 ```
 
 ### 2. Set up the backend
@@ -165,7 +165,7 @@ Create `.env`:
 ```env
 PORT=4000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/codecrew
+MONGODB_URI=mongodb://localhost:27017/Devception
 NEXTAUTH_SECRET=your-32-char-secret-here
 
 CLIENT_ORIGIN=http://localhost:3000

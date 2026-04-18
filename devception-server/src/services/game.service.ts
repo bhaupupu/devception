@@ -4,11 +4,48 @@ import { User } from '../models/User.model';
 import { generateRoomCode } from '../utils/roomCodeGenerator';
 import { assignRoles } from '../utils/roleAssigner';
 import { generateTasksForGame, getMainCodeTemplate, MainTestCase } from '../utils/taskGenerator';
+import {
+  extractProtectedRanges,
+  getProtectedSignatures,
+  computeMinContentLength,
+  ProtectedRange,
+} from '../utils/protectedCode';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
 // In-memory test case patterns per room (not persisted — derived at startGame)
 const liveTestPatterns = new Map<string, MainTestCase[]>();
+
+// Per-room protected-region metadata, derived at startGame, used by updateSharedCode.
+interface RoomProtection {
+  ranges: ProtectedRange[];
+  signatures: string[];
+  minLength: number;
+}
+const liveProtection = new Map<string, RoomProtection>();
+
+// Per-room audit log of accepted ops — bounded ring buffer.
+export interface AuditedOp {
+  userId: string;
+  rangeOffset: number;
+  rangeLength: number;
+  text: string;
+  version: number;
+  timestamp: number;
+}
+const OPS_LOG_LIMIT = 200;
+const liveOpsLog = new Map<string, AuditedOp[]>();
+
+// Single Monaco-style edit op as sent over the wire.
+export interface EditorOp {
+  rangeOffset: number;
+  rangeLength: number;
+  text: string;
+}
+
+export type UpdateSharedCodeResult =
+  | { accepted: true; newCode: string; currentVersion: number }
+  | { accepted: false; reason: 'stale-version' | 'protected-violation' | 'min-length' | 'out-of-bounds'; currentVersion: number; currentCode: string; violationName?: string };
 
 // Player colors (Among Us-inspired)
 const PLAYER_COLORS = [
@@ -64,6 +101,16 @@ export async function getOrLoadGame(roomCode: string): Promise<IGame | null> {
         secondaryKey: game.mainCodeSecondaryKey ?? undefined,
       });
       liveTestPatterns.set(roomCode, testCases);
+    }
+    // Repopulate protection metadata from the persisted sharedCode (best-effort).
+    if (game.phase === 'in-progress' && game.sharedCode && !liveProtection.has(roomCode)) {
+      const ranges = extractProtectedRanges(game.sharedCode);
+      liveProtection.set(roomCode, {
+        ranges,
+        signatures: getProtectedSignatures(ranges),
+        // After restart we can't know the original length, so be lenient: half current.
+        minLength: computeMinContentLength(game.sharedCode.length * 2),
+      });
     }
   }
   return game;
@@ -166,23 +213,105 @@ export function startGame(roomCode: string): IGame | null {
   game.mainCodeTemplateKey = primaryKey;
   game.mainCodeSecondaryKey = secondaryKey;
   liveTestPatterns.set(roomCode, testCases);
+
+  // Derive protection metadata from the fresh template.
+  const ranges = extractProtectedRanges(code);
+  liveProtection.set(roomCode, {
+    ranges,
+    signatures: getProtectedSignatures(ranges),
+    minLength: computeMinContentLength(code.length),
+  });
+  liveOpsLog.set(roomCode, []);
+
   game.phase = 'role-reveal';
   game.timer.gameStartedAt = new Date();
 
   return game;
 }
 
+export function getProtectionForRoom(roomCode: string): RoomProtection | undefined {
+  return liveProtection.get(roomCode);
+}
+
+// Apply a sequence of Monaco-style ops to a base string, in the order supplied.
+// Monaco delivers changes in `e.changes` already sorted descending by rangeOffset so that
+// earlier (higher-offset) applications don't invalidate later offsets. We preserve that
+// contract here — clients are expected to forward `e.changes` verbatim.
+export function applyOpsToString(base: string, ops: EditorOp[]): { ok: true; result: string } | { ok: false; reason: 'out-of-bounds' } {
+  let out = base;
+  for (const op of ops) {
+    if (op.rangeOffset < 0 || op.rangeOffset + op.rangeLength > out.length) {
+      return { ok: false, reason: 'out-of-bounds' };
+    }
+    out = out.slice(0, op.rangeOffset) + op.text + out.slice(op.rangeOffset + op.rangeLength);
+  }
+  return { ok: true, result: out };
+}
+
+function violatesProtection(protection: RoomProtection | undefined, nextCode: string): { violated: true; name: string; reason: 'protected-violation' | 'min-length' } | { violated: false } {
+  if (!protection) return { violated: false };
+  if (nextCode.length < protection.minLength) {
+    return { violated: true, name: 'min-length', reason: 'min-length' };
+  }
+  for (const sig of protection.signatures) {
+    if (!nextCode.includes(sig)) {
+      return { violated: true, name: sig.slice(0, 40), reason: 'protected-violation' };
+    }
+  }
+  return { violated: false };
+}
+
 export function updateSharedCode(
   roomCode: string,
-  newCode: string,
-  version: number
-): { accepted: boolean; currentVersion: number } {
+  ops: EditorOp[],
+  baseVersion: number,
+  userId: string
+): UpdateSharedCodeResult {
   const game = liveGames.get(roomCode);
-  if (!game) return { accepted: false, currentVersion: 0 };
-  if (version < game.editorVersion) return { accepted: false, currentVersion: game.editorVersion };
-  game.sharedCode = newCode;
-  game.editorVersion = version + 1;
-  return { accepted: true, currentVersion: game.editorVersion };
+  if (!game) {
+    return { accepted: false, reason: 'stale-version', currentVersion: 0, currentCode: '' };
+  }
+
+  // Stale version → client must resync; ops would apply at wrong offsets.
+  if (baseVersion !== game.editorVersion) {
+    return { accepted: false, reason: 'stale-version', currentVersion: game.editorVersion, currentCode: game.sharedCode };
+  }
+
+  const applied = applyOpsToString(game.sharedCode, ops);
+  if (!applied.ok) {
+    return { accepted: false, reason: 'out-of-bounds', currentVersion: game.editorVersion, currentCode: game.sharedCode };
+  }
+
+  const protection = liveProtection.get(roomCode);
+  const guard = violatesProtection(protection, applied.result);
+  if (guard.violated) {
+    return { accepted: false, reason: guard.reason, currentVersion: game.editorVersion, currentCode: game.sharedCode, violationName: guard.name };
+  }
+
+  game.sharedCode = applied.result;
+  game.editorVersion = baseVersion + 1;
+
+  // Audit log (bounded).
+  const log = liveOpsLog.get(roomCode) ?? [];
+  const now = Date.now();
+  for (const op of ops) {
+    log.push({ userId, rangeOffset: op.rangeOffset, rangeLength: op.rangeLength, text: op.text, version: game.editorVersion, timestamp: now });
+  }
+  if (log.length > OPS_LOG_LIMIT) log.splice(0, log.length - OPS_LOG_LIMIT);
+  liveOpsLog.set(roomCode, log);
+
+  return { accepted: true, newCode: applied.result, currentVersion: game.editorVersion };
+}
+
+// Legacy full-content setter — retained for the debounced main-test-case check
+// (which works off `sharedCode` only, so it's unaffected by the protocol change).
+// Returns `true` only if the write fully replaced the in-memory snapshot.
+export function forceSetSharedCode(roomCode: string, fullContent: string): boolean {
+  const game = liveGames.get(roomCode);
+  if (!game) return false;
+  game.sharedCode = fullContent;
+  game.editorVersion += 1;
+  return true;
 }
 
 export function completeTask(
@@ -366,6 +495,9 @@ export function resetGame(roomCode: string): IGame | null {
   game.timer = { gameStartedAt: null, gameDurationMs: env.GAME_DURATION_MS, remainingMs: env.GAME_DURATION_MS };
   game.imposterActions = { lastBugInjectedAt: null, lastBlurAt: null, lastHintAt: null };
 
+  liveProtection.delete(roomCode);
+  liveOpsLog.delete(roomCode);
+
   return game;
 }
 
@@ -391,12 +523,14 @@ export function checkMainTestCases(
   return { changed, allPassed, testCases: game.mainTestCases };
 }
 
-// Strip solutionCode from tasks before sending to clients
+// Strip solutionCode from tasks before sending to clients; attach protection metadata.
 export function sanitizeGame(game: IGame): object {
   const obj = game.toObject();
+  const protection = liveProtection.get(game.roomCode);
   return {
     ...obj,
     tasks: (obj.tasks as any[]).map(({ solutionCode: _sc, ...rest }: any) => rest),
+    protectedRanges: protection?.ranges.map((r) => ({ name: r.name, startLine: r.startLine, endLine: r.endLine })) ?? [],
   };
 }
 

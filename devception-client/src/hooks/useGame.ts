@@ -15,13 +15,12 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
   useEffect(() => {
     if (!socket || !roomCode) return;
 
-    // Join room
     socket.emit('room:join', { roomCode });
 
     // Room events
     socket.on('room:state', (game) => {
       gameStore.setGame(game);
-      editorStore.setCode(game.sharedCode, game.editorVersion);
+      editorStore.setInitialCode(game.sharedCode, game.editorVersion, game.protectedRanges ?? []);
     });
     socket.on('room:player-joined', gameStore.addPlayer);
     socket.on('room:player-left', ({ userId }) => gameStore.removePlayer(userId));
@@ -36,7 +35,9 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       gameStore.updatePhase(phase as Parameters<typeof gameStore.updatePhase>[0]);
       if (game) {
         gameStore.setGame(game);
-        if (game.sharedCode) editorStore.setCode(game.sharedCode, game.editorVersion);
+        if (game.sharedCode) {
+          editorStore.setInitialCode(game.sharedCode, game.editorVersion, game.protectedRanges ?? []);
+        }
       }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));
@@ -46,12 +47,13 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       meetingStore.endMeeting();
     });
 
-    // Editor events
-    socket.on('editor:update', ({ fullContent, version }) => {
-      editorStore.setCode(fullContent, version);
-    });
+    // Editor events — op-apply and resync are handled inside CodeEditor.tsx where the
+    // Monaco model is owned. Here we only wire the incidental events.
     socket.on('editor:cursor-update', (cursor) => editorStore.updateCursor(cursor));
     socket.on('editor:test-results', ({ testCases }) => gameStore.updateTestCases(testCases));
+    socket.on('editor:protected-violation', ({ message }) => {
+      chatStore.addSystemMessage({ type: 'system', message: `🔒 ${message}`, timestamp: Date.now() });
+    });
 
     // Task events
     socket.on('task:completed', ({ taskId, completedBy, sharedProgress }) => {
@@ -70,6 +72,8 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
 
     // Chat events
     socket.on('chat:message', (msg) => chatStore.addMessage(msg));
+    socket.on('chat:clear', () => chatStore.clear());
+    socket.on('chat:system', (msg) => chatStore.addSystemMessage(msg));
 
     // Meeting events
     socket.on('meeting:start', ({ meetingId, calledBy, calledByName, discussionMs, votingMs }) => {
@@ -104,13 +108,15 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       socket.off('game:phase-change');
       socket.off('game:timer-tick');
       socket.off('game:end');
-      socket.off('editor:update');
       socket.off('editor:cursor-update');
       socket.off('editor:test-results');
+      socket.off('editor:protected-violation');
       socket.off('task:completed');
       socket.off('task:progress-update');
       socket.off('imposter:keyboard-locked');
       socket.off('chat:message');
+      socket.off('chat:clear');
+      socket.off('chat:system');
       socket.off('meeting:start');
       socket.off('meeting:phase-change');
       socket.off('meeting:vote-cast');

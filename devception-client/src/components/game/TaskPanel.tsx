@@ -6,6 +6,7 @@ import { Task } from '@/types/game';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { AppSocket } from '@/lib/socket';
+import type { TaskVerdict } from '@/types/socket';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -27,7 +28,7 @@ interface Props {
 export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javascript' }: Props) {
   const [selected, setSelected] = useState<Task | null>(null);
   const [code, setCode] = useState('');
-  const [feedback, setFeedback] = useState<{ passed: boolean; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ passed: boolean; text: string; verdicts: TaskVerdict[]; supported: boolean } | null>(null);
   const [editorReady, setEditorReady] = useState(false);
 
   const myTasks = tasks.filter((t) => t.assignedTo === myUserId);
@@ -56,10 +57,10 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
     if (!selected || !socket) return;
     setFeedback(null);
 
-    socket.once('task:result', ({ taskId, passed, feedback: fb }: { taskId: string; passed: boolean; feedback: string }) => {
+    socket.once('task:result', ({ taskId, passed, feedback: fb, verdicts, supported }) => {
       if (taskId === selected._id) {
-        setFeedback({ passed, text: fb });
-        if (passed) setTimeout(() => closeTask(), 1500);
+        setFeedback({ passed, text: fb, verdicts: verdicts ?? [], supported: supported ?? true });
+        if (passed) setTimeout(() => closeTask(), 1800);
       }
     });
 
@@ -195,28 +196,58 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
                 )}
               </div>
 
-              {/* Footer */}
+              {/* Verdicts + footer */}
               <div
-                className="flex items-center justify-between gap-3 p-4 flex-shrink-0 border-t"
+                className="flex flex-col gap-2 p-4 flex-shrink-0 border-t"
                 style={{ borderColor: 'var(--border)' }}
               >
                 <AnimatePresence mode="wait">
-                  {feedback ? (
-                    <motion.p
+                  {feedback && (
+                    <motion.div
                       key="feedback"
-                      initial={{ opacity: 0, x: -4 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="text-xs font-medium"
-                      style={{ color: feedback.passed ? 'var(--accent-green)' : 'var(--accent-red)' }}
+                      className="flex flex-col gap-1"
                     >
-                      {feedback.passed ? '✓ ' : '✗ '}{feedback.text}
-                    </motion.p>
-                  ) : (
-                    <span />
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ color: feedback.passed ? 'var(--accent-green)' : 'var(--accent-red)' }}
+                      >
+                        {feedback.passed ? '✓ ' : '✗ '}{feedback.text}
+                      </p>
+                      {feedback.supported && feedback.verdicts.length > 0 && (
+                        <div className="max-h-28 overflow-y-auto flex flex-col gap-1 text-[10px] font-mono">
+                          {feedback.verdicts.map((v) => (
+                            <div
+                              key={v.index}
+                              className="flex items-start gap-2 px-2 py-1 rounded"
+                              style={{
+                                background: v.passed ? 'rgba(17,127,45,0.12)' : 'rgba(197,17,17,0.12)',
+                                border: `1px solid ${v.passed ? 'rgba(17,127,45,0.35)' : 'rgba(197,17,17,0.35)'}`,
+                              }}
+                            >
+                              <span style={{ color: v.passed ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                                {v.passed ? '✓' : '✗'}
+                              </span>
+                              <div className="flex-1 min-w-0" style={{ color: 'var(--text-secondary)' }}>
+                                <div>in: <span style={{ color: 'var(--text-primary)' }}>{v.input}</span></div>
+                                <div>
+                                  expected: <span style={{ color: 'var(--text-primary)' }}>{v.expected}</span>
+                                  {' · '}
+                                  got: <span style={{ color: v.passed ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                                    {v.error ? `⚠ ${v.error}` : v.actual || '(empty)'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
                   )}
                 </AnimatePresence>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex justify-end gap-2 flex-shrink-0">
                   <button
                     onClick={closeTask}
                     className="pixel-btn pixel-btn-light px-4 py-2"

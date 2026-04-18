@@ -33,16 +33,24 @@ export function ChatPanel({ socket, roomCode, disabled = false }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-        {messages.map((msg) => (
-          <div key={msg.messageId}>
-            <span className="text-xs font-semibold" style={{ color: msg.color }}>
-              {msg.displayName}:{' '}
-            </span>
-            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              {msg.message}
-            </span>
-          </div>
-        ))}
+        {messages.map((msg) =>
+          msg.system ? (
+            <div key={msg.messageId} className="text-center">
+              <span className="text-[10px] italic" style={{ color: 'var(--text-muted)' }}>
+                — {msg.message} —
+              </span>
+            </div>
+          ) : (
+            <div key={msg.messageId}>
+              <span className="text-xs font-semibold" style={{ color: msg.color }}>
+                {msg.displayName}:{' '}
+              </span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {msg.message}
+              </span>
+            </div>
+          )
+        )}
         <div ref={bottomRef} />
       </div>
 

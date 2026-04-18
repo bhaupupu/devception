@@ -2,12 +2,7 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { endGame } from '../../services/game.service';
-
-function validateSolution(submittedCode: string, solutionCode: string): boolean {
-  // MVP: normalize whitespace and compare
-  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
-  return normalize(submittedCode) === normalize(solutionCode);
-}
+import { runTestCases } from '../../services/taskRunner.service';
 
 export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): void {
   socket.on(
@@ -26,19 +21,38 @@ export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): v
 
       const task = game.tasks.find((t) => t._id === taskId);
       if (!task) {
-        socket.emit('task:result', { taskId, passed: false, feedback: 'Task not found' });
+        socket.emit('task:result', {
+          taskId,
+          passed: false,
+          feedback: 'Task not found.',
+          verdicts: [],
+          supported: true,
+        });
         return;
       }
 
-      const passed = validateSolution(submittedCode, task.solutionCode);
+      const { supported, allPassed, verdicts, note } = runTestCases(
+        game.language,
+        submittedCode,
+        task.testCases ?? []
+      );
+
+      const passedCount = verdicts.filter((v) => v.passed).length;
+      const feedback = !supported
+        ? note ?? 'Test execution unsupported for this language.'
+        : allPassed
+          ? `All ${verdicts.length} test cases passed.`
+          : `${passedCount}/${verdicts.length} test cases passed.`;
 
       socket.emit('task:result', {
         taskId,
-        passed,
-        feedback: passed ? 'Correct!' : 'Not quite right, keep trying.',
+        passed: allPassed,
+        feedback,
+        verdicts,
+        supported,
       });
 
-      if (passed) {
+      if (allPassed) {
         const result = gameService.completeTask(roomCode, taskId, socket.userId);
         if (result) {
           io.to(roomCode).emit('task:completed', {

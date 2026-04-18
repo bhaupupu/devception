@@ -9,6 +9,7 @@ import { useEditor } from '@/hooks/useEditor';
 import { useVoting } from '@/hooks/useVoting';
 import { useGameStore } from '@/store/gameStore';
 import { useMeetingStore } from '@/store/meetingStore';
+import { useChatStore } from '@/store/chatStore';
 
 import { RoleReveal } from '@/components/game/RoleReveal';
 import { CodeEditor } from '@/components/game/CodeEditor';
@@ -42,8 +43,34 @@ export default function GamePage({ params }: Props) {
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
 
   useGameEvents(socket, roomId);
-  const { handleChange, handleCursorMove } = useEditor(socket, roomId);
+  const { emitOps, handleCursorMove } = useEditor(socket, roomId);
   const { callMeeting } = useVoting(socket, roomId);
+  const addSystemMessage = useChatStore((s) => s.addSystemMessage);
+
+  // Graceful disconnect on tab close / navigation:
+  //  1. Tell the server we left so it can broadcast "<name> left" to other players.
+  //  2. Fire a sendBeacon signout so NextAuth clears the session (auto-logout).
+  useEffect(() => {
+    if (!socket || !roomId) return;
+    const handleBeforeUnload = () => {
+      try {
+        socket.emit('room:leave', { roomCode: roomId });
+      } catch { /* socket may already be closing */ }
+      try {
+        const url = '/api/auth/leave-signout';
+        const blob = new Blob([JSON.stringify({ roomCode: roomId })], { type: 'application/json' });
+        navigator.sendBeacon(url, blob);
+      } catch { /* beacon unsupported — NextAuth will expire on next load */ }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [socket, roomId]);
+
+  // Show a local toast-style system message when the server rejects a protected-region edit.
+  const onProtectedViolation = useCallback(
+    (message: string) => addSystemMessage({ type: 'system', message: `🔒 ${message}`, timestamp: Date.now() }),
+    [addSystemMessage]
+  );
 
   const userId = (session?.user as { id?: string })?.id ?? '';
   const me = game?.players.find((p) => p.userId === userId);
@@ -125,10 +152,11 @@ export default function GamePage({ params }: Props) {
           </div>
           <div className="flex-1 min-h-0">
             <CodeEditor
-              onChange={handleChange}
+              onOps={emitOps}
               onCursorMove={onCursorMove}
               language={game.language}
               readOnly={isLocked || !canEdit}
+              onProtectedViolation={onProtectedViolation}
             />
           </div>
         </div>
@@ -169,10 +197,11 @@ export default function GamePage({ params }: Props) {
               </div>
               <div className="flex-1 min-h-0">
                 <CodeEditor
-                  onChange={handleChange}
+                  onOps={emitOps}
                   onCursorMove={onCursorMove}
                   language={game.language}
                   readOnly={isLocked || !canEdit}
+                  onProtectedViolation={onProtectedViolation}
                 />
               </div>
             </div>

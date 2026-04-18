@@ -56,6 +56,12 @@ export interface MainTestCaseState {
   passed: boolean;
 }
 
+export interface ProtectedRange {
+  name: string;
+  startLine: number;
+  endLine: number;
+}
+
 export interface GameState {
   roomCode: string;
   phase: GamePhase;
@@ -65,6 +71,7 @@ export interface GameState {
   players: PlayerState[];
   tasks: Task[];
   mainTestCases: MainTestCaseState[];
+  protectedRanges?: ProtectedRange[];
   sharedCode: string;
   sharedProgress: number;
   editorVersion: number;
