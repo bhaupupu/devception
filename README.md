@@ -1,12 +1,12 @@
-# CodeCrew
+# Devception
 
 A real-time multiplayer coding game for programmers — combining collaborative code editing with social deduction mechanics inspired by Among Us. Work together to fix a shared codebase, complete tasks, and root out the hidden imposter before time runs out.
 
 ---
 
-## What is CodeCrew?
+## What is Devception?
 
-CodeCrew puts 4–8 players in a shared coding environment. Most players are **Good Coders** — they must collaboratively solve a complex coding problem and complete individual mini-tasks. Hidden among them are **Imposters** who try to sabotage progress through bug injection, screen blurring, and misleading hints — all while pretending to help.
+Devception puts 4–8 players in a shared coding environment. Most players are **Good Coders** — they must collaboratively solve a complex coding problem and complete individual mini-tasks. Hidden among them are **Imposters** who try to sabotage progress through bug injection, screen blurring, and misleading hints — all while pretending to help.
 
 When things get suspicious, any player can call an **Emergency Meeting** to discuss and vote out the imposter. The game ends when the code is complete, the imposter is voted out, or time expires.
 
