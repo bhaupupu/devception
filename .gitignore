@@ -1,0 +1,28 @@
+# Misc files in workspace root
+*.png
+*.jpg
+*.txt
+
+# Claude config (not part of the project)
+CLAUDE.md
+
+# Dependencies
+devception-client/node_modules/
+devception-server/node_modules/
+
+# Build output
+devception-client/.next/
+devception-server/dist/
+
+# Environment variables (secrets)
+devception-client/.env*.local
+devception-server/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build info
+*.tsbuildinfo

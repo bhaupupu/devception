@@ -74,7 +74,7 @@ When things get suspicious, any player can call an **Emergency Meeting** to disc
 
 ## Tech Stack
 
-### Frontend (`codecrew-client`)
+### Frontend (`devception-client`)
 | Technology | Purpose |
 |-----------|---------|
 | Next.js 14 (App Router) | React framework |
@@ -86,7 +86,7 @@ When things get suspicious, any player can call an **Emergency Meeting** to disc
 | Zustand | Client-side state management |
 | NextAuth.js | Google OAuth authentication |
 
-### Backend (`codecrew-server`)
+### Backend (`devception-server`)
 | Technology | Purpose |
 |-----------|---------|
 | Node.js + Express | HTTP server |
@@ -104,7 +104,7 @@ When things get suspicious, any player can call an **Emergency Meeting** to disc
 
 ```
 codecrew/
-├── codecrew-client/               # Next.js frontend
+├── devception-client/             # Next.js frontend
 │   └── src/
 │       ├── app/                   # Pages (App Router)
 │       │   ├── login/             # Google OAuth entry
@@ -124,7 +124,7 @@ codecrew/
 │       ├── lib/                   # socket.ts, authOptions.ts, api.ts
 │       └── types/                 # Shared TypeScript types
 │
-└── codecrew-server/               # Express + Socket.IO backend
+└── devception-server/             # Express + Socket.IO backend
     └── src/
         ├── config/                # MongoDB connection, env loader
         ├── models/                # User, Game, GameHistory (Mongoose)
@@ -156,7 +156,7 @@ cd codecrew
 ### 2. Set up the backend
 
 ```bash
-cd codecrew-server
+cd devception-server
 npm install
 ```
 
@@ -191,7 +191,7 @@ npm run dev
 ### 3. Set up the frontend
 
 ```bash
-cd ../codecrew-client
+cd ../devception-client
 npm install
 ```
 
