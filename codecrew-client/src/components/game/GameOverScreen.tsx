@@ -80,14 +80,9 @@ export function GameOverScreen({ game, myUserId, myRole: _myRole, socket, onPlay
     };
   }, [game.winner, router]);
 
-  // If winner hasn't arrived yet, show a brief waiting state
-  if (!game.winner) {
-    return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.92)' }}>
-        <span className="pixel-font" style={{ fontSize: 10, color: 'var(--text-muted)' }}>GAME OVER...</span>
-      </div>
-    );
-  }
+  // Wait for winner — render nothing instead of a GAME OVER screen
+  if (!game.winner) return null;
+
   const winner = game.winner;
   const myPlayer = game.players.find((p) => p.userId === myUserId);
   const iWon = myPlayer
