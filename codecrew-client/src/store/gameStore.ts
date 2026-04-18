@@ -29,7 +29,15 @@ export const useGameStore = create<GameStore>((set) => ({
   myColor: null,
   isLocked: false,
 
-  setGame: (game) => set({ game }),
+  setGame: (game) =>
+    set((s) => {
+      // Once we've entered the results phase, don't let a stray broadcast
+      // (e.g. a new player's room:join after someone hits "Play Again")
+      // overwrite the end-of-game state and boot this player off the
+      // game-over screen before they've clicked a button.
+      if (s.game?.phase === 'results' && game.phase !== 'results') return {};
+      return { game };
+    }),
 
   setMyRole: (role, color) => set({ myRole: role, myColor: color }),
 

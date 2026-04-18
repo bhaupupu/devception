@@ -126,6 +126,21 @@ export function startGame(roomCode: string): IGame | null {
   const game = liveGames.get(roomCode);
   if (!game) return null;
 
+  // Reset per-round state so a new game always starts clean, even if the
+  // previous round wasn't properly teardown'd (e.g. game loaded from DB,
+  // or resetGame was skipped because the phase was already 'waiting').
+  game.sharedProgress = 0;
+  game.editorVersion = 0;
+  game.meetings = [];
+  game.imposterActions = { lastBugInjectedAt: null, lastBlurAt: null, lastHintAt: null };
+  game.timer.remainingMs = env.GAME_DURATION_MS;
+  (game as any).winner = null;
+  (game as any).endedAt = null;
+  game.players.forEach((p) => {
+    p.tasksCompleted = [];
+    p.isAlive = true;
+  });
+
   const imposterCount = game.settings?.imposterCount ?? 1;
   const roles = assignRoles(game.players.map((p) => p.userId), imposterCount);
   game.players.forEach((p) => {
