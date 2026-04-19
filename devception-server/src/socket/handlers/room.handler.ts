@@ -1,7 +1,58 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
+import { endGame } from '../../services/game.service';
 import { logger } from '../../utils/logger';
+
+// Single chokepoint for "player leaving" — both `room:leave` and `disconnect`
+// route through here so the chat message + state updates fire exactly once per
+// socket. If the leaver was the sole remaining imposter (or the last imposter
+// while no good-coders remain), the game ends immediately.
+async function announceAndHandleLeave(
+  io: Server,
+  socket: AuthenticatedSocket,
+  roomCode: string
+): Promise<void> {
+  if (socket.data.leaveAnnounced) return;
+  socket.data.leaveAnnounced = true;
+
+  const game = gameService.getLiveGame(roomCode);
+  const leaver = game?.players.find((p) => p.socketId === socket.id);
+
+  gameService.markPlayerDisconnected(roomCode, socket.id);
+
+  io.to(roomCode).emit('room:player-left', { userId: socket.userId });
+  io.to(roomCode).emit('chat:system', {
+    type: 'leave',
+    message: `${socket.displayName} left the game`,
+    timestamp: Date.now(),
+  });
+  logger.info(`${socket.displayName} left room ${roomCode}`);
+
+  // End-game check: only applies during an active round.
+  if (!game || game.phase !== 'in-progress' || !leaver) return;
+
+  // Treat the leaver as eliminated for win-condition purposes.
+  leaver.isAlive = false;
+  const aliveImposters = game.players.filter((p) => p.isAlive && p.role === 'imposter');
+  const aliveGoodCoders = game.players.filter((p) => p.isAlive && p.role === 'good-coder');
+
+  let winner: 'good-coders' | 'imposters' | null = null;
+  if (aliveImposters.length === 0) winner = 'good-coders';
+  else if (aliveImposters.length >= aliveGoodCoders.length) winner = 'imposters';
+
+  if (winner) {
+    try { await endGame(roomCode, winner); } catch (err) { logger.error('endGame on leave failed', err as Error); }
+    io.to(roomCode).emit('chat:system', {
+      type: 'system',
+      message: winner === 'good-coders'
+        ? 'The imposter left the game — good coders win!'
+        : 'Too few good coders remain — imposters win!',
+      timestamp: Date.now(),
+    });
+    io.to(roomCode).emit('game:end', { winner });
+  }
+}
 
 export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): void {
   socket.on('room:join', async ({ roomCode }: { roomCode: string }) => {
@@ -20,6 +71,7 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
 
     socket.join(roomCode);
     socket.data.roomCode = roomCode;
+    socket.data.leaveAnnounced = false;
 
     // Broadcast full authoritative state to everyone in the room (including new player).
     // This ensures all clients have consistent player list, isConnected flags, etc.
@@ -28,16 +80,9 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     logger.info(`${socket.displayName} joined room ${roomCode}`);
   });
 
-  socket.on('room:leave', ({ roomCode }: { roomCode: string }) => {
-    gameService.markPlayerDisconnected(roomCode, socket.id);
+  socket.on('room:leave', async ({ roomCode }: { roomCode: string }) => {
+    await announceAndHandleLeave(io, socket, roomCode);
     socket.leave(roomCode);
-    io.to(roomCode).emit('room:player-left', { userId: socket.userId });
-    io.to(roomCode).emit('chat:system', {
-      type: 'leave',
-      message: `${socket.displayName} left the game`,
-      timestamp: Date.now(),
-    });
-    logger.info(`${socket.displayName} left room ${roomCode}`);
   });
 
   socket.on('room:player-ready', ({ roomCode }: { roomCode: string }) => {
@@ -102,17 +147,9 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     logger.info(`${socket.displayName} reset room ${roomCode}`);
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     const roomCode = socket.data.roomCode;
-    if (roomCode) {
-      gameService.markPlayerDisconnected(roomCode, socket.id);
-      io.to(roomCode).emit('room:player-left', { userId: socket.userId });
-      io.to(roomCode).emit('chat:system', {
-        type: 'leave',
-        message: `${socket.displayName} left the game`,
-        timestamp: Date.now(),
-      });
-    }
+    if (roomCode) await announceAndHandleLeave(io, socket, roomCode);
   });
 }
 

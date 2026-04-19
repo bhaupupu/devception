@@ -1,9 +1,13 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
+import { isSyntacticallyComplete } from '../../utils/syntaxValidator';
 
-// Per-room debounce timers for test case checking
+// Per-room debounce timers for test case checking.
+// We only fire the test suite once the user has been idle for 3s AND the
+// code parses cleanly. Mid-typing bursts no longer trigger random passes.
 const testCheckTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const TEST_CHECK_DEBOUNCE_MS = 3000;
 
 function scheduleTestCaseCheck(io: Server, roomCode: string): void {
   if (testCheckTimers.has(roomCode)) clearTimeout(testCheckTimers.get(roomCode)!);
@@ -14,6 +18,11 @@ function scheduleTestCaseCheck(io: Server, roomCode: string): void {
       const game = gameService.getLiveGame(roomCode);
       if (!game || game.phase !== 'in-progress') return;
 
+      // Gate: do not run tests against code that is still being typed.
+      // This prevents regex patterns from matching partial / accidentally-valid
+      // fragments and marking tests as passed.
+      if (!isSyntacticallyComplete(game.language, game.sharedCode)) return;
+
       const checkResult = gameService.checkMainTestCases(roomCode, game.sharedCode);
       if (checkResult.changed) {
         io.to(roomCode).emit('editor:test-results', { testCases: checkResult.testCases });
@@ -22,7 +31,7 @@ function scheduleTestCaseCheck(io: Server, roomCode: string): void {
         try { await gameService.endGame(roomCode, 'good-coders'); } catch { /* db error, still emit */ }
         io.to(roomCode).emit('game:end', { winner: 'good-coders' });
       }
-    }, 2000)
+    }, TEST_CHECK_DEBOUNCE_MS)
   );
 }
 
