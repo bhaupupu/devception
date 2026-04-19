@@ -1,8 +1,29 @@
 import * as vm from 'vm';
+import { spawnSync } from 'child_process';
 
 export interface TestCase {
   input: string;       // e.g. "[1,2,3,4,5]" or '"racecar"'
   expectedOutput: string; // e.g. "15" or "true" or "[1,2,3,4]"
+}
+
+// Detect an available Python interpreter at boot. We try python3 first
+// (Linux / macOS / most CI), then python (Windows).
+function detectPython(): string | null {
+  for (const bin of ['python3', 'python']) {
+    try {
+      const r = spawnSync(bin, ['-c', 'import sys;print(sys.version_info[0])'], { timeout: 2000 });
+      if (r.status === 0 && (r.stdout?.toString().trim().startsWith('3'))) return bin;
+    } catch { /* not installed */ }
+  }
+  return null;
+}
+const PYTHON_BIN: string | null = detectPython();
+if (PYTHON_BIN) {
+  // eslint-disable-next-line no-console
+  console.log(`[taskRunner] Python sandbox enabled via ${PYTHON_BIN}`);
+} else {
+  // eslint-disable-next-line no-console
+  console.warn('[taskRunner] Python not found on PATH; Python test execution disabled.');
 }
 
 export interface TestVerdict {
@@ -135,14 +156,121 @@ export function runJavaScriptTestCases(code: string, testCases: TestCase[]): Run
   };
 }
 
+// Python entry extraction: first top-level `def name(` declaration.
+function extractPythonEntry(code: string): string | null {
+  const m = /^\s*def\s+([A-Za-z_][\w]*)\s*\(/m.exec(code);
+  return m ? m[1] : null;
+}
+
+export function runPythonTestCases(code: string, testCases: TestCase[]): RunResult {
+  if (!PYTHON_BIN) {
+    return {
+      supported: false,
+      allPassed: false,
+      verdicts: testCases.map((tc, i) => ({
+        index: i, input: tc.input, expected: tc.expectedOutput, actual: '',
+        passed: false, error: 'Python interpreter not available on server.',
+      })),
+      note: 'Python interpreter not available on server. Install python3 and restart.',
+    };
+  }
+
+  const entry = extractPythonEntry(code);
+  if (!entry) {
+    return {
+      supported: true, allPassed: false,
+      verdicts: testCases.map((tc, i) => ({
+        index: i, input: tc.input, expected: tc.expectedOutput, actual: '',
+        passed: false, error: 'Could not find a top-level `def` function to run.',
+      })),
+    };
+  }
+
+  // Wrapper: parses JSON stdin as [input], calls the user's entry function,
+  // prints canonical JSON output. Runs in isolated mode (-I) to block user
+  // site-packages, env vars (PYTHONPATH) and implicit cwd imports. -B disables
+  // .pyc writes. -S disables site.py. Stdin carries the test input only — user
+  // code cannot read it (we consume it in the wrapper before invoking).
+  const wrapper = `
+import sys, json, io, builtins
+__src__ = ${JSON.stringify(code)}
+__entry__ = ${JSON.stringify(entry)}
+__raw__ = sys.stdin.read()
+try:
+    __arg__ = json.loads(__raw__) if __raw__.strip() else None
+except Exception:
+    __arg__ = __raw__.strip()
+# Block obvious escape hatches. Not a true jail — process isolation + timeout
+# are the real guards.
+builtins.open = lambda *a, **kw: (_ for _ in ()).throw(PermissionError('file io disabled'))
+__ns__ = {'__name__': '__user__'}
+exec(compile(__src__, '<user>', 'exec'), __ns__)
+__fn__ = __ns__.get(__entry__)
+if not callable(__fn__):
+    raise RuntimeError('entry function not defined: ' + __entry__)
+__result__ = __fn__(__arg__)
+sys.stdout.write(json.dumps(__result__, default=str))
+`;
+
+  const verdicts: TestVerdict[] = [];
+  for (let i = 0; i < testCases.length; i++) {
+    const tc = testCases[i];
+    const expected = canonicalExpected(tc.expectedOutput);
+    try {
+      const proc = spawnSync(
+        PYTHON_BIN,
+        ['-I', '-B', '-S', '-c', wrapper],
+        {
+          input: tc.input,
+          timeout: EXEC_TIMEOUT_MS,
+          maxBuffer: 256 * 1024,
+          env: {}, // strip env; -I already ignores PYTHONPATH but be explicit
+          encoding: 'utf-8',
+        }
+      );
+      if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
+        verdicts.push({ index: i, input: tc.input, expected, actual: '', passed: false, error: 'Execution timed out (>2s).' });
+        continue;
+      }
+      if (proc.status !== 0) {
+        const stderr = proc.stderr?.toString() ?? '';
+        const firstLine = stderr.split('\n').filter(l => l.trim()).pop() ?? 'Runtime error.';
+        const passed = expected === 'throws';
+        verdicts.push({ index: i, input: tc.input, expected, actual: '', passed, error: firstLine.slice(0, 200) });
+        continue;
+      }
+      const raw = proc.stdout?.toString() ?? '';
+      let actual: string;
+      try { actual = canonical(JSON.parse(raw)); }
+      catch { actual = raw.trim(); }
+      verdicts.push({ index: i, input: tc.input, expected, actual, passed: actual === expected });
+    } catch (err) {
+      verdicts.push({
+        index: i, input: tc.input, expected, actual: '', passed: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return {
+    supported: true,
+    allPassed: verdicts.length > 0 && verdicts.every(v => v.passed),
+    verdicts,
+  };
+}
+
+export function isPythonSandboxEnabled(): boolean {
+  return PYTHON_BIN !== null;
+}
+
 export function runTestCases(language: string, code: string, testCases: TestCase[]): RunResult {
   if (!testCases || testCases.length === 0) {
     return { supported: true, allPassed: false, verdicts: [], note: 'Task has no test cases.' };
   }
   if (language === 'javascript') return runJavaScriptTestCases(code, testCases);
+  if (language === 'python') return runPythonTestCases(code, testCases);
 
-  // Python and C++ are not sandboxed in this build. Report unsupported so the UI
-  // can show a clear message rather than silently failing.
+  // C++ remains unsupported — would need a compile step + sandbox.
   return {
     supported: false,
     allPassed: false,
