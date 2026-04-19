@@ -1,4 +1,7 @@
 import * as vm from 'vm';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { spawnSync } from 'child_process';
 
 export interface TestCase {
@@ -25,6 +28,26 @@ if (PYTHON_BIN) {
   // eslint-disable-next-line no-console
   console.warn('[taskRunner] Python not found on PATH; Python test execution disabled.');
 }
+
+function detectCpp(): string | null {
+  for (const bin of ['g++', 'c++', 'clang++']) {
+    try {
+      const r = spawnSync(bin, ['--version'], { timeout: 2000 });
+      if (r.status === 0) return bin;
+    } catch { /* not installed */ }
+  }
+  return null;
+}
+const CPP_BIN: string | null = detectCpp();
+if (CPP_BIN) {
+  // eslint-disable-next-line no-console
+  console.log(`[taskRunner] C++ sandbox enabled via ${CPP_BIN}`);
+} else {
+  // eslint-disable-next-line no-console
+  console.warn('[taskRunner] C++ compiler not found on PATH; C++ test execution disabled.');
+}
+
+const COMPILE_TIMEOUT_MS = 5000;
 
 export interface TestVerdict {
   index: number;
@@ -263,14 +286,110 @@ export function isPythonSandboxEnabled(): boolean {
   return PYTHON_BIN !== null;
 }
 
+// C++ runner — classic stdin/stdout model. User writes their own main().
+// Per submission we compile once, then run the binary per test case with the
+// test input piped to stdin and compare trimmed stdout against the expected.
+export function runCppTestCases(code: string, testCases: TestCase[]): RunResult {
+  if (!CPP_BIN) {
+    return {
+      supported: false,
+      allPassed: false,
+      verdicts: testCases.map((tc, i) => ({
+        index: i, input: tc.input, expected: tc.expectedOutput, actual: '',
+        passed: false, error: 'C++ compiler not available on server.',
+      })),
+      note: 'C++ compiler not available on server. Install g++ and restart.',
+    };
+  }
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cpp-run-'));
+  const srcPath = path.join(tmpDir, 'main.cpp');
+  const binPath = path.join(tmpDir, process.platform === 'win32' ? 'a.exe' : 'a.out');
+
+  try {
+    fs.writeFileSync(srcPath, code, 'utf-8');
+
+    const compile = spawnSync(
+      CPP_BIN,
+      ['-O1', '-std=c++17', '-o', binPath, srcPath],
+      { timeout: COMPILE_TIMEOUT_MS, encoding: 'utf-8', env: {} }
+    );
+
+    if (compile.error || compile.status !== 0) {
+      const stderr = (compile.stderr ?? '').toString();
+      const firstErr = stderr.split('\n').filter(l => l.trim()).slice(0, 3).join(' | ').slice(0, 300)
+        || (compile.error instanceof Error ? compile.error.message : 'Compilation failed.');
+      return {
+        supported: true,
+        allPassed: false,
+        verdicts: testCases.map((tc, i) => ({
+          index: i, input: tc.input, expected: canonicalExpected(tc.expectedOutput),
+          actual: '', passed: false, error: `Compile error: ${firstErr}`,
+        })),
+      };
+    }
+
+    const verdicts: TestVerdict[] = [];
+    for (let i = 0; i < testCases.length; i++) {
+      const tc = testCases[i];
+      const expected = canonicalExpected(tc.expectedOutput);
+      try {
+        const proc = spawnSync(binPath, [], {
+          input: tc.input,
+          timeout: EXEC_TIMEOUT_MS,
+          maxBuffer: 256 * 1024,
+          encoding: 'utf-8',
+          env: {},
+        });
+        if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
+          verdicts.push({ index: i, input: tc.input, expected, actual: '', passed: false, error: 'Execution timed out (>2s).' });
+          continue;
+        }
+        if (proc.status !== 0) {
+          const stderr = (proc.stderr ?? '').toString();
+          const firstLine = stderr.split('\n').filter(l => l.trim()).pop() ?? `Exited with code ${proc.status}`;
+          // Runtime errors (non-zero exit or signal) count as a pass when the
+          // test expects the program to throw, matching the JS runner's rule.
+          const passed = expected === 'throws';
+          verdicts.push({ index: i, input: tc.input, expected, actual: '', passed, error: firstLine.slice(0, 200) });
+          continue;
+        }
+        const raw = (proc.stdout ?? '').toString().trim();
+        // Best-effort canonicalization: try JSON parse first, else compare as plain text.
+        let actual: string;
+        try { actual = canonical(JSON.parse(raw)); }
+        catch { actual = raw; }
+        verdicts.push({ index: i, input: tc.input, expected, actual, passed: actual === expected });
+      } catch (err) {
+        verdicts.push({
+          index: i, input: tc.input, expected, actual: '', passed: false,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    return {
+      supported: true,
+      allPassed: verdicts.length > 0 && verdicts.every(v => v.passed),
+      verdicts,
+    };
+  } finally {
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+  }
+}
+
+export function isCppSandboxEnabled(): boolean {
+  return CPP_BIN !== null;
+}
+
 export function runTestCases(language: string, code: string, testCases: TestCase[]): RunResult {
   if (!testCases || testCases.length === 0) {
     return { supported: true, allPassed: false, verdicts: [], note: 'Task has no test cases.' };
   }
   if (language === 'javascript') return runJavaScriptTestCases(code, testCases);
   if (language === 'python') return runPythonTestCases(code, testCases);
+  if (language === 'cpp' || language === 'c++') return runCppTestCases(code, testCases);
 
-  // C++ remains unsupported — would need a compile step + sandbox.
   return {
     supported: false,
     allPassed: false,
