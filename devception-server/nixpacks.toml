@@ -1,2 +1,5 @@
+# Install python3 and g++ via apt on the Ubuntu base image so we don't
+# conflict with the Nixpacks Node provider (which pins nodejs_18 and would
+# collide with a nixPkgs-supplied nodejs_20 in the same Nix env).
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3", "gcc"]
+aptPkgs = ["python3", "g++"]
