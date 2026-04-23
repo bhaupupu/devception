@@ -1,7 +1,7 @@
 'use client';
 import { signIn } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -14,7 +14,7 @@ const REASON_COPY: Record<string, string> = {
   'signed-in-elsewhere': 'You were signed in on another device. Sign in again to continue.',
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const reason = searchParams?.get('reason') ?? '';
   const reasonMessage = reason ? (REASON_COPY[reason] ?? 'Your session ended. Sign in again to continue.') : '';
@@ -201,5 +201,13 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

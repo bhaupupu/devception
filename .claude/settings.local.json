@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "mcp__plugin_vercel_vercel__deploy_to_vercel",
+      "Bash(vercel *)"
+    ]
+  }
+}
