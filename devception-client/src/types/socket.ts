@@ -19,6 +19,7 @@ export interface ServerToClientEvents {
   'room:state': (game: GameState) => void;
   'room:player-joined': (player: Partial<PlayerState> & { userId: string }) => void;
   'room:player-left': (data: { userId: string }) => void;
+  'room:player-disconnected': (data: { userId: string }) => void;
   'room:ready-update': (data: { userId: string; readyToStart: boolean }) => void;
   'room:error': (data: { message: string }) => void;
   'room:settings-updated': (data: { settings: { imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number } }) => void;
@@ -55,6 +56,8 @@ export interface ServerToClientEvents {
   'chat:system': (data: { type: 'leave' | 'join' | 'system'; message: string; timestamp: number }) => void;
   'chat:clear': (data: { reason: string }) => void;
   'chat:error': (data: { message: string }) => void;
+
+  'session:force-logout': (data: { reason: string; message: string }) => void;
 }
 
 export interface ClientToServerEvents {

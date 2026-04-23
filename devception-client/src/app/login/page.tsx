@@ -2,12 +2,22 @@
 import { signIn } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
 type Tab = 'google' | 'email';
 type EmailMode = 'signin' | 'signup';
 
+// Human-readable copy for the various reasons the session can be terminated.
+// Keyed by the `?reason=` value the server/useSocket pushes on force-logout.
+const REASON_COPY: Record<string, string> = {
+  'signed-in-elsewhere': 'You were signed in on another device. Sign in again to continue.',
+};
+
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const reason = searchParams?.get('reason') ?? '';
+  const reasonMessage = reason ? (REASON_COPY[reason] ?? 'Your session ended. Sign in again to continue.') : '';
   const [tab, setTab] = useState<Tab>('google');
   const [mode, setMode] = useState<EmailMode>('signin');
   const [email, setEmail] = useState('');
@@ -68,6 +78,20 @@ export default function LoginPage() {
           <p className="pixel-font mb-6 text-center" style={{ fontSize: 9, color: 'var(--text-secondary)' }}>
             SIGN IN TO PLAY
           </p>
+
+          {reasonMessage && (
+            <div
+              className="mb-4 px-3 py-2 rounded text-xs"
+              style={{
+                background: 'rgba(239,125,14,0.12)',
+                border: '1px solid rgba(239,125,14,0.35)',
+                color: 'var(--text-primary)',
+                fontFamily: 'Space Mono, monospace',
+              }}
+            >
+              {reasonMessage}
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex gap-2 mb-6">

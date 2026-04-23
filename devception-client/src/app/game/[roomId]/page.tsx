@@ -47,20 +47,18 @@ export default function GamePage({ params }: Props) {
   const { callMeeting } = useVoting(socket, roomId);
   const addSystemMessage = useChatStore((s) => s.addSystemMessage);
 
-  // Graceful disconnect on tab close / navigation:
-  //  1. Tell the server we left so it can broadcast "<name> left" to other players.
-  //  2. Fire a sendBeacon signout so NextAuth clears the session (auto-logout).
+  // Graceful disconnect on tab close / navigation.
+  //
+  // Previously this handler also fired a `navigator.sendBeacon` to /api/auth/leave-signout
+  // which deleted the NextAuth cookies. That was wrong: `beforeunload` fires on page
+  // refresh and internal navigation too, not just tab close, so refreshing the game
+  // page logged the user out and broke reconnect. The cookie-wipe has been removed —
+  // we only tell the server the socket is leaving. The user's NextAuth session
+  // survives refreshes, enabling proper reconnection into the same game.
   useEffect(() => {
     if (!socket || !roomId) return;
     const handleBeforeUnload = () => {
-      try {
-        socket.emit('room:leave', { roomCode: roomId });
-      } catch { /* socket may already be closing */ }
-      try {
-        const url = '/api/auth/leave-signout';
-        const blob = new Blob([JSON.stringify({ roomCode: roomId })], { type: 'application/json' });
-        navigator.sendBeacon(url, blob);
-      } catch { /* beacon unsupported — NextAuth will expire on next load */ }
+      try { socket.emit('room:leave', { roomCode: roomId }); } catch { /* socket may already be closing */ }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);

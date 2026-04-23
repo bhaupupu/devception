@@ -24,6 +24,10 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
     });
     socket.on('room:player-joined', gameStore.addPlayer);
     socket.on('room:player-left', ({ userId }) => gameStore.removePlayer(userId));
+    // Intermediate state during the reconnect grace window — same visual treatment
+    // as `room:player-left` (grayed-out dot) but without a "left the game" chat.
+    // If the player reconnects in time, a subsequent `room:state` restores them.
+    socket.on('room:player-disconnected', ({ userId }) => gameStore.removePlayer(userId));
     socket.on('room:ready-update', ({ userId }) => gameStore.setPlayerReady(userId));
     socket.on('room:settings-updated', ({ settings }) => gameStore.setSettings(settings));
 
@@ -102,6 +106,7 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
       socket.off('room:state');
       socket.off('room:player-joined');
       socket.off('room:player-left');
+      socket.off('room:player-disconnected');
       socket.off('room:ready-update');
       socket.off('room:settings-updated');
       socket.off('game:role-reveal');

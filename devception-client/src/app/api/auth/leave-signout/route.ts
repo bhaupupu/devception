@@ -1,23 +1,10 @@
 import { NextResponse } from 'next/server';
 
-// Called via navigator.sendBeacon() from the game page when a player closes the tab.
-// Clears NextAuth session cookies so the user is effectively signed out on next return.
-// No CSRF token needed — this endpoint only deletes cookies and is safe to hit blindly.
+// DEPRECATED — retained as a no-op to absorb any in-flight navigator.sendBeacon
+// calls fired by older client bundles. The previous implementation deleted
+// NextAuth cookies on every `beforeunload`, which auto-logged-out users on
+// page refresh or internal navigation. That cookie wipe has been removed;
+// real sign-out now goes through NextAuth's /api/auth/signout endpoint.
 export async function POST(): Promise<NextResponse> {
-  const res = NextResponse.json({ ok: true });
-
-  // Clear all NextAuth session cookies. Both the non-secure and secure variants exist
-  // depending on deployment — expire them all to be thorough.
-  const cookieNames = [
-    'next-auth.session-token',
-    '__Secure-next-auth.session-token',
-    'next-auth.csrf-token',
-    '__Host-next-auth.csrf-token',
-    'next-auth.callback-url',
-    '__Secure-next-auth.callback-url',
-  ];
-  for (const name of cookieNames) {
-    res.cookies.set(name, '', { path: '/', expires: new Date(0) });
-  }
-  return res;
+  return NextResponse.json({ ok: true });
 }

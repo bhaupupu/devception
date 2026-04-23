@@ -2,10 +2,12 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { isSyntacticallyComplete } from '../../utils/syntaxValidator';
+import { logger } from '../../utils/logger';
 
 // Per-room debounce timers for test case checking.
 // We only fire the test suite once the user has been idle for 3s AND the
-// code parses cleanly. Mid-typing bursts no longer trigger random passes.
+// code parses cleanly. Mid-typing bursts never trigger an evaluation, so
+// the judge only runs against complete, settled code.
 const testCheckTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const TEST_CHECK_DEBOUNCE_MS = 3000;
 
@@ -18,12 +20,23 @@ function scheduleTestCaseCheck(io: Server, roomCode: string): void {
       const game = gameService.getLiveGame(roomCode);
       if (!game || game.phase !== 'in-progress') return;
 
-      // Gate: do not run tests against code that is still being typed.
-      // This prevents regex patterns from matching partial / accidentally-valid
-      // fragments and marking tests as passed.
-      if (!isSyntacticallyComplete(game.language, game.sharedCode)) return;
+      // Gate: do not run the judge against code that is still being typed.
+      // Mid-edit fragments (dangling brackets, half-finished lines) must be
+      // ignored so the judge only sees a stable, parse-clean program.
+      if (!isSyntacticallyComplete(game.language, game.sharedCode)) {
+        logger.debug(`[editor ${roomCode}] skip judge — code not syntactically complete (len=${game.sharedCode.length})`);
+        return;
+      }
 
+      // Judge always reads the *current* live code; no snapshot is captured ahead
+      // of time so stale buffers can't leak into a later check.
       const checkResult = gameService.checkMainTestCases(roomCode, game.sharedCode);
+      logger.debug(
+        `[editor ${roomCode}] judge fired len=${game.sharedCode.length} ` +
+        `passed=${checkResult.testCases.filter((t) => t.passed).length}/${checkResult.testCases.length} ` +
+        `changed=${checkResult.changed} allPassed=${checkResult.allPassed}`
+      );
+
       if (checkResult.changed) {
         io.to(roomCode).emit('editor:test-results', { testCases: checkResult.testCases });
       }
@@ -58,6 +71,14 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
       if (!Array.isArray(ops) || ops.length === 0) return;
 
       const result = gameService.updateSharedCode(roomCode, ops, baseVersion, socket.userId);
+
+      if (process.env.EDITOR_TRACE === '1') {
+        const opsSummary = ops.map((o) => `(${o.rangeOffset}+${o.rangeLength}→${o.text.length}b)`).join(',');
+        logger.debug(
+          `[editor ${roomCode}] user=${socket.userId} baseV=${baseVersion} ` +
+          `accepted=${result.accepted} reason=${result.accepted ? '-' : result.reason} ops=${opsSummary}`
+        );
+      }
 
       if (result.accepted) {
         // Broadcast the tagged ops to all OTHER clients. Each client applies them via

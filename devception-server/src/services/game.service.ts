@@ -10,11 +10,22 @@ import {
   computeMinContentLength,
   ProtectedRange,
 } from '../utils/protectedCode';
+import {
+  judgeMainCode,
+  extractTopLevelIdentifiers,
+  MainTestSpec,
+} from './mainCodeJudge.service';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
-// In-memory test case patterns per room (not persisted — derived at startGame)
-const liveTestPatterns = new Map<string, MainTestCase[]>();
+// Per-room judge configuration: the tests (regex or executable) plus the set of
+// top-level identifiers that must remain present. Built once at startGame.
+interface RoomJudgeConfig {
+  tests: MainTestSpec[];
+  requiredIdentifiers: string[];
+  minContentLength: number;
+}
+const liveJudgeConfig = new Map<string, RoomJudgeConfig>();
 
 // Per-room protected-region metadata, derived at startGame, used by updateSharedCode.
 interface RoomProtection {
@@ -94,13 +105,17 @@ export async function getOrLoadGame(roomCode: string): Promise<IGame | null> {
   const game = await Game.findOne({ roomCode });
   if (game) {
     liveGames.set(roomCode, game);
-    // Repopulate in-memory test patterns if server restarted mid-game
-    if (game.phase === 'in-progress' && game.mainTestCases.length > 0 && !liveTestPatterns.has(roomCode)) {
-      const { testCases } = getMainCodeTemplate(game.language, game.players.length, {
+    // Repopulate in-memory judge config if server restarted mid-game
+    if (game.phase === 'in-progress' && game.mainTestCases.length > 0 && !liveJudgeConfig.has(roomCode)) {
+      const { code: templateCode, testCases } = getMainCodeTemplate(game.language, game.players.length, {
         primaryKey: game.mainCodeTemplateKey ?? undefined,
         secondaryKey: game.mainCodeSecondaryKey ?? undefined,
       });
-      liveTestPatterns.set(roomCode, testCases);
+      liveJudgeConfig.set(roomCode, {
+        tests: testCases as MainTestSpec[],
+        requiredIdentifiers: extractTopLevelIdentifiers(game.language, templateCode),
+        minContentLength: computeMinContentLength(templateCode.length),
+      });
     }
     // Repopulate protection metadata from the persisted sharedCode (best-effort).
     if (game.phase === 'in-progress' && game.sharedCode && !liveProtection.has(roomCode)) {
@@ -212,14 +227,22 @@ export function startGame(roomCode: string): IGame | null {
   game.mainTestCases = testCases.map(tc => ({ id: tc.id, description: tc.description, passed: false }));
   game.mainCodeTemplateKey = primaryKey;
   game.mainCodeSecondaryKey = secondaryKey;
-  liveTestPatterns.set(roomCode, testCases);
+
+  const initialMinLength = computeMinContentLength(code.length);
+  liveJudgeConfig.set(roomCode, {
+    tests: testCases as MainTestSpec[],
+    // Pin required identifiers to whatever the template exposed at game start so
+    // the judge can detect if the user has deleted declarations outright.
+    requiredIdentifiers: extractTopLevelIdentifiers(game.language, code),
+    minContentLength: initialMinLength,
+  });
 
   // Derive protection metadata from the fresh template.
   const ranges = extractProtectedRanges(code);
   liveProtection.set(roomCode, {
     ranges,
     signatures: getProtectedSignatures(ranges),
-    minLength: computeMinContentLength(code.length),
+    minLength: initialMinLength,
   });
   liveOpsLog.set(roomCode, []);
 
@@ -486,7 +509,7 @@ export function resetGame(roomCode: string): IGame | null {
   (game as any).winner = null;
   game.tasks = [];
   game.mainTestCases = [];
-  liveTestPatterns.delete(roomCode);
+  liveJudgeConfig.delete(roomCode);
   game.meetings = [];
   game.sharedCode = '';
   game.sharedProgress = 0;
@@ -509,18 +532,47 @@ export function checkMainTestCases(
   if (!game || game.mainTestCases.length === 0) {
     return { changed: false, allPassed: false, testCases: [] };
   }
-  const patterns = liveTestPatterns.get(roomCode) ?? [];
+
+  const config = liveJudgeConfig.get(roomCode);
+  if (!config) {
+    // No judge config means we have no way to verify — never falsely pass.
+    let changed = false;
+    for (const tc of game.mainTestCases) {
+      if (tc.passed) { tc.passed = false; changed = true; }
+    }
+    return { changed, allPassed: false, testCases: game.mainTestCases };
+  }
+
+  // Recompute every verdict from scratch against the live code. No cached pass
+  // state is allowed to survive across calls — that was the old bug.
+  const result = judgeMainCode({
+    language: game.language,
+    code,
+    requiredIdentifiers: config.requiredIdentifiers,
+    minContentLength: config.minContentLength,
+    tests: config.tests,
+  });
+
+  if (result.diagnostics.length > 0) {
+    // Debug-only visibility — do not emit to clients.
+    logger.debug(`[judge ${roomCode}] ${result.diagnostics.join(' | ')}`);
+  }
+
+  // Drive the authoritative mainTestCases state from the fresh verdicts. If a
+  // test's pass flips (either direction), we flag changed so the socket layer
+  // broadcasts the update.
   let changed = false;
+  const verdictById = new Map(result.verdicts.map((v) => [v.id, v]));
   for (const tc of game.mainTestCases) {
-    const pattern = patterns.find(p => p.id === tc.id)?.pattern;
-    const nowPassed = pattern ? pattern.test(code) : false;
+    const verdict = verdictById.get(tc.id);
+    const nowPassed = verdict?.passed ?? false;
     if (nowPassed !== tc.passed) {
       tc.passed = nowPassed;
       changed = true;
     }
   }
-  const allPassed = game.mainTestCases.length > 0 && game.mainTestCases.every(tc => tc.passed);
-  return { changed, allPassed, testCases: game.mainTestCases };
+
+  return { changed, allPassed: result.allPassed, testCases: game.mainTestCases };
 }
 
 // Strip solutionCode from tasks before sending to clients; attach protection metadata.
