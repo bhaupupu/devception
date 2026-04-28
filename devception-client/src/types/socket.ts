@@ -42,8 +42,7 @@ export interface ServerToClientEvents {
 
   'imposter:bug-injected': (data: { affectedLine: number }) => void;
   'imposter:screen-blurred': (data: { durationMs: number }) => void;
-  'imposter:hint-received': (data: { hintText: string; sender: string }) => void;
-  'imposter:cooldown-update': (data: { action: string; remainingMs: number; startCooldown?: boolean; cooldownMs?: number }) => void;
+  'imposter:cooldown-update': (data: { action: string; remainingMs: number; startCooldown?: boolean; cooldownMs?: number; applied?: boolean }) => void;
   'imposter:keyboard-locked': (data: { durationMs: number }) => void;
 
   'meeting:start': (data: { meetingId: string; calledBy: string; calledByName: string; phase: string; discussionMs: number; votingMs: number }) => void;
@@ -73,9 +72,9 @@ export interface ClientToServerEvents {
 
   'task:submit': (data: { roomCode: string; taskId: string; submittedCode: string }) => void;
 
-  'imposter:inject-bug': (data: { roomCode: string; targetLine: number; bugCode: string }) => void;
+  'imposter:inject-bug': (data: { roomCode: string }) => void;
   'imposter:blur-screen': (data: { roomCode: string; targetUserId: string }) => void;
-  'imposter:send-hint': (data: { roomCode: string; hintText: string }) => void;
+  'imposter:variable-shadow': (data: { roomCode: string }) => void;
   'imposter:lock-keyboard': (data: { roomCode: string; targetUserId: string }) => void;
 
   'meeting:call': (data: { roomCode: string }) => void;

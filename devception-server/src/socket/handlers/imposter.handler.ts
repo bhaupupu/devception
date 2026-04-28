@@ -2,11 +2,18 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import * as imposterService from '../../services/imposter.service';
+import { pickBugMutation, pickShadowMutation } from '../../utils/bugMutator';
+import { logger } from '../../utils/logger';
 
 export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket): void {
+  // Inject Bug — server picks a believable mutation against the live shared
+  // code (comparator flip, off-by-one, missing await, wrong-return, …) and
+  // applies it as a normal editor op. The client used to supply the bug text
+  // directly which (a) was easy to spot and (b) couldn't sit in the right
+  // language. The client payload is now ignored entirely.
   socket.on(
     'imposter:inject-bug',
-    ({ roomCode, targetLine, bugCode }: { roomCode: string; targetLine: number; bugCode: string }) => {
+    ({ roomCode }: { roomCode: string }) => {
       const game = gameService.getLiveGame(roomCode);
       const player = game?.players.find((p) => p.userId === socket.userId);
       if (!player || player.role !== 'imposter') return;
@@ -17,16 +24,15 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         return;
       }
 
-      imposterService.recordAction(roomCode, 'bug');
-
+      let applied = false;
       if (game) {
-        const lines = game.sharedCode.split('\n');
-        if (targetLine >= 0 && targetLine < lines.length) {
-          // Compute the rangeOffset/rangeLength of the targeted line, then submit an op.
-          let rangeOffset = 0;
-          for (let i = 0; i < targetLine; i++) rangeOffset += lines[i].length + 1; // +1 for '\n'
-          const rangeLength = lines[targetLine].length;
-          const op = { rangeOffset, rangeLength, text: bugCode };
+        const mutation = pickBugMutation(game.language, game.sharedCode);
+        if (mutation) {
+          const op = {
+            rangeOffset: mutation.rangeOffset,
+            rangeLength: mutation.rangeLength,
+            text: mutation.text,
+          };
           const result = gameService.updateSharedCode(roomCode, [op], game.editorVersion, socket.userId);
           if (result.accepted) {
             io.to(roomCode).emit('editor:op-apply', {
@@ -34,14 +40,21 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
               ops: [op],
               version: result.currentVersion,
             });
-            io.to(roomCode).emit('imposter:bug-injected', { affectedLine: targetLine });
+            io.to(roomCode).emit('imposter:bug-injected', { affectedLine: mutation.affectedLine });
+            logger.debug(`[imposter ${roomCode}] inject-bug ${mutation.description} @line=${mutation.affectedLine}`);
+            applied = true;
           }
         }
       }
 
+      // Whether or not we found a site to mutate, charging the cooldown is the
+      // right behavior — otherwise an imposter could probe for "no eligible
+      // sites" and effectively get a free check on the codebase shape.
+      imposterService.recordAction(roomCode, 'bug');
       const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
         action: 'bug', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
+        applied,
       });
     }
   );
@@ -75,9 +88,13 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
     }
   );
 
+  // Variable Shadow — replaces the old "False Hint" sabotage. Inserts a single
+  // line that re-binds an existing variable to None/null right after its
+  // original assignment. Reads downstream of the assignment now see the wiped
+  // value, producing a quiet, subtle failure that's easy to miss in a diff.
   socket.on(
-    'imposter:send-hint',
-    ({ roomCode, hintText }: { roomCode: string; hintText: string }) => {
+    'imposter:variable-shadow',
+    ({ roomCode }: { roomCode: string }) => {
       const game = gameService.getLiveGame(roomCode);
       const player = game?.players.find((p) => p.userId === socket.userId);
       if (!player || player.role !== 'imposter') return;
@@ -88,16 +105,34 @@ export function registerImposterHandlers(io: Server, socket: AuthenticatedSocket
         return;
       }
 
+      let applied = false;
+      if (game) {
+        const mutation = pickShadowMutation(game.language, game.sharedCode);
+        if (mutation) {
+          const op = {
+            rangeOffset: mutation.rangeOffset,
+            rangeLength: mutation.rangeLength,
+            text: mutation.text,
+          };
+          const result = gameService.updateSharedCode(roomCode, [op], game.editorVersion, socket.userId);
+          if (result.accepted) {
+            io.to(roomCode).emit('editor:op-apply', {
+              userId: 'imposter',
+              ops: [op],
+              version: result.currentVersion,
+            });
+            io.to(roomCode).emit('imposter:bug-injected', { affectedLine: mutation.affectedLine });
+            logger.debug(`[imposter ${roomCode}] variable-shadow ${mutation.description} @line=${mutation.affectedLine}`);
+            applied = true;
+          }
+        }
+      }
+
       imposterService.recordAction(roomCode, 'hint');
-
-      io.to(roomCode).emit('imposter:hint-received', {
-        hintText: hintText.slice(0, 200),
-        sender: 'anonymous',
-      });
-
       const sharedCooldownMs = game?.settings?.impostorCooldownMs ?? 45000;
       socket.emit('imposter:cooldown-update', {
         action: 'hint', remainingMs: 0, startCooldown: true, cooldownMs: sharedCooldownMs,
+        applied,
       });
     }
   );
