@@ -67,13 +67,27 @@ export interface RunResult {
 
 const EXEC_TIMEOUT_MS = 2000;
 
-// Normalize a value for comparison. Handles JSON, numbers, booleans, strings.
+// Normalize a runtime value to a canonical comparison string.
+//
+// Goals: tolerate harmless representational differences so logically-equivalent
+// answers compare equal. We canonicalize:
+//   - booleans → 'true' | 'false' (lowercased)
+//   - null/undefined → 'null'      (treated equivalently)
+//   - numbers → trimmed string, with float tolerance handled at compare time
+//   - arrays/objects → JSON, with object keys sorted recursively for stability
+//   - strings → trimmed verbatim
 function canonical(value: unknown): string {
-  if (value === undefined) return 'undefined';
-  if (value === null) return 'null';
+  if (value === undefined || value === null) return 'null';
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'NaN';
-  if (typeof value === 'boolean') return String(value);
-  if (typeof value === 'string') return value;
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return '[' + value.map((v) => canonical(v)).join(',') + ']';
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value as Record<string, unknown>).sort();
+    return '{' + keys.map((k) => JSON.stringify(k) + ':' + canonical((value as Record<string, unknown>)[k])).join(',') + '}';
+  }
   try {
     return JSON.stringify(value);
   } catch {
@@ -81,17 +95,60 @@ function canonical(value: unknown): string {
   }
 }
 
+// Normalize an expected value (which the task author wrote as a string).
+// Accepts both Python-style (`True`, `False`, `None`) and JS/JSON-style
+// (`true`, `false`, `null`, `undefined`) literals — these are the most common
+// source of "expected: True · got: true" false negatives.
 function canonicalExpected(expected: string): string {
   const trimmed = expected.trim();
-  if (trimmed === 'true' || trimmed === 'false' || trimmed === 'null' || trimmed === 'undefined') return trimmed;
-  if (!isNaN(Number(trimmed)) && trimmed !== '') return String(Number(trimmed));
+  if (trimmed === '') return '';
+  // Python ↔ JSON literal aliases.
+  const lower = trimmed.toLowerCase();
+  if (lower === 'true') return 'true';
+  if (lower === 'false') return 'false';
+  if (lower === 'none' || lower === 'null' || lower === 'undefined' || lower === 'nil') return 'null';
+  if (lower === 'nan') return 'NaN';
+  // Numeric: any form Number() accepts (handles '1', '1.0', '-3', '1e5', etc.).
+  if (!isNaN(Number(trimmed))) return String(Number(trimmed));
+  // Try strict JSON first (arrays, objects, quoted strings).
   try {
     const parsed = JSON.parse(trimmed);
     return canonical(parsed);
-  } catch {
-    // Plain string (strip surrounding quotes if user supplied them).
-    return trimmed.replace(/^"(.*)"$/s, '$1');
+  } catch { /* not JSON */ }
+  // Try Python-shaped literal: `True`/`False`/`None` inside an array/dict, single
+  // quotes around strings. Translate to JSON and retry once.
+  if (/^[\[{(].*[\]})]$/.test(trimmed)) {
+    const pyToJson = trimmed
+      .replace(/\bTrue\b/g, 'true')
+      .replace(/\bFalse\b/g, 'false')
+      .replace(/\bNone\b/g, 'null')
+      .replace(/'((?:[^'\\]|\\.)*)'/g, (_m, s) => '"' + s.replace(/"/g, '\\"') + '"')
+      // tuple → array
+      .replace(/^\(/, '[')
+      .replace(/\)$/, ']');
+    try {
+      const parsed = JSON.parse(pyToJson);
+      return canonical(parsed);
+    } catch { /* fall through */ }
   }
+  // Plain string: strip surrounding quotes if any.
+  return trimmed.replace(/^"(.*)"$/s, '$1').replace(/^'(.*)'$/s, '$1');
+}
+
+// Compare two canonical strings, allowing small float tolerance for numeric values.
+const FLOAT_EPSILON = 1e-6;
+function valuesMatch(actual: string, expected: string): boolean {
+  if (actual === expected) return true;
+  // Numeric tolerance — both sides parse as a real number.
+  const a = Number(actual);
+  const e = Number(expected);
+  if (Number.isFinite(a) && Number.isFinite(e)) {
+    const diff = Math.abs(a - e);
+    if (diff <= FLOAT_EPSILON) return true;
+    const rel = diff / Math.max(Math.abs(a), Math.abs(e), 1);
+    return rel <= FLOAT_EPSILON;
+  }
+  return false;
 }
 
 function parseInput(input: string): unknown {
@@ -156,7 +213,7 @@ export function runJavaScriptTestCases(code: string, testCases: TestCase[]): Run
         input: tc.input,
         expected,
         actual,
-        passed: actual === expected,
+        passed: valuesMatch(actual, expected),
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -265,8 +322,8 @@ sys.stdout.write(json.dumps(__result__, default=str))
       const raw = proc.stdout?.toString() ?? '';
       let actual: string;
       try { actual = canonical(JSON.parse(raw)); }
-      catch { actual = raw.trim(); }
-      verdicts.push({ index: i, input: tc.input, expected, actual, passed: actual === expected });
+      catch { actual = canonicalExpected(raw); }
+      verdicts.push({ index: i, input: tc.input, expected, actual, passed: valuesMatch(actual, expected) });
     } catch (err) {
       verdicts.push({
         index: i, input: tc.input, expected, actual: '', passed: false,
@@ -355,11 +412,13 @@ export function runCppTestCases(code: string, testCases: TestCase[]): RunResult 
           continue;
         }
         const raw = (proc.stdout ?? '').toString().trim();
-        // Best-effort canonicalization: try JSON parse first, else compare as plain text.
+        // Best-effort canonicalization: try JSON first (numbers/arrays/bools),
+        // otherwise apply the same alias-aware normalizer used for expected
+        // values so `True`/`true` and `1.0`/`1` compare equal.
         let actual: string;
         try { actual = canonical(JSON.parse(raw)); }
-        catch { actual = raw; }
-        verdicts.push({ index: i, input: tc.input, expected, actual, passed: actual === expected });
+        catch { actual = canonicalExpected(raw); }
+        verdicts.push({ index: i, input: tc.input, expected, actual, passed: valuesMatch(actual, expected) });
       } catch (err) {
         verdicts.push({
           index: i, input: tc.input, expected, actual: '', passed: false,

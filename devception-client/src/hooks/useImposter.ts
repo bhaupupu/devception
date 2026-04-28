@@ -44,9 +44,12 @@ export function useImposter(socket: AppSocket | null, roomCode: string) {
     };
   }, [socket]);
 
+  // Inject Bug — server picks the mutation site and content. Client just signals
+  // intent. Replaces the old (targetLine, bugCode) shape that let imposters
+  // splatter obvious `throw` statements.
   const injectBug = useCallback(
-    (targetLine: number, bugCode: string) => {
-      socket?.emit('imposter:inject-bug', { roomCode, targetLine, bugCode });
+    () => {
+      socket?.emit('imposter:inject-bug', { roomCode });
     },
     [socket, roomCode]
   );
@@ -58,9 +61,12 @@ export function useImposter(socket: AppSocket | null, roomCode: string) {
     [socket, roomCode]
   );
 
-  const sendHint = useCallback(
-    (hintText: string) => {
-      socket?.emit('imposter:send-hint', { roomCode, hintText });
+  // Variable Shadow — replaces the old "Send False Hint" sabotage. Server
+  // inserts a quiet `name = None` / `name = null;` line to wipe a variable
+  // mid-function.
+  const variableShadow = useCallback(
+    () => {
+      socket?.emit('imposter:variable-shadow', { roomCode });
     },
     [socket, roomCode]
   );
@@ -72,5 +78,5 @@ export function useImposter(socket: AppSocket | null, roomCode: string) {
     [socket, roomCode]
   );
 
-  return { cooldowns, injectBug, blurScreen, sendHint, lockKeyboard };
+  return { cooldowns, injectBug, blurScreen, variableShadow, lockKeyboard };
 }

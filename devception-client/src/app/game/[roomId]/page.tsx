@@ -39,7 +39,6 @@ export default function GamePage({ params }: Props) {
   const { meeting } = useMeetingStore();
   const [showRoleReveal, setShowRoleReveal] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [currentLine, setCurrentLine] = useState(0);
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
 
   useGameEvents(socket, roomId);
@@ -89,7 +88,6 @@ export default function GamePage({ params }: Props) {
 
   const onCursorMove = useCallback(
     (line: number, column: number) => {
-      setCurrentLine(line - 1);
       handleCursorMove(line, column);
     },
     [handleCursorMove]
@@ -167,7 +165,6 @@ export default function GamePage({ params }: Props) {
               roomCode={roomId}
               players={game.players}
               myUserId={userId}
-              currentLine={currentLine}
             />
           )}
           <div className="flex-1 min-h-0">
@@ -213,7 +210,6 @@ export default function GamePage({ params }: Props) {
                   roomCode={roomId}
                   players={game.players}
                   myUserId={userId}
-                  currentLine={currentLine}
                 />
               )}
               <div className="flex-1 min-h-0">

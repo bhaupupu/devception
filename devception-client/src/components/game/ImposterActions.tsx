@@ -1,6 +1,5 @@
 'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useImposter } from '@/hooks/useImposter';
 import { AppSocket } from '@/lib/socket';
 import { PlayerState } from '@/types/game';
@@ -10,15 +9,12 @@ interface Props {
   roomCode: string;
   players: PlayerState[];
   myUserId: string;
-  currentLine: number;
 }
 
 const SHARED_COOLDOWN_MS = 45000; // matches server default
 
-export function ImposterActions({ socket, roomCode, players, myUserId, currentLine }: Props) {
-  const { cooldowns, injectBug, blurScreen, sendHint, lockKeyboard } = useImposter(socket, roomCode);
-  const [hintInput, setHintInput] = useState('');
-  const [showHint, setShowHint] = useState(false);
+export function ImposterActions({ socket, roomCode, players, myUserId }: Props) {
+  const { cooldowns, injectBug, blurScreen, variableShadow, lockKeyboard } = useImposter(socket, roomCode);
 
   const others = players.filter((p) => p.userId !== myUserId && p.isAlive && p.isConnected);
 
@@ -65,13 +61,13 @@ export function ImposterActions({ socket, roomCode, players, myUserId, currentLi
         />
       </div>
 
-      {/* Bug inject */}
+      {/* Bug inject — server-side mutation picker */}
       <SabotageButton
         label="Inject Bug"
         icon="🐛"
-        description="Insert broken code at cursor"
+        description="Quietly mutates a comparator, boundary, or return"
         isReady={isReady}
-        onClick={() => injectBug(currentLine, '  throw new Error("Sabotaged!");')}
+        onClick={injectBug}
       />
 
       {/* Screen blur */}
@@ -108,52 +104,14 @@ export function ImposterActions({ socket, roomCode, players, myUserId, currentLi
         </div>
       </div>
 
-      {/* Misleading hint */}
-      <AnimatePresence mode="wait">
-        {showHint ? (
-          <motion.div
-            key="hint-input"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-1 overflow-hidden"
-          >
-            <input
-              value={hintInput}
-              onChange={(e) => setHintInput(e.target.value)}
-              placeholder="Misleading hint…"
-              maxLength={200}
-              className="w-full px-2 py-1.5 rounded text-xs"
-              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            />
-            <div className="flex gap-1">
-              <SabotageButton
-                label="Send"
-                icon="💬"
-                isReady={isReady}
-                onClick={() => { sendHint(hintInput); setHintInput(''); setShowHint(false); }}
-                small
-              />
-              <button
-                onClick={() => setShowHint(false)}
-                className="flex-1 py-1.5 rounded text-xs"
-                style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div key="hint-btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <SabotageButton
-              label="Send False Hint"
-              icon="💬"
-              isReady={isReady}
-              onClick={() => setShowHint(true)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Variable Shadow — replaces the old False Hint sabotage */}
+      <SabotageButton
+        label="Variable Shadow"
+        icon="👻"
+        description="Wipes a variable mid-function with a hidden re-assignment"
+        isReady={isReady}
+        onClick={variableShadow}
+      />
     </div>
   );
 }
