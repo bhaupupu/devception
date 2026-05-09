@@ -7,6 +7,11 @@ export const env = {
   MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URL || process.env.MONGODB_URL || 'mongodb://localhost:27017/codecrew',
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  CLIENT_ORIGINS: (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  ALLOW_VERCEL_PREVIEWS: process.env.ALLOW_VERCEL_PREVIEWS === 'true',
 
   // Cooldowns (ms)
   IMPOSTER_BUG_COOLDOWN_MS: parseInt(process.env.IMPOSTER_BUG_COOLDOWN_MS || '45000', 10),
