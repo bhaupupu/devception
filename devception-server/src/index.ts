@@ -4,7 +4,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
-import { isAllowedOrigin } from './config/cors';
 import { connectDB } from './config/db';
 import { createSocketServer } from './socket';
 import { errorHandler } from './middleware/errorHandler';
@@ -20,10 +19,13 @@ const httpServer = http.createServer(app);
 
 // Security
 app.use(helmet());
+const allowedOrigins = [env.CLIENT_ORIGIN, 'http://localhost:3000'];
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
+      // Allow no-origin requests (curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin ${origin} not allowed`));

@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
-import { isAllowedOrigin } from '../config/cors';
+import { env } from '../config/env';
 import { socketAuthMiddleware, AuthenticatedSocket } from './middleware/socketAuth';
 import { registerRoomHandlers } from './handlers/room.handler';
 import { registerEditorHandlers } from './handlers/editor.handler';
@@ -15,7 +15,8 @@ export function createSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
     cors: {
       origin: (origin, callback) => {
-        if (isAllowedOrigin(origin)) {
+        if (!origin) return callback(null, true);
+        if ([env.CLIENT_ORIGIN, 'http://localhost:3000'].includes(origin) || origin.endsWith('.vercel.app')) {
           callback(null, true);
         } else {
           callback(new Error(`CORS: origin ${origin} not allowed`));
