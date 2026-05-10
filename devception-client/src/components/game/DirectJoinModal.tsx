@@ -11,7 +11,7 @@ export function DirectJoinModal() {
     setLoading(true);
 
     try {
-      const res = await signIn('credentials', {
+      const res = await signIn('guest', {
         displayName: name.trim(),
         redirect: false,
       });
@@ -55,6 +55,17 @@ export function DirectJoinModal() {
             {loading ? 'JOINING...' : '▶ PLAY NOW'}
           </button>
         </form>
+
+        <div className="mt-2 pt-4 border-t-2 border-[#e5e5e5] flex flex-col gap-2">
+          <p className="font-mono text-xs text-gray-500">Already have an account?</p>
+          <button
+            type="button"
+            onClick={() => window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.href)}`}
+            className="pixel-btn pixel-btn-light w-full py-2 text-sm"
+          >
+            LOGIN TO SAVE PROGRESS
+          </button>
+        </div>
       </div>
     </div>
   );
