@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
@@ -17,6 +18,17 @@ import healthRoutes from './routes/health.routes';
 
 const app = express();
 const httpServer = http.createServer(app);
+
+// ─── Compression ─────────────────────────────────────────────────────────────
+// Gzip/brotli compress all JSON API responses. Saves 60–80% bandwidth.
+// Must come before other middleware so the response stream is compressed.
+app.use(compression());
+
+// HTTP keep-alive — reduces TCP handshake overhead for repeated API calls
+app.use((_req, res, next) => {
+  res.setHeader('Connection', 'keep-alive');
+  next();
+});
 
 // ─── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet());

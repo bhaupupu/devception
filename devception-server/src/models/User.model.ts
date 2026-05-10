@@ -61,3 +61,6 @@ const UserSchema = new Schema<IUser>(
 );
 
 export const User = mongoose.model<IUser>('User', UserSchema);
+
+// Ensure indexes (googleId unique, email unique) are created on Atlas.
+User.createIndexes().catch(() => { /* non-fatal */ });

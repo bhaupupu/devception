@@ -3,6 +3,7 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { endGame } from '../../services/game.service';
 import { runTestCases } from '../../services/taskRunner.service';
+import { logger } from '../../utils/logger';
 
 export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): void {
   socket.on(
@@ -31,8 +32,11 @@ export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): v
         return;
       }
 
+      // Bug fix: use task.language (each task declares its own language), NOT
+      // game.language. A C++ lobby can contain Python tasks and vice-versa.
+      const taskLanguage = (task as any).language ?? game.language;
       const { supported, allPassed, verdicts, note } = runTestCases(
-        game.language,
+        taskLanguage,
         submittedCode,
         task.testCases ?? []
       );
@@ -64,7 +68,10 @@ export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): v
           io.to(roomCode).emit('task:progress-update', { sharedProgress: result.sharedProgress });
 
           if (result.allDone) {
-            try { await endGame(roomCode, 'good-coders'); } catch (err) { console.error('endGame error:', err); }
+            // Guard against double endGame: editor debounce may also fire
+            // simultaneously. completeTask returns null on a re-call, so this
+            // branch only executes once per game.
+            try { await endGame(roomCode, 'good-coders'); } catch (err) { logger.error('endGame on task completion failed', err as Error); }
             io.to(roomCode).emit('game:end', { winner: 'good-coders' });
           }
         }

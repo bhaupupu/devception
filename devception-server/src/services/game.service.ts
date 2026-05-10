@@ -67,19 +67,29 @@ const PLAYER_COLORS = [
 // In-memory live game state (for performance)
 const liveGames = new Map<string, IGame>();
 
-// Periodic flush to MongoDB every 60s
-setInterval(async () => {
+// Periodic flush to MongoDB every 60s — runs all updates in PARALLEL so a
+// single slow write doesn't delay the rest. Uses Promise.allSettled so
+// individual failures are logged without aborting the entire batch.
+setInterval(() => {
+  const flushPromises: Promise<void>[] = [];
   for (const [roomCode, game] of liveGames.entries()) {
     if (game.phase !== 'waiting' && game.phase !== 'results') {
-      await Game.findByIdAndUpdate(game._id, {
-        sharedCode: game.sharedCode,
-        sharedProgress: game.sharedProgress,
-        editorVersion: game.editorVersion,
-        players: game.players,
-        tasks: game.tasks,
-        'timer.remainingMs': game.timer.remainingMs,
-      }).catch((e) => logger.error('Checkpoint flush failed', e));
+      flushPromises.push(
+        Game.findByIdAndUpdate(game._id, {
+          sharedCode: game.sharedCode,
+          sharedProgress: game.sharedProgress,
+          editorVersion: game.editorVersion,
+          players: game.players,
+          tasks: game.tasks,
+          'timer.remainingMs': game.timer.remainingMs,
+        })
+          .then(() => { /* ok */ })
+          .catch((e) => { logger.error(`Checkpoint flush failed for ${roomCode}`, e); })
+      );
     }
+  }
+  if (flushPromises.length > 0) {
+    Promise.allSettled(flushPromises).catch(() => { /* allSettled never rejects */ });
   }
 }, 60000);
 
@@ -395,6 +405,10 @@ export async function endGame(
 ): Promise<void> {
   const game = liveGames.get(roomCode);
   if (!game) return;
+
+  // Idempotency guard: if endGame was already called (race between task
+  // completion and editor debounce both triggering simultaneously), skip.
+  if (game.phase === 'results') return;
 
   game.phase = 'results';
   game.winner = winner;

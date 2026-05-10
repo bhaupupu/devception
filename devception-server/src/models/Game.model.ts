@@ -158,3 +158,8 @@ const GameSchema = new Schema<IGame>(
 );
 
 export const Game = mongoose.model<IGame>('Game', GameSchema);
+
+// ─── Indexes ─────────────────────────────────────────────────────────────────
+// Ensure indexes exist. createIndexes() is idempotent and a no-op if the
+// index already exists. Called at app startup via model import.
+Game.createIndexes().catch(() => { /* non-fatal, app still works without */ });

@@ -3,6 +3,7 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { endGame } from '../../services/game.service';
 import * as sessionManager from '../../services/sessionManager.service';
+import { env } from '../../config/env';
 import { logger } from '../../utils/logger';
 
 // Reconnect grace window: when a socket drops for any reason other than an
@@ -155,7 +156,6 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     io.to(roomCode).emit('room:ready-update', { userId: socket.userId, readyToStart: true });
 
     if (allReady) {
-      const { env } = require('../../config/env');
       const game = gameService.getLiveGame(roomCode);
       const connectedCount = game?.players.filter((p) => p.isConnected).length ?? 0;
       if (connectedCount >= env.MIN_PLAYERS) {
@@ -193,7 +193,6 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
     }
 
     const connectedCount = game.players.filter((p) => p.isConnected).length;
-    const { env } = require('../../config/env');
     if (connectedCount < env.MIN_PLAYERS) {
       socket.emit('room:error', { message: `Need at least ${env.MIN_PLAYERS} players to start` });
       return;
@@ -297,7 +296,6 @@ function launchGame(io: Server, roomCode: string): void {
 }
 
 function startGameTimer(io: Server, roomCode: string): void {
-  const { env } = require('../../config/env');
   const endAt = Date.now() + env.GAME_DURATION_MS;
 
   const interval = setInterval(async () => {
@@ -316,7 +314,7 @@ function startGameTimer(io: Server, roomCode: string): void {
 
     if (remaining <= 0) {
       clearInterval(interval);
-      try { await gameService.endGame(roomCode, 'imposters'); } catch (err) { console.error('endGame error:', err); }
+      try { await gameService.endGame(roomCode, 'imposters'); } catch (err) { logger.error('endGame timer expiry failed', err as Error); }
       io.to(roomCode).emit('game:end', { winner: 'imposters' });
     }
   }, 1000);
