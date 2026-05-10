@@ -1,42 +1,47 @@
 # ─── Stage 1: Builder ─────────────────────────────────────────────────────────
-# Use Node 22 LTS (Iron) for building. Alpine keeps the image lean.
 FROM node:22-alpine AS builder
 
-# Install build tools needed for native addons (e.g. bcrypt, canvas).
-# python3 + make + g++ mirror what nixpacks.toml installs on Railway.
+# Build tools needed to compile native Node addons (mirrors nixpacks.toml)
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-# Copy package files first to leverage Docker layer cache.
-# Dependencies are only reinstalled when package*.json changes.
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-# Copy source and compile TypeScript
 COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build
 
 # ─── Stage 2: Runner ──────────────────────────────────────────────────────────
-# Separate stage: no dev-dependencies, no source code, minimal attack surface.
 FROM node:22-alpine AS runner
+
+# ─── Language runtimes required by taskRunner.service.ts ──────────────────────
+# The task runner calls spawnSync('python3', ...) and spawnSync('g++', ...)
+# at startup. If these binaries are absent the languages are silently disabled
+# and players see "✗ C++ compiler not available on server" / Python errors.
+#
+# Package sizes on Alpine (compressed):
+#   python3  ~50 MB   — needed for Python mini-tasks
+#   g++      ~17 MB   — needed for C++ mini-tasks (pulls in gcc + libstdc++)
+#   libstdc++ is auto-pulled as a g++ dependency
+RUN apk add --no-cache python3 g++ libstdc++
 
 WORKDIR /app
 
-# Copy only what's needed to run
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/dist/ ./dist/
 
-# Install production dependencies only
 RUN npm ci --omit=dev --ignore-scripts
 
-# Render/Railway inject PORT at runtime; default to 4000 for local Docker use
+# Verify runtimes are present — fail the Docker build loudly if missing
+# rather than discovering it at game runtime.
+RUN python3 --version && g++ --version && node --version
+
 ENV PORT=4000
 ENV NODE_ENV=production
 
 EXPOSE 4000
 
-# Use the compiled JS entrypoint (not ts-node) — consistent with Railway + Render
 CMD ["node", "dist/index.js"]
