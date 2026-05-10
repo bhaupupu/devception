@@ -7,6 +7,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/gameStore';
 import { useGameEvents } from '@/hooks/useGame';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { DirectJoinModal } from '@/components/game/DirectJoinModal';
 
 interface Props {
   params: { roomId: string };
@@ -14,7 +15,7 @@ interface Props {
 
 export default function WaitingRoomPage({ params }: Props) {
   const { roomId } = params;
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const socket = useSocket();
   const { game } = useGameStore();
@@ -47,6 +48,22 @@ export default function WaitingRoomPage({ params }: Props) {
   // First player in the list is admin
   const isAdmin = !!game && game.players.length > 0 &&
     game.players[0].userId === userId;
+
+  if (status === 'loading') {
+    return (
+      <div className="pixel-bg min-h-screen flex items-center justify-center">
+        <LoadingSpinner size={40} />
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="pixel-bg min-h-screen">
+        <DirectJoinModal />
+      </div>
+    );
+  }
 
   if (!game) {
     return (
