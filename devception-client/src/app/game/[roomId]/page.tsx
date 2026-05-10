@@ -23,6 +23,7 @@ import { ScreenBlurOverlay } from '@/components/game/ScreenBlurOverlay';
 import { MeetingModal } from '@/components/meeting/MeetingModal';
 import { GameOverScreen } from '@/components/game/GameOverScreen';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { DirectJoinModal } from '@/components/game/DirectJoinModal';
 
 type MobileTab = 'editor' | 'tasks' | 'chat' | 'players';
 
@@ -32,7 +33,7 @@ interface Props {
 
 export default function GamePage({ params }: Props) {
   const { roomId } = params;
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const socket = useSocket();
   const { game, myRole, isLocked, reset } = useGameStore();
@@ -92,6 +93,22 @@ export default function GamePage({ params }: Props) {
     },
     [handleCursorMove]
   );
+
+  if (status === 'loading') {
+    return (
+      <div className="pixel-bg min-h-screen flex items-center justify-center">
+        <LoadingSpinner size={48} />
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="pixel-bg min-h-screen">
+        <DirectJoinModal />
+      </div>
+    );
+  }
 
   if (!game) {
     return (

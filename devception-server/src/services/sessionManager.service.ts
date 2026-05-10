@@ -26,13 +26,10 @@
 //     we leave the newer registration in place.
 
 import { logger } from '../utils/logger';
+import Redis from 'ioredis';
+import * as gameService from './game.service';
 
-interface Session {
-  socketId: string;
-  connectedAt: number;
-}
-
-const activeByUser = new Map<string, Session>();
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 // Track sockets that we deliberately disconnected as part of a takeover, so the
 // room-leave handler can skip broadcasting "<name> left" — the user didn't leave,
@@ -43,22 +40,40 @@ export interface TakeoverNotice {
   previousSocketId: string;
 }
 
-export function register(userId: string, socketId: string): TakeoverNotice | null {
-  const existing = activeByUser.get(userId);
-  activeByUser.set(userId, { socketId, connectedAt: Date.now() });
+export async function checkActiveGameConflict(userId: string): Promise<boolean> {
+  // If Redis isn't available, we fall back to not blocking (or we could use local games)
+  if (!redis) return false;
+  
+  // Find all games where this player is alive
+  const games = Array.from(gameService.getAllLiveGames().values());
+  const inLiveGame = games.some(g => 
+    g.phase === 'in-progress' && 
+    g.players.some(p => p.userId === userId && p.isAlive && p.isConnected)
+  );
+  
+  // If they are actively playing, they shouldn't log in elsewhere
+  return inLiveGame;
+}
 
-  if (existing && existing.socketId !== socketId) {
-    takeoverSockets.add(existing.socketId);
-    logger.info(`session takeover: user=${userId} oldSocket=${existing.socketId} newSocket=${socketId}`);
-    return { previousSocketId: existing.socketId };
+export async function register(userId: string, socketId: string): Promise<TakeoverNotice | null> {
+  if (!redis) return null;
+  
+  const existingSocketId = await redis.get(`session:${userId}`);
+  await redis.set(`session:${userId}`, socketId, 'EX', 86400); // 24hr TTL
+
+  if (existingSocketId && existingSocketId !== socketId) {
+    takeoverSockets.add(existingSocketId);
+    logger.info(`session takeover: user=${userId} oldSocket=${existingSocketId} newSocket=${socketId}`);
+    return { previousSocketId: existingSocketId };
   }
   return null;
 }
 
-export function unregister(userId: string, socketId: string): void {
-  const existing = activeByUser.get(userId);
-  if (existing && existing.socketId === socketId) {
-    activeByUser.delete(userId);
+export async function unregister(userId: string, socketId: string): Promise<void> {
+  if (!redis) return;
+  const existingSocketId = await redis.get(`session:${userId}`);
+  if (existingSocketId === socketId) {
+    await redis.del(`session:${userId}`);
   }
   takeoverSockets.delete(socketId);
 }
@@ -73,6 +88,8 @@ export function consumeTakeoverFlag(socketId: string): boolean {
   return was;
 }
 
-export function activeSocketFor(userId: string): string | undefined {
-  return activeByUser.get(userId)?.socketId;
+export async function activeSocketFor(userId: string): Promise<string | undefined> {
+  if (!redis) return undefined;
+  const val = await redis.get(`session:${userId}`);
+  return val || undefined;
 }

@@ -40,13 +40,24 @@ export function createSocketServer(httpServer: HttpServer): Server {
 
   io.use(socketAuthMiddleware);
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     const authed = socket as AuthenticatedSocket;
     logger.info(`Socket connected: ${authed.displayName} (${socket.id})`);
 
+    const inConflict = await sessionManager.checkActiveGameConflict(authed.userId);
+    if (inConflict) {
+      logger.warn(`Connection rejected: ${authed.userId} is already in an active game.`);
+      socket.emit('session:force-logout', {
+        reason: 'active-game-conflict',
+        message: 'You cannot login on another device while currently playing a game.',
+      });
+      setTimeout(() => { try { socket.disconnect(true); } catch { /* ignored */ } }, 250);
+      return;
+    }
+
     // Register this socket as the authoritative connection for the user. If an
     // older socket existed, notify it and disconnect — "one active session" policy.
-    const takeover = sessionManager.register(authed.userId, socket.id);
+    const takeover = await sessionManager.register(authed.userId, socket.id);
     if (takeover) {
       const old = io.sockets.sockets.get(takeover.previousSocketId);
       if (old) {
@@ -67,7 +78,9 @@ export function createSocketServer(httpServer: HttpServer): Server {
     registerChatHandlers(io, authed);
 
     socket.on('disconnect', () => {
-      sessionManager.unregister(authed.userId, socket.id);
+      sessionManager.unregister(authed.userId, socket.id).catch(err => {
+        logger.error('Failed to unregister session', err);
+      });
       logger.info(`Socket disconnected: ${authed.displayName} (${socket.id})`);
     });
   });

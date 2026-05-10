@@ -26,6 +26,13 @@ export function useSocket(): AppSocket | null {
     const onForceLogout = (data: { reason?: string; message?: string }) => {
       disconnectSocket();
       const reason = data.reason ?? 'signed-in-elsewhere';
+      if (reason === 'active-game-conflict') {
+        // Do not sign out of NextAuth! That would kill the session on the user's main active tab.
+        // Just bounce them out of the game route to the home page with an error.
+        const url = `/?error=${encodeURIComponent(reason)}`;
+        if (typeof window !== 'undefined') window.location.replace(url);
+        return;
+      }
       signOut({ redirect: false }).finally(() => {
         const url = `/login?reason=${encodeURIComponent(reason)}`;
         if (typeof window !== 'undefined') window.location.replace(url);

@@ -12,7 +12,7 @@ import { logger } from '../../utils/logger';
 // window the disconnect never surfaces as a leave event and they step right
 // back into their seat. If the window expires, the normal leave/end-game
 // logic runs.
-const RECONNECT_GRACE_MS = 10_000;
+const RECONNECT_GRACE_MS = 5000;
 type PendingLeave = { timer: ReturnType<typeof setTimeout>; socket: AuthenticatedSocket; roomCode: string };
 // Keyed by `${roomCode}:${userId}` so a single user can have at most one
 // pending leave across all their past sockets (reconnection would replace it).
@@ -80,25 +80,22 @@ async function announceAndHandleLeave(
   // End-game check: only applies during an active round.
   if (!game || game.phase !== 'in-progress' || !leaver) return;
 
-  // Treat the leaver as eliminated for win-condition purposes.
-  leaver.isAlive = false;
-  const aliveImposters = game.players.filter((p) => p.isAlive && p.role === 'imposter');
-  const aliveGoodCoders = game.players.filter((p) => p.isAlive && p.role === 'good-coder');
+  // Treat the leaver as eliminated for win-condition purposes and recalculate tasks.
+  const result = gameService.handlePlayerLeave(roomCode, socket.userId);
+  if (!result) return;
 
-  let winner: 'good-coders' | 'imposters' | null = null;
-  if (aliveImposters.length === 0) winner = 'good-coders';
-  else if (aliveImposters.length >= aliveGoodCoders.length) winner = 'imposters';
+  io.to(roomCode).emit('task:progress-update', { sharedProgress: result.sharedProgress });
 
-  if (winner) {
-    try { await endGame(roomCode, winner); } catch (err) { logger.error('endGame on leave failed', err as Error); }
+  if (result.gameOver && result.winner) {
+    try { await endGame(roomCode, result.winner); } catch (err) { logger.error('endGame on leave failed', err as Error); }
     io.to(roomCode).emit('chat:system', {
       type: 'system',
-      message: winner === 'good-coders'
-        ? 'The imposter left the game — good coders win!'
+      message: result.winner === 'good-coders'
+        ? 'The imposter left or tasks reached 100% — good coders win!'
         : 'Too few good coders remain — imposters win!',
       timestamp: Date.now(),
     });
-    io.to(roomCode).emit('game:end', { winner });
+    io.to(roomCode).emit('game:end', { winner: result.winner });
   }
 }
 

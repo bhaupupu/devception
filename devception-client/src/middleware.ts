@@ -7,5 +7,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ['/lobby/:path*', '/game/:path*', '/results/:path*', '/profile', '/play'],
+  matcher: ['/results/:path*', '/profile', '/play'],
 };

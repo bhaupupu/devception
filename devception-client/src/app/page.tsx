@@ -10,7 +10,8 @@ export default function RootPage() {
   useEffect(() => {
     if (status === 'loading') return;
     if (session) {
-      router.replace('/lobby');
+      const search = window.location.search;
+      router.replace('/lobby' + search);
     } else {
       router.replace('/login');
     }

@@ -1,12 +1,15 @@
 'use client';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HomePage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const user = session?.user;
+
+  const hasConflict = searchParams.get('error') === 'active-game-conflict';
 
   return (
     <main className="min-h-screen pixel-bg flex flex-col">
@@ -28,6 +31,33 @@ export default function HomePage() {
           </button>
         </div>
       </header>
+
+      <AnimatePresence>
+        {hasConflict && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <div className="game-panel p-6 max-w-md w-full bg-white text-center flex flex-col gap-4">
+              <div className="text-4xl">⚠️</div>
+              <h2 className="pixel-font text-red-600 text-lg">ACTIVE GAME CONFLICT</h2>
+              <p className="font-mono text-sm text-gray-700">
+                You are currently playing in an active game session on another device or tab.
+              </p>
+              <p className="font-mono text-sm text-gray-700">
+                Please finish or leave that game before joining here to prevent synchronization issues.
+              </p>
+              <button
+                onClick={() => window.location.replace('/lobby')}
+                className="pixel-btn pixel-btn-light w-full mt-4"
+              >
+                CHECK AGAIN
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 p-8">

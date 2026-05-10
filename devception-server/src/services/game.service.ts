@@ -110,6 +110,10 @@ export function getLiveGame(roomCode: string): IGame | undefined {
   return liveGames.get(roomCode);
 }
 
+export function getAllLiveGames(): Map<string, IGame> {
+  return liveGames;
+}
+
 export async function getOrLoadGame(roomCode: string): Promise<IGame | null> {
   if (liveGames.has(roomCode)) return liveGames.get(roomCode)!;
   const game = await Game.findOne({ roomCode });
@@ -371,7 +375,7 @@ export function completeTask(
     0
   );
   const maxProgress = game.tasks.reduce((sum, t) => sum + t.progressValue, 0);
-  game.sharedProgress = Math.min(100, Math.round((totalProgress / maxProgress) * 100));
+  game.sharedProgress = maxProgress === 0 ? 100 : Math.min(100, Math.round((totalProgress / maxProgress) * 100));
 
   const allDone = game.sharedProgress >= 100;
   return { sharedProgress: game.sharedProgress, allDone };
@@ -397,6 +401,50 @@ export function ejectPlayer(
     return { ejected: player ?? null, gameOver: true, winner: 'imposters' };
   }
   return { ejected: player ?? null, gameOver: false, winner: null };
+}
+
+export function handlePlayerLeave(
+  roomCode: string,
+  userId: string
+): { game: IGame; sharedProgress: number; allDone: boolean; gameOver: boolean; winner: 'good-coders' | 'imposters' | null } | null {
+  const game = liveGames.get(roomCode);
+  if (!game) return null;
+
+  const player = game.players.find((p) => p.userId === userId);
+  if (!player) return null;
+
+  player.isAlive = false;
+  player.isConnected = false;
+
+  const aliveImposters = game.players.filter((p) => p.isAlive && p.role === 'imposter');
+  const aliveGoodCoders = game.players.filter((p) => p.isAlive && p.role === 'good-coder');
+
+  if (aliveImposters.length === 0) {
+    return { game, sharedProgress: game.sharedProgress, allDone: true, gameOver: true, winner: 'good-coders' };
+  }
+  if (aliveImposters.length >= aliveGoodCoders.length && game.phase === 'in-progress') {
+    return { game, sharedProgress: game.sharedProgress, allDone: true, gameOver: true, winner: 'imposters' };
+  }
+
+  let tasksChanged = false;
+  for (const task of game.tasks) {
+    if (task.assignedTo === userId && !task.isCompleted) {
+      task.progressValue = 0; // Remove from denominator
+      tasksChanged = true;
+    }
+  }
+
+  if (tasksChanged) {
+    const totalProgress = game.tasks.reduce(
+      (sum, t) => sum + (t.isCompleted ? t.progressValue : 0),
+      0
+    );
+    const maxProgress = game.tasks.reduce((sum, t) => sum + t.progressValue, 0);
+    game.sharedProgress = maxProgress === 0 ? 100 : Math.min(100, Math.round((totalProgress / maxProgress) * 100));
+  }
+
+  const allDone = game.sharedProgress >= 100;
+  return { game, sharedProgress: game.sharedProgress, allDone, gameOver: allDone, winner: allDone ? 'good-coders' : null };
 }
 
 export async function endGame(
