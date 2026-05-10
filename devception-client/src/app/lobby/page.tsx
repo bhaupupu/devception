@@ -2,8 +2,10 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Suspense } from 'react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-export default function HomePage() {
+function LobbyContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,5 +147,13 @@ export default function HomePage() {
         </p>
       </footer>
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pixel-bg flex items-center justify-center"><LoadingSpinner size={48} /></div>}>
+      <LobbyContent />
+    </Suspense>
   );
 }

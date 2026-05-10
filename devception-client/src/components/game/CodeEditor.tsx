@@ -3,17 +3,15 @@ import { useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/editorStore';
 import { getSocket } from '@/lib/socket';
-import type { EditorOp } from '@/types/socket';
 import type { Monaco } from '@monaco-editor/react';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 
+import type { editor } from 'monaco-editor';
+
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 interface Props {
-  // Called with a batch of ops and the baseVersion they were authored against.
-  // The hook wires this to the `editor:op` socket emission.
-  onOps: (ops: EditorOp[], baseVersion: number) => void;
   onCursorMove: (line: number, column: number) => void;
   language: string;
   readOnly?: boolean;
@@ -21,13 +19,12 @@ interface Props {
   roomCode?: string;
 }
 
-export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
-  const { code, version, resetNonce, protectedRanges, cursors } = useEditorStore();
-  const editorRef = useRef<any>(null);
+export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
+  const { code, resetNonce, protectedRanges, cursors } = useEditorStore();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const ydocRef = useRef<Y.Doc | null>(null);
   const bindingRef = useRef<MonacoBinding | null>(null);
-  const protectedDecorationsRef = useRef<string[]>([]);
 
   const onViolationRef = useRef(onProtectedViolation);
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
@@ -86,11 +83,13 @@ export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly =
     ydocRef.current = ydoc;
 
     // Send updates to the server
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     ydoc.on('update', (update: Uint8Array, origin: any) => {
       if (origin !== 'server') {
         socket.emit('editor:ydoc-sync', { roomCode, update: update.buffer as ArrayBuffer });
       }
     });
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Listen for incoming Yjs updates from the server
     const onYDocSync = (data: { update: ArrayBuffer }) => {
@@ -107,17 +106,20 @@ export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly =
 
     // Bind Monaco once editor is ready
     if (editorRef.current) {
-      const ytext = ydoc.getText('monaco');
-      // Initialize with code if empty
-      if (ytext.length === 0 && code) {
-        ytext.insert(0, code);
+      const model = editorRef.current.getModel();
+      if (model) {
+        const ytext = ydoc.getText('monaco');
+        // Initialize with code if empty
+        if (ytext.length === 0 && code) {
+          ytext.insert(0, code);
+        }
+        bindingRef.current = new MonacoBinding(
+          ytext,
+          model,
+          new Set([editorRef.current]),
+          null // We can add awareness provider here later
+        );
       }
-      bindingRef.current = new MonacoBinding(
-        ytext,
-        editorRef.current.getModel(),
-        new Set([editorRef.current]),
-        null // We can add awareness provider here later
-      );
     }
 
     return () => {
@@ -128,7 +130,7 @@ export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly =
     };
   }, [roomCode]); // Setup once per room
 
-  function handleMount(editorInstance: any, monaco: Monaco) {
+  function handleMount(editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) {
     editorRef.current = editorInstance;
     monacoRef.current = monaco;
 
@@ -147,12 +149,12 @@ export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly =
         );
       }
 
-      model.onDidChangeContent((e: any) => {
+      model.onDidChangeContent((e: editor.IModelContentChangedEvent) => {
         if (e.isFlush) return;
 
         const ranges = protectedRef.current;
         if (ranges && ranges.length > 0) {
-          const overlaps = e.changes.some((ch: any) => {
+          const overlaps = e.changes.some((ch: editor.IModelContentChange) => {
             const startLine = model.getPositionAt(ch.rangeOffset).lineNumber;
             const endLine = model.getPositionAt(ch.rangeOffset + ch.rangeLength).lineNumber;
             return ranges.some((r) => !(endLine < r.startLine || startLine > r.endLine));
@@ -166,7 +168,7 @@ export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly =
       });
     }
 
-    editorInstance.onDidChangeCursorPosition((e: any) => {
+    editorInstance.onDidChangeCursorPosition((e: editor.ICursorPositionChangedEvent) => {
       onCursorMove(e.position.lineNumber, e.position.column);
     });
   }

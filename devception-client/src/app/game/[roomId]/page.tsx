@@ -43,7 +43,7 @@ export default function GamePage({ params }: Props) {
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
 
   useGameEvents(socket, roomId);
-  const { emitOps, handleCursorMove } = useEditor(socket, roomId);
+  const { handleCursorMove } = useEditor(socket, roomId);
   const { callMeeting } = useVoting(socket, roomId);
   const addSystemMessage = useChatStore((s) => s.addSystemMessage);
 
@@ -163,16 +163,15 @@ export default function GamePage({ params }: Props) {
             <div className="flex-1" />
             <EmergencyButton onCall={callMeeting} disabled={!!meeting} />
           </div>
-          <div className="flex-1 min-h-0">
+            <div className="h-[65vh] md:h-full">
               <CodeEditor
                 roomCode={roomId}
-                onOps={emitOps}
                 onCursorMove={onCursorMove}
                 language={game.language}
                 readOnly={isLocked || !canEdit}
                 onProtectedViolation={onProtectedViolation}
               />
-          </div>
+            </div>
         </div>
 
         {/* Right: Task panel + imposter actions + chat */}
@@ -211,7 +210,6 @@ export default function GamePage({ params }: Props) {
               <div className="flex-1 min-h-0">
                 <CodeEditor
                   roomCode={roomId}
-                  onOps={emitOps}
                   onCursorMove={onCursorMove}
                   language={game.language}
                   readOnly={isLocked || !canEdit}
