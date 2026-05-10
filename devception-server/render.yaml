@@ -1,0 +1,66 @@
+services:
+  - type: web
+    name: devception-server
+    runtime: node
+    # Render's Oregon (US West) region — closest to MongoDB Atlas US East clusters.
+    # Change to "frankfurt" if your Atlas cluster is in EU.
+    region: oregon
+    plan: free
+
+    # The repo root is the monorepo. Tell Render the backend lives here.
+    rootDir: devception-server
+
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+
+    # Render pings this path every 30 s. Returns 200 while the process is alive.
+    # We use the liveness probe (/health) NOT the DB probe (/health/db) so that
+    # a transient MongoDB reconnect doesn't cause Render to cycle the container.
+    healthCheckPath: /health
+
+    envVars:
+      # ── Runtime ──────────────────────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+
+      # Render auto-sets PORT; we declare it here so it's visible in the dashboard.
+      # Do NOT hardcode a value — Render controls which port it binds.
+      - key: PORT
+        value: 10000
+
+      # ── Database ─────────────────────────────────────────────────────────────
+      # Set this to your MongoDB Atlas connection string in the Render dashboard.
+      # Format:  mongodb+srv://<user>:<password>@<cluster>.mongodb.net/codecrew?retryWrites=true&w=majority
+      # NEVER use Railway's internal URL here — it is not routable from Render.
+      - key: MONGODB_URI
+        sync: false   # prevents Render from syncing a stale value from render.yaml
+
+      # ── Auth ─────────────────────────────────────────────────────────────────
+      # Must be identical to NEXTAUTH_SECRET in your Vercel frontend deployment.
+      - key: NEXTAUTH_SECRET
+        sync: false
+
+      # ── CORS ─────────────────────────────────────────────────────────────────
+      # Set to your Vercel production URL, e.g. https://devception.vercel.app
+      - key: CLIENT_ORIGIN
+        sync: false
+
+      # ── Game settings (optional — defaults are built into env.ts) ────────────
+      - key: GAME_DURATION_MS
+        value: "900000"
+      - key: MEETING_DISCUSSION_MS
+        value: "60000"
+      - key: MEETING_VOTING_MS
+        value: "30000"
+      - key: MAX_PLAYERS
+        value: "8"
+      - key: MIN_PLAYERS
+        value: "4"
+
+      # ── Imposter cooldowns (optional) ─────────────────────────────────────────
+      - key: IMPOSTER_BUG_COOLDOWN_MS
+        value: "45000"
+      - key: IMPOSTER_BLUR_COOLDOWN_MS
+        value: "60000"
+      - key: IMPOSTER_HINT_COOLDOWN_MS
+        value: "30000"
