@@ -5,6 +5,7 @@
 
 # Claude config (not part of the project)
 CLAUDE.md
+.claude/
 
 # Dependencies
 devception-client/node_modules/
