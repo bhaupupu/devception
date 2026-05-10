@@ -31,7 +31,7 @@ export interface ITaskDoc {
   type: 'fix-bug' | 'complete-function' | 'answer-quiz' | 'code-review';
   starterCode: string;
   solutionCode: string;
-  testCases: { input: string; expectedOutput: string }[];
+  testCases: { input: string; expectedOutput: string; spread?: boolean }[];
   assignedTo: string | null;
   completedBy: string | null;
   isCompleted: boolean;

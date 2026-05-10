@@ -7,6 +7,10 @@ import { spawnSync } from 'child_process';
 export interface TestCase {
   input: string;       // e.g. "[1,2,3,4,5]" or '"racecar"'
   expectedOutput: string; // e.g. "15" or "true" or "[1,2,3,4]"
+  // When true, a JSON-array input is spread as positional arguments:
+  //   fn(...parsedInput)  instead of  fn(parsedInput)
+  // Use this for multi-argument functions like addProperty(obj, key, value).
+  spread?: boolean;
 }
 
 // Detect an available Python interpreter at boot. We try python3 first
@@ -195,13 +199,19 @@ export function runJavaScriptTestCases(code: string, testCases: TestCase[]): Run
     const expected = canonicalExpected(tc.expectedOutput);
     try {
       const context = vm.createContext({ console: { log() {}, warn() {}, error() {} } });
-      // Sandboxed script: define the user's code, then invoke the entry function with the parsed input.
+      const parsedInput = parseInput(tc.input);
+      // When spread=true and the parsed input is an array, call fn(...args).
+      // This supports multi-argument functions like addProperty(obj, key, value)
+      // where the test case supplies [obj, key, value] as a JSON array.
+      const callExpr = (tc.spread && Array.isArray(parsedInput))
+        ? `(${entry})(...__INPUT__)`
+        : `(${entry})(__INPUT__)`;
       const script = new vm.Script(
-        `${code}\n;__RESULT__ = (${entry})(__INPUT__);`,
+        `${code}\n;__RESULT__ = ${callExpr};`,
         { filename: 'user-task.js' }
       );
 
-      (context as any).__INPUT__ = parseInput(tc.input);
+      (context as any).__INPUT__ = parsedInput;
       (context as any).__RESULT__ = undefined;
 
       script.runInContext(context, { timeout: EXEC_TIMEOUT_MS, displayErrors: false });
@@ -271,11 +281,14 @@ export function runPythonTestCases(code: string, testCases: TestCase[]): RunResu
   // site-packages, env vars (PYTHONPATH) and implicit cwd imports. -B disables
   // .pyc writes. -S disables site.py. Stdin carries the test input only — user
   // code cannot read it (we consume it in the wrapper before invoking).
+  const verdictSpread = testCases.map((tc) => tc.spread === true);
+
   const wrapper = `
 import sys, json, io, builtins
 __src__ = ${JSON.stringify(code)}
 __entry__ = ${JSON.stringify(entry)}
-__raw__ = sys.stdin.read()
+__raw__ = sys.stdin.readline().rstrip('\\n')
+__spread__ = json.loads(sys.stdin.readline().rstrip('\\n'))  # bool flag
 try:
     __arg__ = json.loads(__raw__) if __raw__.strip() else None
 except Exception:
@@ -288,7 +301,11 @@ exec(compile(__src__, '<user>', 'exec'), __ns__)
 __fn__ = __ns__.get(__entry__)
 if not callable(__fn__):
     raise RuntimeError('entry function not defined: ' + __entry__)
-__result__ = __fn__(__arg__)
+# Spread list args when flag is set (supports multi-param functions)
+if __spread__ and isinstance(__arg__, list):
+    __result__ = __fn__(*__arg__)
+else:
+    __result__ = __fn__(__arg__)
 sys.stdout.write(json.dumps(__result__, default=str))
 `;
 
@@ -297,11 +314,13 @@ sys.stdout.write(json.dumps(__result__, default=str))
     const tc = testCases[i];
     const expected = canonicalExpected(tc.expectedOutput);
     try {
+      // Two-line stdin: first line = the argument JSON, second line = spread flag
+      const stdinPayload = `${tc.input}\n${verdictSpread[i] ? 'true' : 'false'}\n`;
       const proc = spawnSync(
         PYTHON_BIN,
         ['-I', '-B', '-S', '-c', wrapper],
         {
-          input: tc.input,
+          input: stdinPayload,
           timeout: EXEC_TIMEOUT_MS,
           maxBuffer: 256 * 1024,
           env: {}, // strip env; -I already ignores PYTHONPATH but be explicit

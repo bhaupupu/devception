@@ -204,6 +204,62 @@ export function loadJavaScriptModule(code: string): { ok: true; module: Record<s
   }
 }
 
+// Detect whether ANY required function still has a stub/placeholder body.
+// The check works on the ORIGINAL code (not stripped) so we can catch comment-only stubs.
+// Returns the first stub identifier found, or null if all look substantive.
+export function detectStubBody(code: string, requiredIdentifiers: string[]): string | null {
+  // Patterns that indicate the user hasn't implemented anything yet.
+  const STUB_MARKERS = [
+    /\/\/\s*your code here/i,
+    /#\s*your code here/i,
+    /\/\*\s*your code here\s*\*\//i,
+    // Python bare pass with nothing else meaningful in the body
+  ];
+
+  for (const name of requiredIdentifiers) {
+    // Find where this identifier appears as a declaration.
+    // We look for: function <name>(, def <name>(, or class <name>
+    const declarationRe = new RegExp(`(?:function\\s+${name}\\b|\\bdef\\s+${name}\\b|\\bclass\\s+${name}\\b)`);
+    const declMatch = declarationRe.exec(code);
+    if (!declMatch) continue;
+
+    // Extract a window of code after the declaration to inspect the body.
+    // For JS/C++ we look for the opening brace; for Python we just take the indented block.
+    const afterDecl = code.slice(declMatch.index);
+
+    // JS/C++: find the opening brace and extract to the matching close.
+    const braceOpen = afterDecl.indexOf('{');
+    if (braceOpen >= 0 && braceOpen < 200) {
+      let depth = 1, i = braceOpen + 1;
+      while (i < afterDecl.length && depth > 0) {
+        if (afterDecl[i] === '{') depth++;
+        else if (afterDecl[i] === '}') depth--;
+        i++;
+      }
+      const body = afterDecl.slice(braceOpen, i);
+
+      // Check for stub markers inside the body.
+      for (const pat of STUB_MARKERS) {
+        if (pat.test(body)) return name;
+      }
+
+      // A body that's only whitespace / comments (stripped length < 10) is also a stub.
+      const bodyStripped = body.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s/g, '');
+      if (bodyStripped.length < 10) return name;
+    } else {
+      // Python: check the lines following the def for stub markers.
+      const bodyLines = afterDecl.split('\n').slice(1, 8).join('\n');
+      for (const pat of STUB_MARKERS) {
+        if (pat.test(bodyLines)) return name;
+      }
+      // Python bare pass — body consists only of "pass" and/or comments.
+      const pyBody = bodyLines.replace(/#[^\n]*/g, '').trim();
+      if (/^pass\s*$/.test(pyBody) || pyBody.length === 0) return name;
+    }
+  }
+  return null;
+}
+
 export function judgeMainCode(input: JudgeInput): JudgeResult {
   const { language, code, requiredIdentifiers, minContentLength, tests } = input;
   const diagnostics: string[] = [];
@@ -224,6 +280,16 @@ export function judgeMainCode(input: JudgeInput): JudgeResult {
   if (missing.length > 0) {
     diagnostics.push(`missing-identifiers: ${missing.slice(0, 5).join(', ')}`);
     return failAll(`missing:${missing[0]}`);
+  }
+
+  // Stub/hollow-body guard: if ANY required function still contains the template
+  // placeholder comment ("// your code here", "pass  # your code here", etc.),
+  // treat the entire submission as unimplemented — no test can pass.
+  // This is the primary fix for the "delete function body, keep shell" bypass.
+  const stubId = detectStubBody(code, requiredIdentifiers);
+  if (stubId) {
+    diagnostics.push(`stub-body-detected: ${stubId}`);
+    return failAll(`stub:${stubId}`);
   }
 
   const stripped = stripCodeForRegex(code);
