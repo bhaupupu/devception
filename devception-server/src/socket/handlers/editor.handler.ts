@@ -3,6 +3,40 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { isSyntacticallyComplete } from '../../utils/syntaxValidator';
 import { logger } from '../../utils/logger';
+import * as Y from 'yjs';
+import Redis from 'ioredis';
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+
+const roomDocs = new Map<string, Y.Doc>();
+
+export async function getOrCreateYDoc(roomCode: string, initialCode: string): Promise<Y.Doc> {
+  if (!roomDocs.has(roomCode)) {
+    const ydoc = new Y.Doc();
+    const ytext = ydoc.getText('monaco');
+    
+    if (redis) {
+      try {
+        const buffer = await redis.getBuffer(`game:${roomCode}:ydoc`);
+        if (buffer) {
+          Y.applyUpdate(ydoc, new Uint8Array(buffer));
+          roomDocs.set(roomCode, ydoc);
+          return ydoc;
+        }
+      } catch (e) {
+        logger.error(`Failed to load Y.Doc from Redis for ${roomCode}`, e);
+      }
+    }
+
+    ytext.insert(0, initialCode);
+    roomDocs.set(roomCode, ydoc);
+  }
+  return roomDocs.get(roomCode)!;
+}
+
+export function clearYDoc(roomCode: string) {
+  roomDocs.delete(roomCode);
+}
 
 // Per-room debounce timers for test case checking.
 // We only fire the test suite once the user has been idle for 3s AND the
@@ -49,67 +83,37 @@ function scheduleTestCaseCheck(io: Server, roomCode: string): void {
 }
 
 export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket): void {
-  // Op-based edit protocol. Each payload carries one or more Monaco `IModelContentChange`-
-  // shaped ops, the baseVersion the client applied them against, and the authoring userId.
-  // The server is authoritative: ops are accepted only if baseVersion matches; otherwise
-  // the client is sent a full resync.
   socket.on(
-    'editor:op',
-    ({
-      roomCode,
-      ops,
-      baseVersion,
-    }: {
-      roomCode: string;
-      ops: gameService.EditorOp[];
-      baseVersion: number;
-    }) => {
-      // Eliminated players are spectators: silently drop their edits.
+    'editor:ydoc-sync',
+    async ({ roomCode, update }: { roomCode: string; update: ArrayBuffer }) => {
       const liveGame = gameService.getLiveGame(roomCode);
       const sender = liveGame?.players.find((p) => p.userId === socket.userId);
       if (!sender?.isAlive) return;
-      if (!Array.isArray(ops) || ops.length === 0) return;
+      if (!update) return;
 
-      const result = gameService.updateSharedCode(roomCode, ops, baseVersion, socket.userId);
+      const ydoc = await getOrCreateYDoc(roomCode, liveGame?.sharedCode || '');
+      
+      const uint8Update = new Uint8Array(update);
+      Y.applyUpdate(ydoc, uint8Update, 'client');
 
-      if (process.env.EDITOR_TRACE === '1') {
-        const opsSummary = ops.map((o) => `(${o.rangeOffset}+${o.rangeLength}→${o.text.length}b)`).join(',');
-        logger.debug(
-          `[editor ${roomCode}] user=${socket.userId} baseV=${baseVersion} ` +
-          `accepted=${result.accepted} reason=${result.accepted ? '-' : result.reason} ops=${opsSummary}`
-        );
+      if (redis) {
+        try {
+          const stateVector = Y.encodeStateAsUpdate(ydoc);
+          // Fire and forget so we don't block the socket
+          redis.set(`game:${roomCode}:ydoc`, Buffer.from(stateVector));
+        } catch (e) {
+          logger.error(`Failed to save Y.Doc to Redis for ${roomCode}`, e);
+        }
       }
 
-      if (result.accepted) {
-        // Broadcast the tagged ops to all OTHER clients. Each client applies them via
-        // model.applyEdits() which does NOT touch their local undo stack — so Monaco's
-        // built-in undo naturally becomes per-user.
-        socket.to(roomCode).emit('editor:op-apply', {
-          userId: socket.userId,
-          ops,
-          version: result.currentVersion,
-        });
-
-        scheduleTestCaseCheck(io, roomCode);
-        return;
+      if (liveGame) {
+        liveGame.sharedCode = ydoc.getText('monaco').toString();
+        gameService.forceSetSharedCode(roomCode, liveGame.sharedCode);
       }
 
-      // Rejected → send back authoritative snapshot so the sender can resync.
-      if (result.reason === 'protected-violation' || result.reason === 'min-length') {
-        socket.emit('editor:protected-violation', {
-          reason: result.reason,
-          violationName: result.violationName ?? '',
-          message:
-            result.reason === 'min-length'
-              ? 'The core code cannot be cleared.'
-              : `Protected region cannot be modified (${result.violationName ?? 'marker'}).`,
-        });
-      }
-
-      socket.emit('editor:resync', {
-        fullContent: result.currentCode,
-        version: result.currentVersion,
-      });
+      socket.to(roomCode).emit('editor:ydoc-sync', { update });
+      
+      scheduleTestCaseCheck(io, roomCode);
     }
   );
 

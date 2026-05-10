@@ -30,6 +30,7 @@ export interface ServerToClientEvents {
   'game:timer-tick': (data: { remainingMs: number }) => void;
   'game:end': (data: { winner: 'good-coders' | 'imposters' }) => void;
 
+  'editor:ydoc-sync': (data: { roomCode: string; update: ArrayBuffer }) => void;
   'editor:op-apply': (data: { userId: string; ops: EditorOp[]; version: number }) => void;
   'editor:resync': (data: { fullContent: string; version: number }) => void;
   'editor:protected-violation': (data: { reason: 'protected-violation' | 'min-length'; violationName: string; message: string }) => void;
@@ -67,6 +68,7 @@ export interface ClientToServerEvents {
   'room:update-settings': (data: { roomCode: string; settings: Partial<{ imposterCount: number; tasksPerPlayer: number; impostorCooldownMs: number; discussionTimeMs: number; votingTimeMs: number }> }) => void;
   'room:reset': (data: { roomCode: string }) => void;
 
+  'editor:ydoc-sync': (data: { roomCode: string; update: ArrayBuffer }) => void;
   'editor:op': (data: { roomCode: string; ops: EditorOp[]; baseVersion: number }) => void;
   'editor:cursor-move': (data: { roomCode: string; line: number; column: number }) => void;
 

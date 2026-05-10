@@ -4,8 +4,9 @@ import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/editorStore';
 import { getSocket } from '@/lib/socket';
 import type { EditorOp } from '@/types/socket';
-import type { editor } from 'monaco-editor';
 import type { Monaco } from '@monaco-editor/react';
+import * as Y from 'yjs';
+import { MonacoBinding } from 'y-monaco';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -17,39 +18,33 @@ interface Props {
   language: string;
   readOnly?: boolean;
   onProtectedViolation?: (message: string) => void;
+  roomCode?: string;
 }
 
-export function CodeEditor({ onOps, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
+export function CodeEditor({ roomCode, onOps, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
   const { code, version, resetNonce, protectedRanges, cursors } = useEditorStore();
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
-  const decorationsRef = useRef<string[]>([]);
+  const ydocRef = useRef<Y.Doc | null>(null);
+  const bindingRef = useRef<MonacoBinding | null>(null);
   const protectedDecorationsRef = useRef<string[]>([]);
-  const widgetsRef = useRef<Map<string, editor.IContentWidget>>(new Map());
 
-  // Guards reentrance when applying REMOTE ops via model.applyEdits — prevents echo.
-  const isApplyingRemoteRef = useRef(false);
-  // Tracks the authoritative server version the local model is currently at.
-  const versionRef = useRef(0);
-  // Ref to the onOps callback so event listeners always see the latest closure.
-  const onOpsRef = useRef(onOps);
-  useEffect(() => { onOpsRef.current = onOps; }, [onOps]);
   const onViolationRef = useRef(onProtectedViolation);
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
   const protectedRef = useRef(protectedRanges);
   useEffect(() => { protectedRef.current = protectedRanges; }, [protectedRanges]);
 
-  // ── Initial / hard-resync set: only call model.setValue when resetNonce advances.
-  // This is the ONLY place we wipe the undo stack — necessary for fresh games and
-  // for version-conflict resyncs. Normal remote edits go through applyEdits below.
+  // Hard resync (if server rejects an edit or sends a forced reset)
   useEffect(() => {
-    const ed = editorRef.current;
-    const model = ed?.getModel();
-    if (!ed || !model) return;
-    isApplyingRemoteRef.current = true;
-    model.setValue(code);
-    versionRef.current = version;
-    isApplyingRemoteRef.current = false;
+    const ydoc = ydocRef.current;
+    if (!ydoc) return;
+    const ytext = ydoc.getText('monaco');
+    if (ytext.toString() !== code) {
+      ydoc.transact(() => {
+        ytext.delete(0, ytext.length);
+        ytext.insert(0, code);
+      });
+    }
   }, [resetNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Inject cursor highlight CSS (background + left border per user color).
@@ -78,186 +73,100 @@ export function CodeEditor({ onOps, onCursorMove, language, readOnly = false, on
     styleEl.textContent = css;
   }, [cursors]);
 
-  // ── Apply decorations + content widgets for remote cursors.
-  useEffect(() => {
-    const editorInstance = editorRef.current;
-    const monacoInstance = monacoRef.current;
-    if (!editorInstance || !monacoInstance) return;
-    const model = editorInstance.getModel();
-    if (!model) return;
-
-    widgetsRef.current.forEach((w) => editorInstance.removeContentWidget(w));
-    widgetsRef.current.clear();
-
-    const newDecorations = Array.from(cursors.entries()).map(([uid, c]) => {
-      const safeId = uid.replace(/[^a-zA-Z0-9]/g, '');
-
-      const labelEl = document.createElement('div');
-      labelEl.textContent = c.displayName.slice(0, 20);
-      labelEl.style.cssText = [
-        `background:${c.color}`,
-        'color:#fff',
-        'font-size:10px',
-        'font-family:monospace',
-        'padding:1px 6px',
-        'border-radius:3px 3px 3px 0',
-        'white-space:nowrap',
-        'pointer-events:none',
-        'line-height:16px',
-        'position:relative',
-        'z-index:9999',
-      ].join(';');
-
-      const widget: editor.IContentWidget = {
-        getId: () => `rcursor-widget-${safeId}`,
-        getDomNode: () => labelEl,
-        getPosition: () => ({
-          position: { lineNumber: c.line, column: c.column },
-          preference: [
-            monacoInstance.editor.ContentWidgetPositionPreference.ABOVE,
-            monacoInstance.editor.ContentWidgetPositionPreference.BELOW,
-          ],
-        }),
-      };
-      editorInstance.addContentWidget(widget);
-      widgetsRef.current.set(uid, widget);
-
-      return {
-        range: {
-          startLineNumber: c.line,
-          startColumn: c.column,
-          endLineNumber: c.line,
-          endColumn: c.column + 1,
-        },
-        options: { className: `rcursor-${safeId}`, stickiness: 1, zIndex: 10 },
-      };
-    });
-
-    decorationsRef.current = editorInstance.deltaDecorations(
-      decorationsRef.current,
-      newDecorations
-    );
-
-    return () => {
-      widgetsRef.current.forEach((w) => editorInstance.removeContentWidget(w));
-      widgetsRef.current.clear();
-    };
-  }, [cursors]);
-
-  // ── Paint protected-range decorations.
-  useEffect(() => {
-    const ed = editorRef.current;
-    if (!ed) return;
-    const next = protectedRanges.map((r) => ({
-      range: {
-        startLineNumber: r.startLine,
-        startColumn: 1,
-        endLineNumber: r.endLine,
-        endColumn: 1,
-      },
-      options: {
-        isWholeLine: true,
-        className: 'protected-line',
-        linesDecorationsClassName: 'protected-line-gutter',
-        hoverMessage: { value: `🔒 Protected: ${r.name}` },
-      },
-    }));
-    protectedDecorationsRef.current = ed.deltaDecorations(protectedDecorationsRef.current, next);
-  }, [protectedRanges]);
-
-  // ── Subscribe to the socket's remote-op stream and apply via applyEdits (no undo-stack impact).
-  // Also handles authoritative resync from the server.
+  // ── Yjs Setup and Socket Sync
   useEffect(() => {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket || !roomCode) return;
 
-    const onOpApply = (data: { userId: string; ops: EditorOp[]; version: number }) => {
-      const ed = editorRef.current;
-      const model = ed?.getModel();
-      if (!ed || !model) return;
-      isApplyingRemoteRef.current = true;
-      try {
-        const edits = data.ops.map((op) => {
-          const startPos = model.getPositionAt(op.rangeOffset);
-          const endPos = model.getPositionAt(op.rangeOffset + op.rangeLength);
-          return {
-            range: {
-              startLineNumber: startPos.lineNumber,
-              startColumn: startPos.column,
-              endLineNumber: endPos.lineNumber,
-              endColumn: endPos.column,
-            },
-            text: op.text,
-            forceMoveMarkers: false,
-          };
-        });
-        model.applyEdits(edits);
-        versionRef.current = data.version;
-        useEditorStore.getState().setCodeMirror(model.getValue(), data.version);
-      } finally {
-        isApplyingRemoteRef.current = false;
+    if (ydocRef.current) {
+      ydocRef.current.destroy();
+    }
+    
+    const ydoc = new Y.Doc();
+    ydocRef.current = ydoc;
+
+    // Send updates to the server
+    ydoc.on('update', (update: Uint8Array, origin: any) => {
+      if (origin !== 'server') {
+        socket.emit('editor:ydoc-sync', { roomCode, update: update.buffer as ArrayBuffer });
       }
+    });
+
+    // Listen for incoming Yjs updates from the server
+    const onYDocSync = (data: { update: ArrayBuffer }) => {
+      Y.applyUpdate(ydoc, new Uint8Array(data.update), 'server');
     };
 
+    // Legacy resync for protected violation
     const onResync = (data: { fullContent: string; version: number }) => {
       useEditorStore.getState().resyncCode(data.fullContent, data.version);
     };
 
-    socket.on('editor:op-apply', onOpApply);
+    socket.on('editor:ydoc-sync', onYDocSync);
     socket.on('editor:resync', onResync);
-    return () => {
-      socket.off('editor:op-apply', onOpApply);
-      socket.off('editor:resync', onResync);
-    };
-  }, []);
 
-  function handleMount(editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) {
+    // Bind Monaco once editor is ready
+    if (editorRef.current) {
+      const ytext = ydoc.getText('monaco');
+      // Initialize with code if empty
+      if (ytext.length === 0 && code) {
+        ytext.insert(0, code);
+      }
+      bindingRef.current = new MonacoBinding(
+        ytext,
+        editorRef.current.getModel(),
+        new Set([editorRef.current]),
+        null // We can add awareness provider here later
+      );
+    }
+
+    return () => {
+      socket.off('editor:ydoc-sync', onYDocSync);
+      socket.off('editor:resync', onResync);
+      if (bindingRef.current) bindingRef.current.destroy();
+      ydoc.destroy();
+    };
+  }, [roomCode]); // Setup once per room
+
+  function handleMount(editorInstance: any, monaco: Monaco) {
     editorRef.current = editorInstance;
     monacoRef.current = monaco;
 
     const model = editorInstance.getModel();
     if (model) {
-      // Seed the model with the current known code (for the first mount).
-      isApplyingRemoteRef.current = true;
-      model.setValue(code);
-      versionRef.current = version;
-      isApplyingRemoteRef.current = false;
+      if (ydocRef.current && !bindingRef.current) {
+        const ytext = ydocRef.current.getText('monaco');
+        if (ytext.length === 0 && code) {
+          ytext.insert(0, code);
+        }
+        bindingRef.current = new MonacoBinding(
+          ytext,
+          model,
+          new Set([editorInstance]),
+          null
+        );
+      }
 
-      // Listen for content changes. Filter out remote ops (set by isApplyingRemoteRef).
-      model.onDidChangeContent((e) => {
-        if (isApplyingRemoteRef.current || e.isFlush) return;
+      model.onDidChangeContent((e: any) => {
+        if (e.isFlush) return;
 
-        // Intercept edits that overlap any protected range — undo immediately for UX,
-        // server still rejects as the authoritative guard.
         const ranges = protectedRef.current;
         if (ranges && ranges.length > 0) {
-          const overlaps = e.changes.some((ch) => {
+          const overlaps = e.changes.some((ch: any) => {
             const startLine = model.getPositionAt(ch.rangeOffset).lineNumber;
             const endLine = model.getPositionAt(ch.rangeOffset + ch.rangeLength).lineNumber;
             return ranges.some((r) => !(endLine < r.startLine || startLine > r.endLine));
           });
           if (overlaps) {
             onViolationRef.current?.('Protected region cannot be modified.');
-            // Undo the local edit off the undo stack so the user's Ctrl+Z state stays clean.
+            // Undo local edit immediately
             editorInstance.trigger('protected-guard', 'undo', null);
-            return;
           }
         }
-
-        // Each Monaco change has rangeOffset/rangeLength; that's exactly what the server wants.
-        const ops: EditorOp[] = e.changes.map((ch) => ({
-          rangeOffset: ch.rangeOffset,
-          rangeLength: ch.rangeLength,
-          text: ch.text,
-        }));
-        const baseVersion = versionRef.current;
-        versionRef.current = baseVersion + 1; // optimistic local bump
-        onOpsRef.current(ops, baseVersion);
-        useEditorStore.getState().setCodeMirror(model.getValue(), versionRef.current);
       });
     }
 
-    editorInstance.onDidChangeCursorPosition((e) => {
+    editorInstance.onDidChangeCursorPosition((e: any) => {
       onCursorMove(e.position.lineNumber, e.position.column);
     });
   }

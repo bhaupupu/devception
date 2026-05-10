@@ -10,6 +10,8 @@ import { registerMeetingHandlers } from './handlers/meeting.handler';
 import { registerChatHandlers } from './handlers/chat.handler';
 import * as sessionManager from '../services/sessionManager.service';
 import { logger } from '../utils/logger';
+import { createAdapter } from '@socket.io/redis-adapter';
+import Redis from 'ioredis';
 
 export function createSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
@@ -28,6 +30,13 @@ export function createSocketServer(httpServer: HttpServer): Server {
     pingTimeout: 60000,
     pingInterval: 25000,
   });
+
+  if (process.env.REDIS_URL) {
+    const pubClient = new Redis(process.env.REDIS_URL);
+    const subClient = pubClient.duplicate();
+    io.adapter(createAdapter(pubClient, subClient));
+    logger.info('Redis adapter configured for Socket.io');
+  }
 
   io.use(socketAuthMiddleware);
 

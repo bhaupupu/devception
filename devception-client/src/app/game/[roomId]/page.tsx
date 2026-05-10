@@ -147,13 +147,14 @@ export default function GamePage({ params }: Props) {
             <EmergencyButton onCall={callMeeting} disabled={!!meeting} />
           </div>
           <div className="flex-1 min-h-0">
-            <CodeEditor
-              onOps={emitOps}
-              onCursorMove={onCursorMove}
-              language={game.language}
-              readOnly={isLocked || !canEdit}
-              onProtectedViolation={onProtectedViolation}
-            />
+              <CodeEditor
+                roomCode={roomId}
+                onOps={emitOps}
+                onCursorMove={onCursorMove}
+                language={game.language}
+                readOnly={isLocked || !canEdit}
+                onProtectedViolation={onProtectedViolation}
+              />
           </div>
         </div>
 
@@ -192,6 +193,7 @@ export default function GamePage({ params }: Props) {
               </div>
               <div className="flex-1 min-h-0">
                 <CodeEditor
+                  roomCode={roomId}
                   onOps={emitOps}
                   onCursorMove={onCursorMove}
                   language={game.language}
