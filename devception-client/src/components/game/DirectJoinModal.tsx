@@ -11,12 +11,17 @@ export function DirectJoinModal() {
     setLoading(true);
 
     try {
-      await signIn('credentials', {
+      const res = await signIn('credentials', {
         displayName: name.trim(),
-        redirect: false, // Don't redirect, let useSession handle the update
+        redirect: false,
       });
-      // A successful login will cause the parent page's useSession to flip to "authenticated",
-      // rendering the game directly!
+      
+      if (res?.ok) {
+        window.location.reload();
+      } else {
+        console.error('Join failed', res?.error);
+        setLoading(false);
+      }
     } catch (err) {
       console.error('Join failed', err);
       setLoading(false);
