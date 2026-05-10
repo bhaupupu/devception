@@ -2,9 +2,27 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    CredentialsProvider({
+      id: 'guest',
+      name: 'Guest',
+      credentials: {
+        displayName: { label: 'Display Name', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.displayName) return null;
+        const guestId = `guest_${randomUUID()}`;
+        return {
+          id: guestId,
+          name: credentials.displayName,
+          email: `${guestId}@guest.devception.com`,
+          image: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(credentials.displayName)}`,
+        };
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',

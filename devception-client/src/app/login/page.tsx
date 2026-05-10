@@ -5,7 +5,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
-type Tab = 'google' | 'email';
+type Tab = 'guest' | 'google' | 'email';
 type EmailMode = 'signin' | 'signup';
 
 // Human-readable copy for the various reasons the session can be terminated.
@@ -18,7 +18,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const reason = searchParams?.get('reason') ?? '';
   const reasonMessage = reason ? (REASON_COPY[reason] ?? 'Your session ended. Sign in again to continue.') : '';
-  const [tab, setTab] = useState<Tab>('google');
+  const [tab, setTab] = useState<Tab>('guest');
   const [mode, setMode] = useState<EmailMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +29,34 @@ function LoginContent() {
   async function handleGoogleSignIn() {
     setLoading(true);
     await signIn('google', { callbackUrl: '/' });
+  }
+
+  async function handleGuestSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    if (!displayName.trim()) {
+      setError('Please enter a display name');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const result = await signIn('guest', {
+        displayName: displayName.trim(),
+        redirect: false,
+      });
+      if (result?.error) {
+        setError('Failed to join as guest');
+        setLoading(false);
+      } else {
+        window.location.href = '/';
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -95,7 +123,7 @@ function LoginContent() {
 
           {/* Tabs */}
           <div className="flex gap-2 mb-6">
-            {(['google', 'email'] as Tab[]).map((t) => (
+            {(['guest', 'google', 'email'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => { setTab(t); setError(''); }}
@@ -107,10 +135,39 @@ function LoginContent() {
                   borderColor: tab === t ? 'var(--accent-blue)' : 'var(--border)',
                 }}
               >
-                {t === 'google' ? 'GOOGLE' : 'EMAIL'}
+                {t === 'guest' ? 'GUEST' : t === 'google' ? 'GOOGLE' : 'EMAIL'}
               </button>
             ))}
           </div>
+
+          {tab === 'guest' && (
+            <form onSubmit={handleGuestSubmit} className="space-y-3">
+              <input
+                className="pixel-input w-full"
+                style={{ fontSize: '11px', textAlign: 'center' }}
+                type="text"
+                placeholder="Enter Display Name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={20}
+                required
+                autoFocus
+              />
+              
+              {error && (
+                <p className="text-xs text-red-500 font-mono text-center">{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !displayName.trim()}
+                className="pixel-btn pixel-btn-blue w-full py-4 flex justify-center"
+                style={{ fontSize: '11px', opacity: loading || !displayName.trim() ? 0.7 : 1 }}
+              >
+                {loading ? 'JOINING...' : 'PLAY AS GUEST'}
+              </button>
+            </form>
+          )}
 
           {tab === 'google' && (
             <button
