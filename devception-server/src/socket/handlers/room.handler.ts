@@ -3,7 +3,7 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { endGame } from '../../services/game.service';
 import * as sessionManager from '../../services/sessionManager.service';
-import { clearYDoc, getOrCreateYDoc } from './editor.handler';
+import { clearYDoc, getOrCreateYDoc, encodeRoomYDocState } from './editor.handler';
 import { env } from '../../config/env';
 import { logger } from '../../utils/logger';
 
@@ -283,7 +283,7 @@ async function launchGame(io: Server, roomCode: string): Promise<void> {
     }
   });
 
-  setTimeout(() => {
+  setTimeout(async () => {
     gameService.setGamePhase(roomCode, 'in-progress');
     const currentGame = gameService.getLiveGame(roomCode);
     const gameObj = currentGame ? gameService.sanitizeGame(currentGame) as any : undefined;
@@ -300,6 +300,14 @@ async function launchGame(io: Server, roomCode: string): Promise<void> {
       phase: 'in-progress',
       game: gameObj,
     });
+
+    // Server-push the full Y.Doc state to every connected client.
+    // This is the authoritative fallback: even if a client's editor:request-state
+    // fired during waiting/role-reveal and got dropped, they receive the template here.
+    const stateBuffer = await encodeRoomYDocState(roomCode, currentGame?.sharedCode ?? '');
+    io.to(roomCode).emit('editor:ydoc-sync', { update: stateBuffer });
+    logger.info(`[launchGame ${roomCode}] Pushed initial Y.Doc state to room`);
+
     startGameTimer(io, roomCode);
   }, 3000);
 }

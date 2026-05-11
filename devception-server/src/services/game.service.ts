@@ -228,11 +228,13 @@ export function startGame(roomCode: string): IGame | null {
   const coders = game.players.filter((p) => p.role === 'good-coder');
   const totalTasksNeeded = coders.length * tasksPerPlayer;
   const tasks = generateTasksForGame(game.language, game.skillLevel, totalTasksNeeded);
-  coders.forEach((player, playerIdx) => {
-    for (let t = 0; t < tasksPerPlayer; t++) {
-      const taskIdx = playerIdx * tasksPerPlayer + t;
-      if (tasks[taskIdx]) tasks[taskIdx].assignedTo = player.userId;
-    }
+  // Distribute tasks in round-robin across coders so every player always gets
+  // at least one task even when the pool is smaller than totalTasksNeeded.
+  // The old block approach (playerIdx * tasksPerPlayer) left the last player(s)
+  // with zero tasks when tasks.length < totalTasksNeeded.
+  tasks.forEach((task, taskIdx) => {
+    const player = coders[taskIdx % coders.length];
+    if (player) task.assignedTo = player.userId;
   });
 
   game.tasks = tasks;

@@ -49,6 +49,13 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
         // a resetNonce cascade causing N×N template duplications.
         gameStore.setGame(game);
       }
+      // When the game goes live, re-request the editor state in case the initial
+      // editor:request-state (fired at CodeEditor mount during role-reveal) was
+      // dropped because the Y.Doc wasn't ready yet. The server also pushes the
+      // state proactively, so this is a belt-and-suspenders pull request.
+      if (phase === 'in-progress') {
+        socket.emit('editor:request-state', { roomCode });
+      }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));
     socket.on('game:end', ({ winner }) => {

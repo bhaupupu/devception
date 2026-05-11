@@ -26,6 +26,15 @@ export async function getOrCreateYDoc(roomCode: string, initialCode: string): Pr
   return roomDocs.get(roomCode)!;
 }
 
+// Encode the current Y.Doc state for a room as an ArrayBuffer suitable for
+// emitting via editor:ydoc-sync. Used by room.handler.ts to push the initial
+// template to all clients without importing the yjs namespace directly.
+export async function encodeRoomYDocState(roomCode: string, fallbackCode: string): Promise<ArrayBuffer> {
+  const ydoc = await getOrCreateYDoc(roomCode, fallbackCode);
+  const stateVector = Y.encodeStateAsUpdate(ydoc);
+  return stateVector.buffer as ArrayBuffer;
+}
+
 export async function clearYDoc(roomCode: string): Promise<void> {
   const existing = roomDocs.get(roomCode);
   if (existing) {
@@ -139,7 +148,11 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
     'editor:request-state',
     async ({ roomCode }: { roomCode: string }) => {
       const liveGame = gameService.getLiveGame(roomCode);
-      if (!liveGame || liveGame.phase !== 'in-progress') return;
+      // Respond during role-reveal AND in-progress — both phases have a seeded Y.Doc.
+      // Returning early for role-reveal caused blank editors: the CodeEditor mounts
+      // during role-reveal, emits this once, gets dropped, and never retries because
+      // roomCode doesn't change when the phase transitions to in-progress.
+      if (!liveGame || (liveGame.phase !== 'in-progress' && liveGame.phase !== 'role-reveal')) return;
       const ydoc = await getOrCreateYDoc(roomCode, liveGame.sharedCode || '');
       const stateVector = Y.encodeStateAsUpdate(ydoc);
       socket.emit('editor:ydoc-sync', { update: stateVector.buffer as ArrayBuffer });
