@@ -11,6 +11,47 @@ import type { editor } from 'monaco-editor';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
+class RemoteCursorWidget implements editor.IContentWidget {
+  private id: string;
+  private domNode: HTMLDivElement;
+  private position: { lineNumber: number; column: number } | null = null;
+
+  constructor(userId: string, color: string, name: string) {
+    this.id = `rcursor-widget-${userId}`;
+    this.domNode = document.createElement('div');
+    this.domNode.textContent = name;
+    this.domNode.style.backgroundColor = color;
+    this.domNode.style.color = '#fff';
+    this.domNode.style.fontSize = '10px';
+    this.domNode.style.padding = '2px 4px';
+    this.domNode.style.borderRadius = '2px';
+    this.domNode.style.whiteSpace = 'nowrap';
+    this.domNode.style.pointerEvents = 'none';
+    this.domNode.style.zIndex = '50';
+    this.domNode.style.fontFamily = "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace";
+  }
+
+  getId(): string {
+    return this.id;
+  }
+
+  getDomNode(): HTMLElement {
+    return this.domNode;
+  }
+
+  getPosition(): editor.IContentWidgetPosition | null {
+    if (!this.position) return null;
+    return {
+      position: this.position,
+      preference: [1] // 1 = ABOVE
+    };
+  }
+
+  update(lineNumber: number, column: number) {
+    this.position = { lineNumber, column };
+  }
+}
+
 interface Props {
   onCursorMove: (line: number, column: number) => void;
   language: string;
@@ -26,6 +67,7 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
   const ydocRef = useRef<Y.Doc | null>(null);
   const bindingRef = useRef<MonacoBinding | null>(null);
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
+  const widgetsRef = useRef<Map<string, RemoteCursorWidget>>(new Map());
 
   const onViolationRef = useRef(onProtectedViolation);
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
@@ -89,6 +131,24 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
     } else {
       decorationsRef.current.set(newDecorations);
     }
+
+    cursors.forEach((c) => {
+      let widget = widgetsRef.current.get(c.userId);
+      if (!widget) {
+        widget = new RemoteCursorWidget(c.userId, c.color, c.displayName);
+        widgetsRef.current.set(c.userId, widget);
+        editorRef.current!.addContentWidget(widget);
+      }
+      widget.update(c.line, c.column);
+      editorRef.current!.layoutContentWidget(widget);
+    });
+
+    widgetsRef.current.forEach((widget, userId) => {
+      if (!cursors.has(userId)) {
+        editorRef.current!.removeContentWidget(widget);
+        widgetsRef.current.delete(userId);
+      }
+    });
   }, [cursors]);
 
   // ── Yjs Setup and Socket Sync
