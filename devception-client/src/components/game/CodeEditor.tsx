@@ -61,7 +61,7 @@ interface Props {
 }
 
 export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
-  const { code, resetNonce, protectedRanges, cursors } = useEditorStore();
+  const { protectedRanges, cursors } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const ydocRef = useRef<Y.Doc | null>(null);
@@ -74,18 +74,12 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
   const protectedRef = useRef(protectedRanges);
   useEffect(() => { protectedRef.current = protectedRanges; }, [protectedRanges]);
 
-  // Hard resync (if server rejects an edit or sends a forced reset)
-  useEffect(() => {
-    const ydoc = ydocRef.current;
-    if (!ydoc) return;
-    const ytext = ydoc.getText('monaco');
-    if (ytext.toString() !== code) {
-      ydoc.transact(() => {
-        ytext.delete(0, ytext.length);
-        ytext.insert(0, code);
-      });
-    }
-  }, [resetNonce]); // eslint-disable-line react-hooks/exhaustive-deps
+  // NOTE: The Y.Doc is the single source of truth for editor content.
+  // Hard-resync via resetNonce has been removed — it caused a cascade where
+  // every setInitialCode call mutated the Y.Doc, fired editor:ydoc-sync to
+  // the server, which rebroadcast to all N clients, producing N×N template
+  // duplications. Editor content is bootstrapped exclusively via
+  // editor:request-state → server state-vector → onYDocSync.
 
   // ── Inject cursor highlight CSS (background + left border per user color).
   useEffect(() => {
@@ -256,7 +250,6 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
       <MonacoEditor
         height="100%"
         language={language === 'cpp' ? 'cpp' : language}
-        defaultValue={code}
         theme="vs-dark"
         onMount={handleMount}
         options={{

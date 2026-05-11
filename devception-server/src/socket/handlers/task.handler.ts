@@ -48,11 +48,15 @@ export function registerTaskHandlers(io: Server, socket: AuthenticatedSocket): v
           ? `All ${verdicts.length} test cases passed.`
           : `${passedCount}/${verdicts.length} test cases passed.`;
 
+      // On failure: send ONLY the failed verdicts so players cannot reverse-engineer
+      // the solution by observing which cases already pass. On full success, reveal all.
+      const visibleVerdicts = allPassed ? verdicts : verdicts.filter((v) => !v.passed);
+
       socket.emit('task:result', {
         taskId,
         passed: allPassed,
         feedback,
-        verdicts,
+        verdicts: visibleVerdicts,
         supported,
       });
 

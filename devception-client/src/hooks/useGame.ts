@@ -43,10 +43,11 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
     socket.on('game:phase-change', ({ phase, game }) => {
       gameStore.updatePhase(phase as Parameters<typeof gameStore.updatePhase>[0]);
       if (game) {
+        // Update game state but do NOT call setInitialCode here.
+        // The CodeEditor bootstraps its Y.Doc via editor:request-state →
+        // server state-vector. Calling setInitialCode would have triggered
+        // a resetNonce cascade causing N×N template duplications.
         gameStore.setGame(game);
-        if (game.sharedCode) {
-          editorStore.setInitialCode(game.sharedCode, game.editorVersion, game.protectedRanges ?? []);
-        }
       }
     });
     socket.on('game:timer-tick', ({ remainingMs }) => gameStore.updateTimer(remainingMs));

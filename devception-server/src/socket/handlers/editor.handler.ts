@@ -10,6 +10,12 @@ const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 const roomDocs = new Map<string, Y.Doc>();
 
+// Tracks which rooms have had at least one genuine human edit since game start.
+// The judge is gated on this flag to prevent auto-passing test cases when the
+// server bootstraps clients (editor:request-state → client Y.Doc sync →
+// server receives the initial-state update, which is NOT a human edit).
+const codeEditedRooms = new Set<string>();
+
 export async function getOrCreateYDoc(roomCode: string, initialCode: string): Promise<Y.Doc> {
   if (!roomDocs.has(roomCode)) {
     const ydoc = new Y.Doc();
@@ -26,6 +32,8 @@ export async function clearYDoc(roomCode: string): Promise<void> {
     existing.destroy();
     roomDocs.delete(roomCode);
   }
+  // Clear the human-edit gate so the new game starts clean.
+  codeEditedRooms.delete(roomCode);
   // Also purge the Redis snapshot so a new game never inherits stale Yjs state.
   if (redis) {
     try {
@@ -94,6 +102,11 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
       const uint8Update = new Uint8Array(update);
       Y.applyUpdate(ydoc, uint8Update, 'client');
 
+      // Mark that a real human has touched this room's code. The judge is
+      // gated on this flag — bootstrap syncs (editor:request-state responses)
+      // must not trigger evaluation against unmodified template code.
+      codeEditedRooms.add(roomCode);
+
       if (redis) {
         try {
           const stateVector = Y.encodeStateAsUpdate(ydoc);
@@ -110,8 +123,12 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
       }
 
       socket.to(roomCode).emit('editor:ydoc-sync', { update });
-      
-      scheduleTestCaseCheck(io, roomCode);
+
+      // Only run the test-case judge if a real human edit has been received.
+      // This prevents auto-passing on game start when clients request initial state.
+      if (codeEditedRooms.has(roomCode)) {
+        scheduleTestCaseCheck(io, roomCode);
+      }
     }
   );
 

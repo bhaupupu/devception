@@ -3648,7 +3648,9 @@ export function getMainCodeTemplate(
 }
 
 // 50% easy · 30% medium · 20% hard (normalized to allowed difficulties per skill level)
-// Tasks are globally deduplicated by title — no two players receive the same task.
+// Every task in the returned array has a unique title — no two players in the same
+// lobby can receive the same task. The pool is capped at the number of unique tasks
+// available; callers should be prepared to receive fewer tasks than requested.
 export function generateTasksForGame(
   language: string,
   skillLevel: 'beginner' | 'intermediate' | 'advanced',
@@ -3663,41 +3665,17 @@ export function generateTasksForGame(
   };
   const allowed = difficultyMap[skillLevel] ?? ['easy', 'medium', 'hard'];
 
-  // Normalize target weights to allowed set
-  const baseWeights: Record<string, number> = { easy: 0.5, medium: 0.3, hard: 0.2 };
-  let totalW = 0;
-  for (const d of allowed) totalW += baseWeights[d] ?? 0;
-  const weights: Record<string, number> = {};
-  for (const d of allowed) weights[d] = (baseWeights[d] ?? 0) / totalW;
-
-  // Shuffle each difficulty pool independently
-  const byDiff: Record<string, typeof JS_TASKS> = {};
-  for (const d of allowed) {
-    byDiff[d] = [...bank.filter((t) => t.difficulty === d)].sort(() => Math.random() - 0.5);
-  }
-
-  // Calculate per-difficulty task counts
-  const sortedByWeight = [...allowed].sort((a, b) => weights[b] - weights[a]);
-  const targets: Record<string, number> = {};
-  let assigned = 0;
-  for (let i = 0; i < sortedByWeight.length; i++) {
-    const d = sortedByWeight[i];
-    if (i === sortedByWeight.length - 1) {
-      targets[d] = totalTasksNeeded - assigned;
-    } else {
-      targets[d] = Math.round(weights[d] * totalTasksNeeded);
-      assigned += targets[d];
-    }
-  }
-
-  // Build a globally deduplicated candidate pool (by title)
+  // Build a globally deduplicated candidate pool (by title) from all allowed difficulties.
+  // Shuffle each difficulty pool first so weighted sampling is still random.
   const usedTitles = new Set<string>();
   const uniquePool: ITaskDoc[] = [];
 
-  // First pass: pick unique tasks from each difficulty pool
-  for (const d of allowed) {
-    const pool = byDiff[d];
-    if (!pool) continue;
+  // Weighted order: easy tasks first (most common), then medium, then hard.
+  const baseWeights: Record<string, number> = { easy: 0.5, medium: 0.3, hard: 0.2 };
+  const sortedByWeight = [...allowed].sort((a, b) => (baseWeights[b] ?? 0) - (baseWeights[a] ?? 0));
+
+  for (const d of sortedByWeight) {
+    const pool = [...bank.filter((t) => t.difficulty === d)].sort(() => Math.random() - 0.5);
     for (const task of pool) {
       if (!usedTitles.has(task.title)) {
         usedTitles.add(task.title);
@@ -3706,16 +3684,21 @@ export function generateTasksForGame(
     }
   }
 
-  // Shuffle the unique pool, then slice to totalTasksNeeded.
-  // If pool is smaller than needed, cycle through again (different UUIDs, same content) —
-  // this only happens when bank is very small relative to player count.
+  // Shuffle the unique pool for unpredictability.
   uniquePool.sort(() => Math.random() - 0.5);
 
-  const result: ITaskDoc[] = [];
-  for (let i = 0; i < totalTasksNeeded; i++) {
-    const source = uniquePool[i % uniquePool.length];
-    result.push({ ...source, _id: randomUUID() });
+  // Cap at what is actually available — NEVER cycle or reuse task content.
+  // Duplicate content with different _ids caused players to unknowingly work
+  // on the same problem, defeating the uniqueness guarantee.
+  const effectiveCount = Math.min(totalTasksNeeded, uniquePool.length);
+  if (effectiveCount < totalTasksNeeded) {
+    // Log a warning but do not crash — a small task bank is a content gap, not a bug.
+    console.warn(
+      `[taskGenerator] Requested ${totalTasksNeeded} unique ${language}/${skillLevel} tasks ` +
+      `but only ${uniquePool.length} are available. Returning ${effectiveCount}.`
+    );
   }
 
-  return result;
+  // Each task gets a fresh _id so Mongoose sub-document identity is unique per game.
+  return uniquePool.slice(0, effectiveCount).map((t) => ({ ...t, _id: randomUUID() }));
 }

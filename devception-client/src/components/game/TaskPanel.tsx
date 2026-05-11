@@ -218,6 +218,10 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
                       </p>
                       {feedback.supported && feedback.verdicts.length > 0 && (
                         <div className="max-h-28 overflow-y-auto flex flex-col gap-1 text-[10px] font-mono">
+                          <p className="text-[9px] uppercase tracking-wider mb-1"
+                            style={{ color: 'var(--text-muted)' }}>
+                            {feedback.passed ? 'All test cases:' : 'Failed cases:'}
+                          </p>
                           {feedback.verdicts.map((v) => (
                             <div
                               key={v.index}
