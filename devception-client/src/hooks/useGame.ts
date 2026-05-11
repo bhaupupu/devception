@@ -20,7 +20,12 @@ export function useGameEvents(socket: AppSocket | null, roomCode: string) {
     // Room events
     socket.on('room:state', (game) => {
       gameStore.setGame(game);
-      editorStore.setInitialCode(game.sharedCode, game.editorVersion, game.protectedRanges ?? []);
+      // Only initialize the editor from room:state when we're in the lobby.
+      // During an active game, room:state can fire for reconnects/joins and
+      // must NOT re-insert the template — the live Y.Doc is the source of truth.
+      if (game.phase === 'waiting' || game.phase === 'role-reveal') {
+        editorStore.setInitialCode(game.sharedCode ?? '', game.editorVersion ?? 0, game.protectedRanges ?? []);
+      }
     });
     socket.on('room:player-joined', gameStore.addPlayer);
     socket.on('room:player-left', ({ userId }) => gameStore.removePlayer(userId));

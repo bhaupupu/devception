@@ -185,15 +185,15 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
     socket.on('editor:ydoc-sync', onYDocSync);
     socket.on('editor:resync', onResync);
 
+    // Request the full server state so this client's Y.Doc is bootstrapped
+    // from the authoritative snapshot rather than starting blank.
+    socket.emit('editor:request-state', { roomCode });
+
     // Bind Monaco once editor is ready
     if (editorRef.current) {
       const model = editorRef.current.getModel();
       if (model) {
         const ytext = ydoc.getText('monaco');
-        // Initialize with code if empty
-        if (ytext.length === 0 && code) {
-          ytext.insert(0, code);
-        }
         bindingRef.current = new MonacoBinding(
           ytext,
           model,
@@ -219,9 +219,6 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
     if (model) {
       if (ydocRef.current && !bindingRef.current) {
         const ytext = ydocRef.current.getText('monaco');
-        if (ytext.length === 0 && code) {
-          ytext.insert(0, code);
-        }
         bindingRef.current = new MonacoBinding(
           ytext,
           model,

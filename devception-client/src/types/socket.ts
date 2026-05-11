@@ -71,6 +71,7 @@ export interface ClientToServerEvents {
   'editor:ydoc-sync': (data: { roomCode: string; update: ArrayBuffer }) => void;
   'editor:op': (data: { roomCode: string; ops: EditorOp[]; baseVersion: number }) => void;
   'editor:cursor-move': (data: { roomCode: string; line: number; column: number }) => void;
+  'editor:request-state': (data: { roomCode: string }) => void;
 
   'task:submit': (data: { roomCode: string; taskId: string; submittedCode: string }) => void;
 

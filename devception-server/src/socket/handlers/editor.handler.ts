@@ -14,28 +14,26 @@ export async function getOrCreateYDoc(roomCode: string, initialCode: string): Pr
   if (!roomDocs.has(roomCode)) {
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('monaco');
-    
-    if (redis) {
-      try {
-        const buffer = await redis.getBuffer(`game:${roomCode}:ydoc`);
-        if (buffer) {
-          Y.applyUpdate(ydoc, new Uint8Array(buffer));
-          roomDocs.set(roomCode, ydoc);
-          return ydoc;
-        }
-      } catch (e) {
-        logger.error(`Failed to load Y.Doc from Redis for ${roomCode}`, e);
-      }
-    }
-
     ytext.insert(0, initialCode);
     roomDocs.set(roomCode, ydoc);
   }
   return roomDocs.get(roomCode)!;
 }
 
-export function clearYDoc(roomCode: string) {
-  roomDocs.delete(roomCode);
+export async function clearYDoc(roomCode: string): Promise<void> {
+  const existing = roomDocs.get(roomCode);
+  if (existing) {
+    existing.destroy();
+    roomDocs.delete(roomCode);
+  }
+  // Also purge the Redis snapshot so a new game never inherits stale Yjs state.
+  if (redis) {
+    try {
+      await redis.del(`game:${roomCode}:ydoc`);
+    } catch (e) {
+      logger.error(`Failed to delete Y.Doc from Redis for ${roomCode}`, e);
+    }
+  }
 }
 
 // Per-room debounce timers for test case checking.
@@ -114,6 +112,20 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
       socket.to(roomCode).emit('editor:ydoc-sync', { update });
       
       scheduleTestCaseCheck(io, roomCode);
+    }
+  );
+
+  // Bootstrap a newly (re)connected client by sending the full server Y.Doc
+  // state vector. The client emits this once after creating its local Y.Doc so
+  // it receives the authoritative document without having to wait for a delta.
+  socket.on(
+    'editor:request-state',
+    async ({ roomCode }: { roomCode: string }) => {
+      const liveGame = gameService.getLiveGame(roomCode);
+      if (!liveGame || liveGame.phase !== 'in-progress') return;
+      const ydoc = await getOrCreateYDoc(roomCode, liveGame.sharedCode || '');
+      const stateVector = Y.encodeStateAsUpdate(ydoc);
+      socket.emit('editor:ydoc-sync', { update: stateVector.buffer as ArrayBuffer });
     }
   );
 

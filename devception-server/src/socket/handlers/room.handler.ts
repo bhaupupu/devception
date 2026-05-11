@@ -3,6 +3,7 @@ import { AuthenticatedSocket } from '../middleware/socketAuth';
 import * as gameService from '../../services/game.service';
 import { endGame } from '../../services/game.service';
 import * as sessionManager from '../../services/sessionManager.service';
+import { clearYDoc, getOrCreateYDoc } from './editor.handler';
 import { env } from '../../config/env';
 import { logger } from '../../utils/logger';
 
@@ -200,9 +201,11 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
   });
 
   // Play Again: reset room back to waiting with same players
-  socket.on('room:reset', ({ roomCode }: { roomCode: string }) => {
+  socket.on('room:reset', async ({ roomCode }: { roomCode: string }) => {
     const game = gameService.resetGame(roomCode);
     if (!game) return;
+    // Destroy any lingering Y.Doc so the next game starts with a clean slate.
+    await clearYDoc(roomCode);
     // Unicast only — don't broadcast to players still on the results screen
     socket.emit('room:state', game.toObject());
     logger.info(`${socket.displayName} reset room ${roomCode}`);
@@ -250,9 +253,18 @@ export function registerRoomHandlers(io: Server, socket: AuthenticatedSocket): v
   });
 }
 
-function launchGame(io: Server, roomCode: string): void {
+async function launchGame(io: Server, roomCode: string): Promise<void> {
+  // Destroy stale Y.Doc (and its Redis snapshot) BEFORE startGame so the
+  // fresh template is the only content that ever enters the new document.
+  await clearYDoc(roomCode);
+
   const started = gameService.startGame(roomCode);
   if (!started) return;
+
+  // Eagerly seed the server-side Y.Doc with the fresh template so that
+  // editor:request-state responses are ready the moment the game transitions.
+  // This must happen AFTER startGame assigns game.sharedCode.
+  await getOrCreateYDoc(roomCode, started.sharedCode ?? '');
 
   // Wipe chat for all clients so a fresh game starts with a clean panel.
   io.to(roomCode).emit('chat:clear', { reason: 'new-game' });
