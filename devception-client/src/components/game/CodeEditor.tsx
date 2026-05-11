@@ -25,6 +25,7 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
   const monacoRef = useRef<Monaco | null>(null);
   const ydocRef = useRef<Y.Doc | null>(null);
   const bindingRef = useRef<MonacoBinding | null>(null);
+  const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
 
   const onViolationRef = useRef(onProtectedViolation);
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
@@ -68,6 +69,26 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
       .protected-line-gutter::before { content: '🔒'; padding-right: 4px; font-size: 10px; }
     `;
     styleEl.textContent = css;
+
+    if (!editorRef.current) return;
+    
+    const newDecorations: editor.IModelDeltaDecoration[] = [];
+    cursors.forEach((c) => {
+      const safeId = c.userId.replace(/[^a-zA-Z0-9]/g, '');
+      newDecorations.push({
+        range: { startLineNumber: c.line, startColumn: c.column, endLineNumber: c.line, endColumn: c.column },
+        options: {
+          className: `rcursor-${safeId}`,
+          hoverMessage: { value: c.displayName },
+        }
+      });
+    });
+
+    if (!decorationsRef.current) {
+      decorationsRef.current = editorRef.current.createDecorationsCollection(newDecorations);
+    } else {
+      decorationsRef.current.set(newDecorations);
+    }
   }, [cursors]);
 
   // ── Yjs Setup and Socket Sync
