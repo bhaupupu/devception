@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 import { Press_Start_2P, Space_Mono } from 'next/font/google';
-import Script from 'next/script';
 
 const pressStart = Press_Start_2P({
   weight: '400',
@@ -34,14 +33,12 @@ export default function RootLayout({
       className={`${pressStart.variable} ${spaceMono.variable}`}
     >
       <head>
-        <Script
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8046507549517323"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </head>
-
       <body>
         <Providers>{children}</Providers>
       </body>
