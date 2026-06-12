@@ -394,7 +394,7 @@ export default function HeroSection() {
         display: 'flex',
         alignItems: 'center',
         backgroundImage: 'url(/hero-bg.png)',
-        backgroundSize: 'cover',
+        backgroundSize: '100% 100%',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}

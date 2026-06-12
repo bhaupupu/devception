@@ -98,7 +98,7 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
               overflow: 'hidden',
               background: 'linear-gradient(to bottom, #ebdccc 0%, #d1c1ad 100%)',
               backgroundImage: 'url(/hero-bg.png)',
-              backgroundSize: 'cover',
+              backgroundSize: '100% 100%',
               backgroundPosition: 'center',
               animation: 'cinematic-fade-in 0.4s ease-out forwards',
               display: 'flex',
