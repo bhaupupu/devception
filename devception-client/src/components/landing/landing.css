@@ -1,0 +1,573 @@
+/* ============================================================
+   DEVCEPTION LANDING PAGE — LIGHT PARCHMENT / BLUEPRINT THEME
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* ---------- RESET & ROOT ---------- */
+.landing-root {
+  background-color: #f0ece2;
+  color: #1c1917;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---------- BLUEPRINT GRID BACKGROUND ---------- */
+.landing-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+.pixel-font-landing {
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.8;
+}
+
+/* ---------- SECTION CONTAINER ---------- */
+.section-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- PANELS ---------- */
+.retro-panel {
+  border: 3px solid #1c1917;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  position: relative;
+}
+
+.light-panel {
+  border: 3px solid #1c1917;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  padding: 24px;
+}
+
+.light-panel:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+/* ---------- BUTTONS ---------- */
+.landing-btn-primary {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px 32px;
+  background: #2563eb;
+  color: #fff;
+  border: 3px solid #1c1917;
+  box-shadow: 4px 4px 0 #1c1917;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.landing-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+.landing-btn-primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.landing-btn-secondary {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px 32px;
+  background: #faf8f4;
+  color: #1c1917;
+  border: 3px solid #1c1917;
+  box-shadow: 4px 4px 0 #1c1917;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.landing-btn-secondary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+  background: #f0ece2;
+  color: #2563eb;
+}
+
+.landing-btn-secondary:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.landing-btn-red {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px 32px;
+  background: #dc2626;
+  color: #fff;
+  border: 3px solid #1c1917;
+  box-shadow: 4px 4px 0 #1c1917;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.landing-btn-red:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+.landing-btn-red:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* ---------- SECTION LABELS ---------- */
+.section-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #2563eb;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #2563eb;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.section-label-red {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #dc2626;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #dc2626;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.section-label-yellow {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #92400e;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #92400e;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+/* ---------- PIXEL TAGS (feature pills) ---------- */
+.pixel-tag-light {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #1c1917;
+  border: 2px solid #1c1917;
+  background: #faf8f4;
+  padding: 6px 14px;
+  display: inline-block;
+  letter-spacing: 0.1em;
+  box-shadow: 2px 2px 0 #1c1917;
+}
+
+.pixel-tag-blue {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  background: rgba(37,99,235,0.06);
+  padding: 6px 14px;
+  display: inline-block;
+  letter-spacing: 0.1em;
+  box-shadow: 2px 2px 0 #2563eb;
+}
+
+/* ---------- BLINKING CURSOR ---------- */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blink-cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1.2em;
+  background: #2563eb;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 1s step-end infinite;
+}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+.fade-in-up-delay-1 { animation: fadeInUp 0.6s 0.1s ease forwards; opacity: 0; }
+.fade-in-up-delay-2 { animation: fadeInUp 0.6s 0.2s ease forwards; opacity: 0; }
+.fade-in-up-delay-3 { animation: fadeInUp 0.6s 0.3s ease forwards; opacity: 0; }
+.fade-in-up-delay-4 { animation: fadeInUp 0.6s 0.4s ease forwards; opacity: 0; }
+
+@keyframes glitch {
+  0%, 100% { text-shadow: 2px 0 #dc2626, -2px 0 #2563eb; }
+  25% { text-shadow: -2px 0 #dc2626, 2px 0 #2563eb; }
+  50% { text-shadow: 2px 2px #dc2626, -2px -2px #2563eb; }
+  75% { text-shadow: -2px 2px #dc2626, 2px -2px #2563eb; }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 3s steps(40, end) forwards;
+}
+
+/* ---------- PIXEL CLOUDS ---------- */
+@keyframes cloud-drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(80px); }
+}
+
+@keyframes cloud-drift-reverse {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-60px); }
+}
+
+.pixel-cloud {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ---------- PHASE BUTTON (How It Works) ---------- */
+.how-it-works-phase-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 10px 20px;
+  background: #faf8f4;
+  color: #44403c;
+  border: 2px solid #1c1917;
+  box-shadow: 3px 3px 0 #1c1917;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.1s, color 0.1s;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.how-it-works-phase-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #1c1917;
+}
+
+.how-it-works-phase-btn.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #1c1917;
+  box-shadow: 3px 3px 0 #1c1917;
+}
+
+.how-it-works-phase-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+/* ---------- COUNTER ---------- */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.counter-value {
+  animation: countUp 0.5s ease forwards;
+}
+
+/* ---------- PHASE TIMELINE ---------- */
+.phase-connector {
+  width: 2px;
+  background: linear-gradient(to bottom, #2563eb, rgba(37,99,235,0.1));
+  flex-shrink: 0;
+}
+
+/* ---------- NAVBAR ---------- */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #faf8f4;
+  border-bottom: 3px solid #1c1917;
+  transition: box-shadow 0.3s;
+}
+
+.landing-nav.scrolled {
+  box-shadow: 2px 2px 0 #1c1917;
+}
+
+/* ---------- STAT COUNTER BOX ---------- */
+.stat-box {
+  border: 3px solid #1c1917;
+  padding: 20px;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  text-align: center;
+}
+
+/* ---------- FAQ ACCORDION ---------- */
+.faq-item {
+  border-bottom: 2px solid rgba(28,25,23,0.15);
+}
+
+.faq-question {
+  cursor: pointer;
+  padding: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  color: #1c1917;
+  transition: color 0.2s;
+}
+
+.faq-question:hover { color: #2563eb; }
+
+.faq-answer {
+  padding-bottom: 20px;
+  color: #44403c;
+  font-size: 13px;
+  line-height: 1.8;
+  font-family: 'Space Mono', monospace;
+}
+
+/* ---------- BLOG CARDS ---------- */
+.blog-card {
+  border: 3px solid #1c1917;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  padding: 24px;
+  transition: transform 0.12s, box-shadow 0.12s;
+  cursor: pointer;
+}
+
+.blog-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+/* ---------- MODULE CARDS ---------- */
+.module-card {
+  border: 3px solid #1c1917;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  padding: 24px;
+  transition: transform 0.12s, box-shadow 0.12s;
+  position: relative;
+}
+
+.module-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+.module-card::before {
+  content: attr(data-module);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #2563eb;
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+/* ---------- ARCHITECTURE ---------- */
+.arch-node {
+  border: 3px solid #1c1917;
+  padding: 12px 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  text-align: center;
+  background: #faf8f4;
+  box-shadow: 3px 3px 0 #1c1917;
+  color: #1c1917;
+}
+
+.arch-arrow {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: #2563eb;
+  margin: 6px 0;
+  text-align: center;
+}
+
+/* ---------- OS SECTION ---------- */
+.os-window {
+  border: 3px solid #1c1917;
+  background: #1c1917;
+  box-shadow: 4px 4px 0 #44403c;
+  font-family: 'Space Mono', monospace;
+}
+
+.os-titlebar {
+  background: #16a34a;
+  color: #fff;
+  padding: 4px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.os-body {
+  padding: 20px;
+  color: #00ff41;
+  font-size: 13px;
+  line-height: 2;
+}
+
+.os-menu-item {
+  display: block;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color 0.15s;
+  color: #00ff41;
+}
+
+.os-menu-item:hover { color: #fff; }
+.os-menu-item:hover::before { content: '> '; }
+
+/* ---------- COMMUNITY CARDS ---------- */
+.community-card {
+  border: 3px solid #1c1917;
+  background: #faf8f4;
+  box-shadow: 4px 4px 0 #1c1917;
+  padding: 32px;
+  text-align: center;
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
+.community-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+/* ---------- FINAL CTA ---------- */
+.final-cta-section {
+  border-top: 3px solid #2563eb;
+  border-bottom: 3px solid #2563eb;
+  background: #f0ece2;
+  position: relative;
+  overflow: hidden;
+}
+
+.final-cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ---------- CODE THEME (terminal blocks) ---------- */
+.code-keyword { color: #2563eb; }
+.code-string { color: #16a34a; }
+.code-number { color: #92400e; }
+.code-comment { color: #78716c; font-style: italic; }
+.code-function { color: #7c3aed; }
+.code-variable { color: #1c1917; }
+.code-punctuation { color: #44403c; }
+.code-type { color: #0891b2; }
+
+/* ---------- SCANLINE (kept but subtle) ---------- */
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(28,25,23,0.015) 2px,
+    rgba(28,25,23,0.015) 4px
+  );
+  z-index: 1;
+}
+
+/* ---------- GLOW EFFECTS ---------- */
+.glow-blue-text {
+  text-shadow: 0 0 20px rgba(37,99,235,0.3);
+}
+
+/* ---------- SCROLLBAR ---------- */
+.landing-root ::-webkit-scrollbar { width: 6px; }
+.landing-root ::-webkit-scrollbar-track { background: #e4dfd3; }
+.landing-root ::-webkit-scrollbar-thumb { background: #1c1917; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #e4dfd3; }
+::-webkit-scrollbar-thumb { background: #1c1917; }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  .landing-btn-primary,
+  .landing-btn-secondary,
+  .landing-btn-red {
+    font-size: 8px;
+    padding: 12px 20px;
+  }
+
+  .section-label,
+  .section-label-red,
+  .section-label-yellow {
+    font-size: 7px;
+  }
+
+  .how-it-works-phase-btn {
+    font-size: 7px;
+    padding: 8px 14px;
+  }
+
+  .blog-card,
+  .module-card,
+  .community-card {
+    box-shadow: 3px 3px 0 #1c1917;
+  }
+}

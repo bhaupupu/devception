@@ -18,8 +18,51 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Devception — Multiplayer Coding Game',
-  description: 'Code together. Deceive each other. Find the imposter.',
+  title: 'Devception — Multiplayer Social Deduction Coding Game',
+  description:
+    'Devception is a multiplayer social deduction coding game. Collaborate on real programming challenges with 4–8 players while secretly hunting an imposter hidden among the team. Code together. Find the imposter. Trust no one.',
+  keywords: [
+    'multiplayer coding game',
+    'social deduction coding game',
+    'coding game with friends',
+    'developer party game',
+    'programming challenge multiplayer',
+    'coding competition game',
+    'among us coding game',
+    'devception',
+    'developer game',
+    'coding imposter game',
+  ],
+  metadataBase: new URL('https://devception.com'),
+  authors: [{ name: 'Devception Team' }],
+  creator: 'Devception',
+  publisher: 'Devception',
+  openGraph: {
+    title: 'Devception — One Of Your Teammates Is Lying.',
+    description:
+      'A multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.',
+    url: 'https://devception.com',
+    siteName: 'Devception',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Devception — One Of Your Teammates Is Lying.',
+    description:
+      'A multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +80,23 @@ export default function RootLayout({
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8046507549517323"
           crossOrigin="anonymous"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'Devception',
+              description: 'Multiplayer social deduction coding game where developers collaborate on real code challenges while hunting a hidden imposter.',
+              url: 'https://devception.com',
+              applicationCategory: 'Game',
+              genre: ['Multiplayer', 'Social Deduction', 'Coding'],
+              operatingSystem: 'Web Browser',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+              keywords: 'multiplayer coding game, social deduction game, coding game with friends, developer party game',
+            }),
+          }}
         />
       </head>
       <body>
