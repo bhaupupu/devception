@@ -79,7 +79,6 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
         {/* Main Content wrapper */}
         <div 
           style={{
-            opacity: isEntering ? 0 : 1,
             transform: isEntering ? 'scale(1.05)' : 'scale(1)',
             filter: isEntering ? 'blur(10px)' : 'blur(0px)',
             transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -137,10 +136,11 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
                 fontSize: 16,
                 color: '#16a34a',
                 textAlign: 'center',
-                animation: 'pulse-blink 1s step-end infinite',
               }}
             >
-              UPLINK ESTABLISHED
+              <span style={{ animation: 'pulse-blink 1s step-end infinite' }}>
+                UPLINK ESTABLISHED
+              </span>
             </div>
             <style>{`@keyframes pulse-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
           </div>
