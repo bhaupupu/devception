@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { useCinematic } from './CinematicProvider';
 
 const OS_MENU = [
   { key: '1', label: 'CREATE ROOM', desc: 'Initialize a new secure game session and generate your room code.', action: '/play', color: '#16a34a' },
@@ -26,6 +26,7 @@ export default function FakeOSSection() {
     '',
     'Select an option below to continue:',
   ]);
+  const { triggerCinematic } = useCinematic();
 
   return (
     <section
@@ -111,10 +112,11 @@ export default function FakeOSSection() {
                         fontFamily: "'Space Mono', monospace",
                       }}>
                         <div style={{ marginBottom: 8 }}>{item.desc}</div>
-                        <Link
-                          href={item.action}
+                        <button
+                          onClick={() => triggerCinematic(item.action)}
                           style={{
                             color: item.color,
+                            background: 'none',
                             textDecoration: 'none',
                             fontFamily: "'Press Start 2P', monospace",
                             fontSize: 8,
@@ -122,10 +124,11 @@ export default function FakeOSSection() {
                             padding: '6px 14px',
                             display: 'inline-block',
                             letterSpacing: '0.1em',
+                            cursor: 'pointer',
                           }}
                         >
                           EXECUTE →
-                        </Link>
+                        </button>
                       </div>
                     )}
                   </div>

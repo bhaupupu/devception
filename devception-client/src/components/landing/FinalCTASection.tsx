@@ -1,10 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCinematic } from './CinematicProvider';
 
 export default function FinalCTASection() {
   const [glitch, setGlitch] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
+  const { triggerCinematic } = useCinematic();
 
   useEffect(() => {
     // Glitch effect on heading
@@ -188,19 +189,19 @@ export default function FinalCTASection() {
         <div
           style={{
             display: 'flex',
-            gap: 20,
-            justifyContent: 'center',
+            gap: 16,
             flexWrap: 'wrap',
+            justifyContent: 'center',
             marginBottom: 64,
           }}
         >
-          <Link
-            href="/play"
-            className="landing-btn-primary"
-            style={{ fontSize: 11, padding: '20px 44px' }}
+          <button
+            onClick={() => triggerCinematic('/play')}
+            className="pixel-btn pixel-btn-blue"
+            style={{ fontSize: 10, textDecoration: 'none', padding: '20px 44px' }}
           >
             ▶ PLAY NOW
-          </Link>
+          </button>
           <a
             href="#how-it-works"
             className="landing-btn-secondary"

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useCinematic } from './CinematicProvider';
 
 const navLinks = [
   { label: 'HOW IT WORKS', href: '#how-it-works' },
@@ -12,6 +13,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { triggerCinematic } = useCinematic();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -106,8 +108,8 @@ export default function Navbar() {
 
           {/* RIGHT BUTTONS */}
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <Link
-              href="/login"
+            <button
+              onClick={() => triggerCinematic('/login')}
               className="nav-login-btn"
               style={{
                 fontFamily: "'Press Start 2P', monospace",
@@ -133,10 +135,10 @@ export default function Navbar() {
               }}
             >
               LOGIN
-            </Link>
+            </button>
 
-            <Link
-              href="/play"
+            <button
+              onClick={() => triggerCinematic('/play')}
               style={{
                 fontFamily: "'Press Start 2P', monospace",
                 fontSize: 8,
@@ -163,7 +165,7 @@ export default function Navbar() {
               }}
             >
               ▶ PLAY NOW
-            </Link>
+            </button>
 
             {/* Mobile hamburger */}
             <button
@@ -227,9 +229,8 @@ export default function Navbar() {
               </a>
             ))}
             <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
+              <button
+                onClick={() => { setMenuOpen(false); triggerCinematic('/login'); }}
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
                   fontSize: 8,
@@ -241,10 +242,9 @@ export default function Navbar() {
                 }}
               >
                 LOGIN
-              </Link>
-              <Link
-                href="/play"
-                onClick={() => setMenuOpen(false)}
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); triggerCinematic('/play'); }}
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
                   fontSize: 8,
@@ -260,7 +260,7 @@ export default function Navbar() {
                 }}
               >
                 ▶ PLAY NOW
-              </Link>
+              </button>
             </div>
           </div>
         )}

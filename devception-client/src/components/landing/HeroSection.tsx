@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useCinematic } from './CinematicProvider';
 
 /* ── Pixel Clouds ── */
 interface CloudDef {
@@ -338,8 +337,7 @@ export default function HeroSection() {
   const mouseRef = useRef({ x: 0, y: 0 });
   const rafRef = useRef<number | null>(null);
   const [cloudOffset, setCloudOffset] = useState({ x: 0, y: 0 });
-  const [isEntering, setIsEntering] = useState(false);
-  const router = useRouter();
+  const { isEntering, triggerCinematic } = useCinematic();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -363,25 +361,6 @@ export default function HeroSection() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [isEntering]);
-
-  useEffect(() => {
-    if (isEntering) {
-      let start = performance.now();
-      const duration = 1500;
-      const animateWarp = (time: number) => {
-        const elapsed = time - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeInExpo = progress === 0 ? 0 : Math.pow(2, 10 * progress - 10);
-        setCloudOffset({ x: mouseRef.current.x + easeInExpo * 10000, y: mouseRef.current.y + easeInExpo * 2000 });
-        if (progress < 1) {
-          requestAnimationFrame(animateWarp);
-        } else {
-          router.push('/login');
-        }
-      };
-      requestAnimationFrame(animateWarp);
-    }
-  }, [isEntering, router]);
 
   return (
     <section
@@ -460,10 +439,6 @@ export default function HeroSection() {
             gridTemplateColumns: '1fr 1fr',
             gap: 60,
             alignItems: 'start',
-            opacity: isEntering ? 0 : 1,
-            transform: isEntering ? 'scale(1.1)' : 'scale(1)',
-            filter: isEntering ? 'blur(10px)' : 'blur(0px)',
-            transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {/* LEFT COLUMN */}
@@ -521,7 +496,7 @@ export default function HeroSection() {
             </p>
 
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <button onClick={() => setIsEntering(true)} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
+              <button onClick={() => triggerCinematic('/login')} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
                 ▶ PLAY NOW
               </button>
               <a href="#how-it-works" className="pixel-btn pixel-btn-light">

@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import { useCinematic } from './CinematicProvider';
 
 const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
   PRODUCT: [
@@ -21,6 +22,8 @@ const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
 };
 
 export default function Footer() {
+  const { triggerCinematic } = useCinematic();
+
   return (
     <>
       <style>{`
@@ -138,29 +141,57 @@ export default function Footer() {
                 >
                   {section}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: 12, listStyle: 'none', padding: 0, margin: 0 }}>
                   {links.map((link) => (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      style={{
-                        fontFamily: "'Space Mono', monospace",
-                        fontSize: 12,
-                        color: '#78716c',
-                        textDecoration: 'none',
-                        transition: 'color 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = '#e5e0d5';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = '#78716c';
-                      }}
-                    >
-                      {link.label}
-                    </Link>
+                    <li key={link.label}>
+                      {link.href.startsWith('/play') || link.href.startsWith('/login') ? (
+                        <button
+                          onClick={() => triggerCinematic(link.href)}
+                          style={{
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: 12,
+                            color: '#78716c',
+                            textDecoration: 'none',
+                            transition: 'color 0.2s',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.color = '#e5e0d5';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.color = '#78716c';
+                          }}
+                        >
+                          {link.label}
+                        </button>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          style={{
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: 12,
+                            color: '#78716c',
+                            textDecoration: 'none',
+                            transition: 'color 0.2s',
+                            display: 'block',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.color = '#e5e0d5';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.color = '#78716c';
+                          }}
+                        >
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             ))}
           </div>

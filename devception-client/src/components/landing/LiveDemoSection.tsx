@@ -1,6 +1,5 @@
-'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { useCinematic } from './CinematicProvider';
 
 /* ─── Types ─── */
 type Phase = 'intro' | 'joining' | 'role' | 'coding' | 'meeting' | 'result';
@@ -611,6 +610,7 @@ function MeetingPhase({ onNext }: { onNext: () => void }) {
 /* ─── Phase: Result ─── */
 function ResultPhase({ onReset }: { onReset: () => void }) {
   const [reveal, setReveal] = useState(false);
+  const { triggerCinematic } = useCinematic();
 
   useEffect(() => {
     const t = setTimeout(() => setReveal(true), 600);
@@ -707,9 +707,9 @@ function ResultPhase({ onReset }: { onReset: () => void }) {
             <button onClick={onReset} className="pixel-btn pixel-btn-light" style={{ fontSize: 8 }}>
               ↺ PLAY DEMO AGAIN
             </button>
-            <Link href="/play" className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
-              ▶ PLAY FOR REAL →
-            </Link>
+            <button onClick={() => triggerCinematic('/play')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
+              ▶ PLAY NOW
+            </button>
           </div>
         </>
       )}

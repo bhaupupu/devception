@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BlogPost, blogPosts } from '@/lib/blog-data';
+import { useCinematic } from '@/components/landing/CinematicProvider';
 
 const categoryColors: Record<string, string> = {
   'Game Design': '#2563eb',
@@ -14,6 +16,13 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function BlogPostClient({ post }: { post: BlogPost }) {
+  const [mounted, setMounted] = useState(false);
+  const { triggerCinematic } = useCinematic();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const color = categoryColors[post.category] || '#2563eb';
   const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -336,31 +345,34 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           >
             Join a match and see how social deduction changes coding forever.
           </p>
-          <Link
-            href="/play"
+          <button
+            onClick={() => triggerCinematic('/play')}
             style={{
-              display: 'inline-block',
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: '10px',
-              color: '#faf8f4',
+              display: 'block',
               background: '#2563eb',
-              border: '3px solid #faf8f4',
-              boxShadow: '4px 4px 0 #faf8f4',
-              padding: '14px 28px',
+              color: '#fff',
+              border: '2px solid #1c1917',
+              padding: '12px 24px',
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 8,
               textDecoration: 'none',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              textAlign: 'center',
+              boxShadow: '3px 3px 0 #1c1917',
+              transition: 'transform 0.1s, box-shadow 0.1s',
+              cursor: 'pointer',
+              width: '100%',
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = 'translate(-2px,-2px)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '6px 6px 0 #faf8f4';
+              (e.currentTarget as HTMLElement).style.transform = 'translate(-2px, -2px)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '5px 5px 0 #1c1917';
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = 'translate(0,0)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '4px 4px 0 #faf8f4';
+              (e.currentTarget as HTMLElement).style.transform = 'translate(0, 0)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '3px 3px 0 #1c1917';
             }}
           >
-            PLAY NOW →
-          </Link>
+            ▶ PLAY NOW
+          </button>
         </div>
 
         {/* Related posts */}

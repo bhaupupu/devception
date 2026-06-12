@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { useCinematic } from './CinematicProvider';
 
 const VALUES = [
   {
@@ -43,7 +43,12 @@ const TEAM = [
 ];
 
 export default function AboutPageClient() {
-  const [expandedValue, setExpandedValue] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const { triggerCinematic } = useCinematic();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div style={{ background: '#f0ece2', minHeight: '100vh' }}>
@@ -298,10 +303,7 @@ export default function AboutPageClient() {
                   padding: 28,
                   borderColor: v.color,
                   boxShadow: `4px 4px 0 ${v.color}`,
-                  cursor: 'pointer',
-                  transition: 'transform 0.12s, box-shadow 0.12s',
                 }}
-                onClick={() => setExpandedValue(expandedValue === i ? null : i)}
               >
                 <div style={{ fontSize: 32, marginBottom: 16 }}>{v.icon}</div>
                 <div
@@ -474,9 +476,14 @@ export default function AboutPageClient() {
             </p>
           </div>
 
-          <Link href="/play" className="pixel-btn pixel-btn-blue" style={{ fontSize: 10 }}>
-            ▶ PLAY NOW →
-          </Link>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+            <button onClick={() => triggerCinematic('/play')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 10, textDecoration: 'none' }}>
+              ▶ PLAY NOW
+            </button>
+            <a href="/blog" className="pixel-btn pixel-btn-light" style={{ fontSize: 10, textDecoration: 'none' }}>
+              READ THE BLOG
+            </a>
+          </div>
         </div>
       </section>
 
