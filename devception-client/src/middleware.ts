@@ -7,5 +7,6 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ['/results/:path*', '/profile', '/play'],
+  // Protect game routes but NOT the landing page (/)
+  matcher: ['/results/:path*', '/profile', '/play', '/lobby/:path*', '/game/:path*'],
 };
