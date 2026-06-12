@@ -393,7 +393,10 @@ export default function HeroSection() {
         paddingBottom: 100,
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(to bottom, #ebdccc 0%, #d1c1ad 100%)', // Match image soft gradient
+        backgroundImage: 'url(/hero-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       {/* Blueprint grid overlay */}
