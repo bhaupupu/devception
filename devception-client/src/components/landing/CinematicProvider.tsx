@@ -29,7 +29,7 @@ const OVERLAY_CLOUDS = [
 
 export function CinematicProvider({ children }: { children: React.ReactNode }) {
   const [isEntering, setIsEntering] = useState(false);
-  const [cloudOffset, setCloudOffset] = useState(0);
+  const [cloudOffset, setCloudOffset] = useState({ x: 0, y: 0 });
   const router = useRouter();
   const rafRef = useRef<number | null>(null);
 
@@ -37,9 +37,6 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
     if (isEntering) return;
     setIsEntering(true);
     
-    // Auto scroll to top to see the transition better if we're not fixed fullscreen
-    // But since our overlay is fixed fullscreen, we don't strictly need to scroll, 
-    // but it helps if the background blurs out nicely.
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     let start = performance.now();
@@ -50,16 +47,18 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
       const progress = Math.min(elapsed / duration, 1);
       const easeInExpo = progress === 0 ? 0 : Math.pow(2, 10 * progress - 10);
       
-      setCloudOffset(easeInExpo * 15000);
+      setCloudOffset({
+        x: easeInExpo * 10000,
+        y: easeInExpo * 2000
+      });
       
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animateWarp);
       } else {
         router.push(url);
-        // Reset after navigation
         setTimeout(() => {
           setIsEntering(false);
-          setCloudOffset(0);
+          setCloudOffset({ x: 0, y: 0 });
         }, 1000);
       }
     };
@@ -79,6 +78,7 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
         {/* Main Content wrapper */}
         <div 
           style={{
+            opacity: isEntering ? 0 : 1,
             transform: isEntering ? 'scale(1.05)' : 'scale(1)',
             filter: isEntering ? 'blur(10px)' : 'blur(0px)',
             transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -96,53 +96,58 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
               zIndex: 9999,
               pointerEvents: 'none',
               overflow: 'hidden',
+              background: 'linear-gradient(to bottom, #ebdccc 0%, #d1c1ad 100%)',
+              animation: 'cinematic-fade-in 0.4s ease-out forwards',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}
           >
-            {/* Warp Clouds */}
-            {OVERLAY_CLOUDS.map((cloud) => {
-              const tx = cloudOffset * cloud.depth * 0.03;
-              const h = Math.round(cloud.size * 0.5);
-              return (
-                <div
-                  key={cloud.id}
-                  style={{
-                    position: 'absolute',
-                    left: cloud.x + '%',
-                    top: cloud.y + '%',
-                    transform: `translateX(${tx}px)`,
-                    willChange: 'transform',
-                  }}
-                >
-                  <div style={{ position: 'relative', width: cloud.size, height: h }}>
-                    <div style={{ position: 'absolute', bottom: 0, left: '10%', width: '80%', height: '55%', background: '#fff', border: '2px solid #1c1917' }} />
-                    <div style={{ position: 'absolute', bottom: '45%', left: '20%', width: '60%', height: '55%', background: '#fff', border: '2px solid #1c1917' }} />
-                    <div style={{ position: 'absolute', bottom: '55%', left: '35%', width: '40%', height: '50%', background: '#fff', border: '2px solid #1c1917' }} />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Central Terminal Message */}
+            {/* Blueprint grid overlay */}
             <div
               style={{
-                background: '#0d1117',
-                border: '3px solid #16a34a',
-                padding: '20px 40px',
-                boxShadow: '0 0 40px rgba(22, 163, 74, 0.4)',
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 16,
-                color: '#16a34a',
-                textAlign: 'center',
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `
+                  linear-gradient(rgba(28,25,23,0.03) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(28,25,23,0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px',
+                zIndex: 0,
               }}
-            >
-              <span style={{ animation: 'pulse-blink 1s step-end infinite' }}>
-                UPLINK ESTABLISHED
-              </span>
+            />
+
+            {/* Warp Clouds */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+              {OVERLAY_CLOUDS.map((cloud) => {
+                const tx = cloudOffset.x * cloud.depth * 0.03;
+                const ty = cloudOffset.y * cloud.depth * 0.015;
+                const h = Math.round(cloud.size * 0.5);
+                const bg = 'rgba(255, 255, 255, 0.45)';
+                return (
+                  <div
+                    key={cloud.id}
+                    style={{
+                      position: 'absolute',
+                      left: cloud.x + '%',
+                      top: cloud.y + '%',
+                      transform: `translateX(${tx}px) translateY(${ty}px)`,
+                      transition: 'transform 0.1s linear',
+                      willChange: 'transform',
+                    }}
+                  >
+                    <div style={{ position: 'relative', width: cloud.size, height: h }}>
+                      <div style={{ position: 'absolute', bottom: 0, left: '10%', width: '80%', height: '55%', background: bg }} />
+                      <div style={{ position: 'absolute', bottom: '45%', left: '20%', width: '60%', height: '55%', background: bg }} />
+                      <div style={{ position: 'absolute', bottom: '55%', left: '35%', width: '40%', height: '50%', background: bg }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <style>{`@keyframes pulse-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
+            <style>{`
+              @keyframes cinematic-fade-in { from { opacity: 0 } to { opacity: 1 } }
+            `}</style>
           </div>
         )}
       </div>

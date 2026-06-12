@@ -1,134 +1,90 @@
-'use client';
-
+﻿'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { useCinematic } from './CinematicProvider';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-/* ── Soft Pixel Clouds ── */
-function SoftPixelCloud({ size = 120 }: { size?: number }) {
-  const h = Math.round(size * 0.5);
-  const bg = 'rgba(255, 255, 255, 0.45)'; // Soft, low-contrast, no borders
-
-  return (
-    <div style={{ position: 'relative', width: size, height: h }}>
-      <div style={{ position: 'absolute', bottom: 0, left: '10%', width: '80%', height: '55%', background: bg }} />
-      <div style={{ position: 'absolute', bottom: '45%', left: '20%', width: '60%', height: '55%', background: bg }} />
-      <div style={{ position: 'absolute', bottom: '55%', left: '35%', width: '40%', height: '50%', background: bg }} />
-    </div>
-  );
+/* ΓöÇΓöÇ Pixel Clouds ΓöÇΓöÇ */
+interface CloudDef {
+  id: number;
+  x: number;   // percent
+  y: number;   // percent
+  size: number; // px
+  depth: number; // 1 or 2
 }
 
-function AnimatedBackground() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const cloudRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mouseRef = useRef({ x: -1000, y: -1000 });
+const CLOUDS: CloudDef[] = [
+  { id: 1, x: 5,  y: 8,  size: 80,  depth: 1 },
+  { id: 2, x: 22, y: 4,  size: 120, depth: 2 },
+  { id: 3, x: 55, y: 6,  size: 100, depth: 1 },
+  { id: 4, x: 75, y: 3,  size: 60,  depth: 2 },
+  { id: 5, x: 88, y: 10, size: 140, depth: 1 },
+  { id: 6, x: 40, y: 12, size: 90,  depth: 2 },
+  { id: 7, x: 12, y: 18, size: 75,  depth: 1 },
+  { id: 8, x: 65, y: 15, size: 110, depth: 2 },
+];
 
-  useEffect(() => {
-    // 4 clouds of varying sizes and speeds for parallax
-    const clouds = [
-      { id: 0, x: 10, y: 15, size: 80, speed: 0.15, ox: 0, oy: 0 },
-      { id: 1, x: 60, y: 35, size: 140, speed: 0.25, ox: 0, oy: 0 },
-      { id: 2, x: 30, y: 65, size: 100, speed: 0.2, ox: 0, oy: 0 },
-      { id: 3, x: 80, y: 80, size: 180, speed: 0.35, ox: 0, oy: 0 },
-    ].map(c => ({
-      ...c,
-      x: (c.x / 100) * window.innerWidth
-    }));
-
-    let rafId: number;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    const animate = () => {
-      const mouseX = mouseRef.current.x;
-      const mouseY = mouseRef.current.y;
-
-      clouds.forEach((cloud, i) => {
-        // Continuous horizontal scroll
-        cloud.x += cloud.speed;
-        if (cloud.x > window.innerWidth + cloud.size) {
-          cloud.x = -cloud.size;
-          cloud.y = Math.random() * 80 + 10;
-        }
-
-        const el = cloudRefs.current[i];
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          
-          const dx = cx - mouseX;
-          const dy = cy - mouseY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const interactionRadius = 250;
-
-          // Repulsion effect
-          if (dist < interactionRadius && dist > 0) {
-            const force = (interactionRadius - dist) / interactionRadius;
-            cloud.ox += (dx / dist) * force * 1.5;
-            cloud.oy += (dy / dist) * force * 1.5;
-          } else {
-            // Spring back to base offset
-            cloud.ox += (0 - cloud.ox) * 0.05;
-            cloud.oy += (0 - cloud.oy) * 0.05;
-          }
-
-          el.style.transform = `translate3d(${cloud.x + cloud.ox}px, calc(${cloud.y}vh + ${cloud.oy}px), 0)`;
-        }
-      });
-
-      rafId = requestAnimationFrame(animate);
-    };
-
-    rafId = requestAnimationFrame(animate);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
+function PixelCloud({ cloud, offsetX, offsetY }: { cloud: CloudDef; offsetX: number; offsetY: number }) {
+  const tx = offsetX * cloud.depth * 0.03;
+  const ty = offsetY * cloud.depth * 0.015;
+  const h = Math.round(cloud.size * 0.5);
 
   return (
     <div
-      ref={containerRef}
       style={{
         position: 'absolute',
-        inset: 0,
-        zIndex: 1,
-        pointerEvents: 'none',
-        overflow: 'hidden'
+        left: cloud.x + '%',
+        top: cloud.y + '%',
+        transform: `translateX(${tx}px) translateY(${ty}px)`,
+        transition: 'transform 0.1s linear',
+        willChange: 'transform',
       }}
     >
-      {[0, 1, 2, 3].map(i => (
-        <div
-          key={i}
-          ref={el => { cloudRefs.current[i] = el; }}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            willChange: 'transform'
-          }}
-        >
-          <SoftPixelCloud size={[80, 140, 100, 180][i]} />
-        </div>
-      ))}
+      <div style={{ position: 'relative', width: cloud.size, height: h }}>
+        {/* Bottom layer ΓÇö widest */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: '10%',
+          width: '80%',
+          height: '55%',
+          background: '#fff',
+          border: '2px solid #1c1917',
+        }} />
+        {/* Middle bump */}
+        <div style={{
+          position: 'absolute',
+          bottom: '45%',
+          left: '20%',
+          width: '60%',
+          height: '55%',
+          background: '#fff',
+          border: '2px solid #1c1917',
+        }} />
+        {/* Top peak */}
+        <div style={{
+          position: 'absolute',
+          bottom: '55%',
+          left: '35%',
+          width: '40%',
+          height: '50%',
+          background: '#fff',
+          border: '2px solid #1c1917',
+        }} />
+      </div>
     </div>
   );
 }
 
-/* ── Terminal animation ── */
+/* ΓöÇΓöÇ Terminal animation ΓöÇΓöÇ */
 const TERMINAL_SEQUENCE = [
   { text: '> initializing secure room...', color: '#555', delay: 0 },
-  { text: 'SUCCESS — room ID: DCPTN-7734', color: '#16a34a', delay: 900 },
+  { text: 'SUCCESS ΓÇö room ID: DCPTN-7734', color: '#16a34a', delay: 900 },
   { text: '> assigning roles...', color: '#555', delay: 1600 },
-  { text: 'SUCCESS — 1 IMPOSTER assigned', color: '#16a34a', delay: 2400 },
+  { text: 'SUCCESS ΓÇö 1 IMPOSTER assigned', color: '#16a34a', delay: 2400 },
   { text: '> scanning for anomalies...', color: '#555', delay: 3200 },
-  { text: 'WARNING — trust level: 14%', color: '#ca8a04', delay: 4200 },
+  { text: 'WARNING ΓÇö trust level: 14%', color: '#ca8a04', delay: 4200 },
   { text: '> analyzing commit history...', color: '#555', delay: 5000 },
-  { text: 'ALERT — suspicious code in player_3', color: '#dc2626', delay: 5900 },
+  { text: 'ALERT ΓÇö suspicious code in player_3', color: '#dc2626', delay: 5900 },
   { text: '> good luck, agent.', color: '#2563eb', delay: 6700 },
 ];
 
@@ -191,7 +147,7 @@ function TerminalPanel() {
           letterSpacing: '0.1em',
         }}
       >
-        TERMINAL — DEVCEPTION SECURE SHELL v2.1 &nbsp;&nbsp;&nbsp; [ENCRYPTED]
+        TERMINAL ΓÇö DEVCEPTION SECURE SHELL v2.1 &nbsp;&nbsp;&nbsp; [ENCRYPTED]
       </div>
       <div style={{ marginTop: 28 }}>
         {lines.map((line, i) => (
@@ -216,10 +172,10 @@ function TerminalPanel() {
   );
 }
 
-/* ── VS Code Panel ── */
+/* ΓöÇΓöÇ VS Code Panel ΓöÇΓöÇ */
 function VSCodePanel() {
   const code = `// devception-match.ts
-// MISSION ACTIVE — DO NOT DISTRIBUTE
+// MISSION ACTIVE ΓÇö DO NOT DISTRIBUTE
 
 const players: Player[] = loadSession();
 const imposters: number = Math.ceil(players.length / 6);
@@ -287,7 +243,7 @@ startMatch(currentRoom);`;
           devception-match.ts
         </span>
         <span style={{ marginLeft: 'auto', color: '#dc2626', fontSize: 8, fontFamily: "'Press Start 2P', monospace" }}>
-          ● LIVE
+          ΓùÅ LIVE
         </span>
       </div>
       {/* Code body */}
@@ -318,13 +274,13 @@ startMatch(currentRoom);`;
   );
 }
 
-/* ── Mission Brief Card ── */
+/* ΓöÇΓöÇ Mission Brief Card ΓöÇΓöÇ */
 function MissionBriefCard() {
   const items = [
-    { icon: '👥', label: '4–8 PLAYERS', color: '#2563eb' },
-    { icon: '⏱', label: '15 MIN MATCH', color: '#16a34a' },
-    { icon: '💻', label: 'REAL CODE', color: '#ca8a04' },
-    { icon: '🔍', label: 'TRUST NO ONE', color: '#dc2626' },
+    { icon: '≡ƒæÑ', label: '4ΓÇô8 PLAYERS', color: '#2563eb' },
+    { icon: 'ΓÅ▒', label: '15 MIN MATCH', color: '#16a34a' },
+    { icon: '≡ƒÆ╗', label: 'REAL CODE', color: '#ca8a04' },
+    { icon: '≡ƒöì', label: 'TRUST NO ONE', color: '#dc2626' },
   ];
 
   return (
@@ -345,7 +301,7 @@ function MissionBriefCard() {
         borderBottom: '2px solid #1c1917',
         paddingBottom: 10,
       }}>
-        ▌ MISSION BRIEF
+        Γûî MISSION BRIEF
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {items.map((item) => (
@@ -376,10 +332,56 @@ function MissionBriefCard() {
   );
 }
 
-/* ── HERO SECTION ── */
+/* ΓöÇΓöÇ HERO SECTION ΓöÇΓöÇ */
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const { isEntering, triggerCinematic } = useCinematic();
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+  const [cloudOffset, setCloudOffset] = useState({ x: 0, y: 0 });
+  const [isEntering, setIsEntering] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      mouseRef.current = {
+        x: e.clientX - centerX,
+        y: e.clientY - centerY,
+      };
+
+      if (isEntering) return; // Freeze mouse tracking during warp
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        setCloudOffset({ x: mouseRef.current.x, y: mouseRef.current.y });
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isEntering]);
+
+  useEffect(() => {
+    if (isEntering) {
+      let start = performance.now();
+      const duration = 1500;
+      const animateWarp = (time: number) => {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeInExpo = progress === 0 ? 0 : Math.pow(2, 10 * progress - 10);
+        setCloudOffset({ x: mouseRef.current.x + easeInExpo * 10000, y: mouseRef.current.y + easeInExpo * 2000 });
+        if (progress < 1) {
+          requestAnimationFrame(animateWarp);
+        } else {
+          router.push('/login');
+        }
+      };
+      requestAnimationFrame(animateWarp);
+    }
+  }, [isEntering, router]);
 
   return (
     <section
@@ -393,7 +395,6 @@ export default function HeroSection() {
         paddingBottom: 100,
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(to bottom, #ebdccc 0%, #d1c1ad 100%)', // Match image soft gradient
       }}
     >
       {/* Blueprint grid overlay */}
@@ -402,8 +403,8 @@ export default function HeroSection() {
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            linear-gradient(rgba(28,25,23,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(28,25,23,0.03) 1px, transparent 1px)
+            linear-gradient(rgba(28,25,23,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(28,25,23,0.06) 1px, transparent 1px)
           `,
           backgroundSize: '40px 40px',
           pointerEvents: 'none',
@@ -412,7 +413,23 @@ export default function HeroSection() {
       />
 
       {/* Cloud layer */}
-      <AnimatedBackground />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      >
+        {CLOUDS.map((cloud) => (
+          <PixelCloud
+            key={cloud.id}
+            cloud={cloud}
+            offsetX={cloudOffset.x}
+            offsetY={cloudOffset.y}
+          />
+        ))}
+      </div>
 
       {/* Content */}
       <div className="section-container" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
@@ -420,20 +437,20 @@ export default function HeroSection() {
         <div style={{ marginBottom: 32 }}>
           <span
             className="pixel-tag"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#faf8f4', border: '2px solid #1c1917', padding: '6px 12px', fontFamily: "'Press Start 2P', monospace", fontSize: '8px', color: '#1c1917' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
             <span
               style={{
                 width: 7,
                 height: 7,
-                background: '#dc2626',
+                background: isEntering ? '#16a34a' : '#dc2626',
                 display: 'inline-block',
                 flexShrink: 0,
-                animation: 'pulse-blink 1s step-end infinite',
+                animation: isEntering ? 'none' : 'pulse-blink 1s step-end infinite',
               }}
             />
             <style>{`@keyframes pulse-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
-            MISSION STATUS: ACTIVE
+            {isEntering ? 'UPLINK ESTABLISHED' : 'MISSION STATUS: ACTIVE'}
           </span>
         </div>
 
@@ -443,6 +460,10 @@ export default function HeroSection() {
             gridTemplateColumns: '1fr 1fr',
             gap: 60,
             alignItems: 'start',
+            opacity: isEntering ? 0 : 1,
+            transform: isEntering ? 'scale(1.1)' : 'scale(1)',
+            filter: isEntering ? 'blur(10px)' : 'blur(0px)',
+            transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {/* LEFT COLUMN */}
@@ -500,11 +521,11 @@ export default function HeroSection() {
             </p>
 
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <button onClick={() => triggerCinematic('/login')} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
-                ▶ PLAY NOW
+              <button onClick={() => setIsEntering(true)} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
+                Γû╢ PLAY NOW
               </button>
               <a href="#how-it-works" className="pixel-btn pixel-btn-light">
-                ◎ HOW IT WORKS
+                ΓùÄ HOW IT WORKS
               </a>
             </div>
 
