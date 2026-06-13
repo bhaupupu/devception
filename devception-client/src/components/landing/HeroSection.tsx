@@ -281,6 +281,7 @@ export default function HeroSection() {
         paddingBottom: 100,
         display: 'flex',
         alignItems: 'center',
+        zIndex: 1, // Establish stacking context so negative z-index child doesn't go behind landing root background
       }}
     >
       {/* Parallax Background */}
