@@ -17,146 +17,92 @@ export function useCinematic() {
   return ctx;
 }
 
+const GRID_ROWS = 8;
+const GRID_COLS = 8;
+const BLOCKS = Array.from({ length: GRID_ROWS * GRID_COLS }, (_, i) => ({
+  r: Math.floor(i / GRID_COLS),
+  c: i % GRID_COLS,
+}));
+
 export function CinematicProvider({ children }: { children: React.ReactNode }) {
-  const [isEntering, setIsEntering] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'entering' | 'exiting'>('idle');
   const router = useRouter();
 
   const triggerCinematic = (url = '/login') => {
-    if (isEntering) return;
-    setIsEntering(true);
+    if (phase !== 'idle') return;
+    setPhase('entering');
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Wait for entering sweep to fully cover screen (0.56s max delay + 0.25s animation)
     setTimeout(() => {
       router.push(url);
+      
+      // Let the route loading initiate
       setTimeout(() => {
-        setIsEntering(false);
-      }, 1000);
-    }, 1500);
+        setPhase('exiting');
+        
+        // Wait for exit sweep to complete (0.42s max delay + 0.25s animation)
+        setTimeout(() => {
+          setPhase('idle');
+        }, 750);
+      }, 200);
+    }, 850);
   };
 
   return (
-    <CinematicContext.Provider value={{ isEntering, triggerCinematic }}>
+    <CinematicContext.Provider value={{ isEntering: phase === 'entering', triggerCinematic }}>
       <div style={{ position: 'relative' }}>
         {/* Main Content wrapper */}
         <div 
           style={{
-            transform: isEntering ? 'scale(1.03)' : 'scale(1)',
-            filter: isEntering ? 'blur(12px)' : 'blur(0px)',
-            transition: 'all 1.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: phase === 'entering' ? 'scale(1.02)' : 'scale(1)',
+            filter: phase === 'entering' ? 'blur(8px)' : 'blur(0px)',
+            transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {children}
         </div>
 
-        {/* Cinematic Overlay */}
-        {isEntering && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+        {/* Cinematic pixel sweep overlay */}
+        {phase !== 'idle' && (
+          <div
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 9999,
-              background: '#0a0d12',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: "'Space Mono', monospace",
-              color: '#16a34a',
+              pointerEvents: 'auto', // block double clicks
+              display: 'grid',
+              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+              gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
+              background: 'transparent',
             }}
           >
-            {/* Retro Loading Console */}
-            <div
-              style={{
-                width: 340,
-                padding: '24px',
-                border: '3px solid #16a34a',
-                background: '#0d1117',
-                boxShadow: '0 0 30px rgba(22, 163, 74, 0.2)',
-                position: 'relative',
-              }}
-            >
-              {/* Header */}
-              <div
-                style={{
-                  fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 8,
-                  marginBottom: 18,
-                  borderBottom: '2px solid #16a34a',
-                  paddingBottom: 10,
-                  color: '#16a34a',
-                  letterSpacing: '0.15em',
-                }}
-              >
-                // ESTABLISHING CONNECTION
-              </div>
-
-              {/* Console Output logs */}
-              <div
-                style={{
-                  fontSize: 10,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
-                  minHeight: 68,
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                <div style={{ animation: 'fadeInText 0.1s forwards' }}>
-                  &gt; CONNECTING TO THE MATRIX...
-                </div>
-                <div
-                  style={{
-                    opacity: 0,
-                    animation: 'fadeInText 0.1s forwards',
-                    animationDelay: '0.4s',
-                  }}
-                >
-                  &gt; SYNCING SECURE PROTOCOLS...
-                </div>
-                <div
-                  style={{
-                    opacity: 0,
-                    animation: 'fadeInText 0.1s forwards',
-                    animationDelay: '0.8s',
-                  }}
-                >
-                  &gt; SECURITY HANDSHAKE COMPLETED.
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div
-                style={{
-                  marginTop: 20,
-                  border: '2px solid #16a34a',
-                  height: 14,
-                  position: 'relative',
-                  background: 'rgba(22, 163, 74, 0.05)',
-                  overflow: 'hidden',
-                }}
-              >
+            {BLOCKS.map((block, i) => {
+              const isEven = (block.r + block.c) % 2 === 0;
+              const bg = isEven ? '#faf8f4' : '#f0ece2'; // checkerboard cream tones
+              
+              return (
                 <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1.3, ease: 'easeInOut' }}
+                  key={i}
+                  initial={{ scale: 0 }}
+                  animate={phase === 'entering' ? { scale: 1.05 } : { scale: 0 }}
+                  transition={{
+                    duration: 0.25,
+                    delay: phase === 'entering'
+                      ? (block.r + block.c) * 0.04
+                      : (14 - block.r - block.c) * 0.03,
+                    ease: 'easeInOut',
+                  }}
                   style={{
-                    height: '100%',
-                    background: '#16a34a',
+                    background: bg,
+                    border: '1px solid rgba(28,25,23,0.12)', // subtle grid line
+                    transformOrigin: 'center',
                   }}
                 />
-              </div>
-            </div>
-
-            <style>{`
-              @keyframes fadeInText {
-                to { opacity: 1; }
-              }
-            `}</style>
-          </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
     </CinematicContext.Provider>
