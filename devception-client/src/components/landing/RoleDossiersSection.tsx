@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const DOSSIERS = [
   {
@@ -65,7 +66,13 @@ export default function RoleDossiersSection() {
         backgroundSize: '32px 32px',
       }}
     >
-      <div className="section-container">
+      <motion.div
+        className="section-container"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <div
@@ -258,7 +265,7 @@ export default function RoleDossiersSection() {
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       <style>{`
         @media (max-width: 768px) {

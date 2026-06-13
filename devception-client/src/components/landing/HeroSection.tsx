@@ -1,78 +1,7 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import { useCinematic } from './CinematicProvider';
-
-/* ── Pixel Clouds ── */
-interface CloudDef {
-  id: number;
-  x: number;   // percent
-  y: number;   // percent
-  size: number; // px
-  depth: number; // 1 or 2
-}
-
-const CLOUDS: CloudDef[] = [
-  { id: 1, x: 5,  y: 8,  size: 80,  depth: 1 },
-  { id: 2, x: 22, y: 4,  size: 120, depth: 2 },
-  { id: 3, x: 55, y: 6,  size: 100, depth: 1 },
-  { id: 4, x: 75, y: 3,  size: 60,  depth: 2 },
-  { id: 5, x: 88, y: 10, size: 140, depth: 1 },
-  { id: 6, x: 40, y: 12, size: 90,  depth: 2 },
-  { id: 7, x: 12, y: 18, size: 75,  depth: 1 },
-  { id: 8, x: 65, y: 15, size: 110, depth: 2 },
-];
-
-function PixelCloud({ cloud, offsetX, offsetY }: { cloud: CloudDef; offsetX: number; offsetY: number }) {
-  const tx = offsetX * cloud.depth * 0.03;
-  const ty = offsetY * cloud.depth * 0.015;
-  const h = Math.round(cloud.size * 0.5);
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: cloud.x + '%',
-        top: cloud.y + '%',
-        transform: `translateX(${tx}px) translateY(${ty}px)`,
-        transition: 'transform 0.1s linear',
-        willChange: 'transform',
-      }}
-    >
-      <div style={{ position: 'relative', width: cloud.size, height: h }}>
-        {/* Bottom layer — widest */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: '10%',
-          width: '80%',
-          height: '55%',
-          background: '#fff',
-          border: '2px solid #1c1917',
-        }} />
-        {/* Middle bump */}
-        <div style={{
-          position: 'absolute',
-          bottom: '45%',
-          left: '20%',
-          width: '60%',
-          height: '55%',
-          background: '#fff',
-          border: '2px solid #1c1917',
-        }} />
-        {/* Top peak */}
-        <div style={{
-          position: 'absolute',
-          bottom: '55%',
-          left: '35%',
-          width: '40%',
-          height: '50%',
-          background: '#fff',
-          border: '2px solid #1c1917',
-        }} />
-      </div>
-    </div>
-  );
-}
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 /* ── Terminal animation ── */
 const TERMINAL_SEQUENCE = [
@@ -334,33 +263,11 @@ function MissionBriefCard() {
 /* ── HERO SECTION ── */
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number | null>(null);
-  const [cloudOffset, setCloudOffset] = useState({ x: 0, y: 0 });
   const { isEntering, triggerCinematic } = useCinematic();
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      mouseRef.current = {
-        x: e.clientX - centerX,
-        y: e.clientY - centerY,
-      };
-
-      if (isEntering) return; // Freeze mouse tracking during warp
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => {
-        setCloudOffset({ x: mouseRef.current.x, y: mouseRef.current.y });
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isEntering]);
+  // Parallax background scroll effect
+  const { scrollY } = useScroll();
+  const yBg = useTransform(scrollY, [0, 1000], [0, 200]);
 
   return (
     <section
@@ -374,12 +281,25 @@ export default function HeroSection() {
         paddingBottom: 100,
         display: 'flex',
         alignItems: 'center',
-        backgroundImage: 'url(/hero-bg.png)',
-        backgroundSize: '100% 100%',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
       }}
     >
+      {/* Parallax Background */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: -50,
+          bottom: -200,
+          backgroundImage: 'url(/hero-bg.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          y: yBg,
+          zIndex: -1,
+        }}
+      />
+
       {/* Blueprint grid overlay */}
       <div
         style={{
@@ -395,27 +315,14 @@ export default function HeroSection() {
         }}
       />
 
-      {/* Cloud layer */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      >
-        {CLOUDS.map((cloud) => (
-          <PixelCloud
-            key={cloud.id}
-            cloud={cloud}
-            offsetX={cloudOffset.x}
-            offsetY={cloudOffset.y}
-          />
-        ))}
-      </div>
-
       {/* Content */}
-      <div className="section-container" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+      <motion.div
+        className="section-container"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        style={{ position: 'relative', zIndex: 2, width: '100%' }}
+      >
         {/* Mission status badge */}
         <div style={{ marginBottom: 32 }}>
           <span
@@ -520,7 +427,7 @@ export default function HeroSection() {
             <VSCodePanel />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <style>{`
         @media (max-width: 900px) {

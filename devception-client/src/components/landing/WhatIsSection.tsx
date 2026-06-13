@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const FEATURES = [
   {
@@ -53,7 +54,14 @@ export default function WhatIsSection() {
           }}
         />
 
-        <div className="section-container" style={{ position: 'relative', zIndex: 1 }}>
+        <motion.div
+          className="section-container"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{ position: 'relative', zIndex: 1 }}
+        >
           {/* Section label */}
           <div className="section-label" style={{ marginBottom: 12 }}>
             [WHAT IS DEVCEPTION]
@@ -286,7 +294,7 @@ export default function WhatIsSection() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
     </>
   );

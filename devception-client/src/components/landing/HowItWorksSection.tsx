@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const PHASES = [
   {
@@ -55,7 +56,13 @@ export default function HowItWorksSection() {
         borderTop: '2px solid rgba(28,25,23,0.12)',
       }}
     >
-      <div className="section-container">
+      <motion.div
+        className="section-container"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <div
@@ -257,7 +264,7 @@ export default function HowItWorksSection() {
             </React.Fragment>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

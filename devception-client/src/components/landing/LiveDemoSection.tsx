@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCinematic } from './CinematicProvider';
+import { motion } from 'framer-motion';
 
 /* ─── Types ─── */
 type Phase = 'intro' | 'joining' | 'role' | 'coding' | 'meeting' | 'result';
@@ -756,7 +757,13 @@ export default function LiveDemoSection() {
         borderBottom: '2px solid rgba(37,99,235,0.15)',
       }}
     >
-      <div className="section-container">
+      <motion.div
+        className="section-container"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <div className="section-label">▶ INTERACTIVE DEMO</div>
@@ -904,7 +911,7 @@ export default function LiveDemoSection() {
             {phase === 'result' && <ResultPhase onReset={reset} />}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <style>{`
         @keyframes fadeInUp {

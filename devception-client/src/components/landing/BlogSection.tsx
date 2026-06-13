@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 const POSTS = [
@@ -59,7 +60,13 @@ export default function BlogSection() {
         borderTop: '2px solid rgba(28,25,23,0.1)',
       }}
     >
-      <div className="section-container">
+      <motion.div
+        className="section-container"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <div className="section-label">// INTEL DISPATCHES</div>
           <h2
@@ -286,7 +293,7 @@ export default function BlogSection() {
             VIEW ALL ARTICLES →
           </Link>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
