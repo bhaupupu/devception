@@ -375,10 +375,9 @@ export default function HeroSection() {
         display: 'flex',
         alignItems: 'center',
         backgroundImage: 'url(/hero-bg.png)',
-        backgroundSize: '100% auto',
-        backgroundPosition: 'center bottom',
+        backgroundSize: '100% 100%',
+        backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#f0e8dc',
       }}
     >
       {/* Blueprint grid overlay */}
