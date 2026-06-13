@@ -341,7 +341,7 @@ export default function HeroSection() {
               }}
             />
             <style>{`@keyframes pulse-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
-            {isEntering ? 'UPLINK ESTABLISHED' : 'MISSION STATUS: ACTIVE'}
+            {isEntering ? 'CONNECTING...' : 'MISSION STATUS: ACTIVE'}
           </span>
         </div>
 

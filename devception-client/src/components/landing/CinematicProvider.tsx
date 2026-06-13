@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 interface CinematicContextValue {
   isEntering: boolean;
@@ -16,62 +17,23 @@ export function useCinematic() {
   return ctx;
 }
 
-const OVERLAY_CLOUDS = [
-  { id: 1, x: 5,  y: 8,  size: 80,  depth: 1 },
-  { id: 2, x: 22, y: 4,  size: 120, depth: 2 },
-  { id: 3, x: 55, y: 6,  size: 100, depth: 1 },
-  { id: 4, x: 75, y: 3,  size: 60,  depth: 2 },
-  { id: 5, x: 88, y: 10, size: 140, depth: 1 },
-  { id: 6, x: 40, y: 12, size: 90,  depth: 2 },
-  { id: 7, x: 12, y: 18, size: 75,  depth: 1 },
-  { id: 8, x: 65, y: 15, size: 110, depth: 2 },
-];
-
 export function CinematicProvider({ children }: { children: React.ReactNode }) {
   const [isEntering, setIsEntering] = useState(false);
-  const [cloudOffset, setCloudOffset] = useState(0);
   const router = useRouter();
-  const rafRef = useRef<number | null>(null);
 
   const triggerCinematic = (url = '/login') => {
     if (isEntering) return;
     setIsEntering(true);
     
-    // Auto scroll to top to see the transition better if we're not fixed fullscreen
-    // But since our overlay is fixed fullscreen, we don't strictly need to scroll, 
-    // but it helps if the background blurs out nicely.
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    let start = performance.now();
-    const duration = 1500;
-    
-    const animateWarp = (time: number) => {
-      const elapsed = time - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeInExpo = progress === 0 ? 0 : Math.pow(2, 10 * progress - 10);
-      
-      setCloudOffset(easeInExpo * 15000);
-      
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animateWarp);
-      } else {
-        router.push(url);
-        // Reset after navigation
-        setTimeout(() => {
-          setIsEntering(false);
-          setCloudOffset(0);
-        }, 1000);
-      }
-    };
-    
-    rafRef.current = requestAnimationFrame(animateWarp);
+    setTimeout(() => {
+      router.push(url);
+      setTimeout(() => {
+        setIsEntering(false);
+      }, 1000);
+    }, 1500);
   };
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
 
   return (
     <CinematicContext.Provider value={{ isEntering, triggerCinematic }}>
@@ -79,9 +41,9 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
         {/* Main Content wrapper */}
         <div 
           style={{
-            transform: isEntering ? 'scale(1.05)' : 'scale(1)',
-            filter: isEntering ? 'blur(10px)' : 'blur(0px)',
-            transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: isEntering ? 'scale(1.03)' : 'scale(1)',
+            filter: isEntering ? 'blur(12px)' : 'blur(0px)',
+            transition: 'all 1.4s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {children}
@@ -89,61 +51,112 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
 
         {/* Cinematic Overlay */}
         {isEntering && (
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 9999,
-              pointerEvents: 'none',
-              overflow: 'hidden',
+              background: '#0a0d12',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              fontFamily: "'Space Mono', monospace",
+              color: '#16a34a',
             }}
           >
-            {/* Warp Clouds */}
-            {OVERLAY_CLOUDS.map((cloud) => {
-              const tx = cloudOffset * cloud.depth * 0.03;
-              const h = Math.round(cloud.size * 0.5);
-              return (
-                <div
-                  key={cloud.id}
-                  style={{
-                    position: 'absolute',
-                    left: cloud.x + '%',
-                    top: cloud.y + '%',
-                    transform: `translateX(${tx}px)`,
-                    willChange: 'transform',
-                  }}
-                >
-                  <div style={{ position: 'relative', width: cloud.size, height: h }}>
-                    <div style={{ position: 'absolute', bottom: 0, left: '10%', width: '80%', height: '55%', background: '#fff', border: '2px solid #1c1917' }} />
-                    <div style={{ position: 'absolute', bottom: '45%', left: '20%', width: '60%', height: '55%', background: '#fff', border: '2px solid #1c1917' }} />
-                    <div style={{ position: 'absolute', bottom: '55%', left: '35%', width: '40%', height: '50%', background: '#fff', border: '2px solid #1c1917' }} />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Central Terminal Message */}
+            {/* Retro Loading Console */}
             <div
               style={{
-                background: '#0d1117',
+                width: 340,
+                padding: '24px',
                 border: '3px solid #16a34a',
-                padding: '20px 40px',
-                boxShadow: '0 0 40px rgba(22, 163, 74, 0.4)',
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 16,
-                color: '#16a34a',
-                textAlign: 'center',
+                background: '#0d1117',
+                boxShadow: '0 0 30px rgba(22, 163, 74, 0.2)',
+                position: 'relative',
               }}
             >
-              <span style={{ animation: 'pulse-blink 1s step-end infinite' }}>
-                UPLINK ESTABLISHED
-              </span>
+              {/* Header */}
+              <div
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 8,
+                  marginBottom: 18,
+                  borderBottom: '2px solid #16a34a',
+                  paddingBottom: 10,
+                  color: '#16a34a',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                // ESTABLISHING CONNECTION
+              </div>
+
+              {/* Console Output logs */}
+              <div
+                style={{
+                  fontSize: 10,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  minHeight: 68,
+                  fontFamily: "'Space Mono', monospace",
+                }}
+              >
+                <div style={{ animation: 'fadeInText 0.1s forwards' }}>
+                  &gt; CONNECTING TO THE MATRIX...
+                </div>
+                <div
+                  style={{
+                    opacity: 0,
+                    animation: 'fadeInText 0.1s forwards',
+                    animationDelay: '0.4s',
+                  }}
+                >
+                  &gt; SYNCING SECURE PROTOCOLS...
+                </div>
+                <div
+                  style={{
+                    opacity: 0,
+                    animation: 'fadeInText 0.1s forwards',
+                    animationDelay: '0.8s',
+                  }}
+                >
+                  &gt; SECURITY HANDSHAKE COMPLETED.
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div
+                style={{
+                  marginTop: 20,
+                  border: '2px solid #16a34a',
+                  height: 14,
+                  position: 'relative',
+                  background: 'rgba(22, 163, 74, 0.05)',
+                  overflow: 'hidden',
+                }}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.3, ease: 'easeInOut' }}
+                  style={{
+                    height: '100%',
+                    background: '#16a34a',
+                  }}
+                />
+              </div>
             </div>
-            <style>{`@keyframes pulse-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
-          </div>
+
+            <style>{`
+              @keyframes fadeInText {
+                to { opacity: 1; }
+              }
+            `}</style>
+          </motion.div>
         )}
       </div>
     </CinematicContext.Provider>
