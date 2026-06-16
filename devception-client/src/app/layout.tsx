@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     'developer game',
     'coding imposter game',
   ],
-  metadataBase: new URL('https://devception.com'),
+  metadataBase: new URL('https://devception.xyz'),
   authors: [{ name: 'Devception Team' }],
   creator: 'Devception',
   publisher: 'Devception',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: 'Devception — One Of Your Teammates Is Lying.',
     description:
       'A multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.',
-    url: 'https://devception.com',
+    url: 'https://devception.xyz',
     siteName: 'Devception',
     type: 'website',
     locale: 'en_US',
@@ -88,13 +88,20 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'WebApplication',
               name: 'Devception',
-              description: 'Multiplayer social deduction coding game where developers collaborate on real code challenges while hunting a hidden imposter.',
-              url: 'https://devception.com',
-              applicationCategory: 'Game',
-              genre: ['Multiplayer', 'Social Deduction', 'Coding'],
+              alternateName: 'Devception Multiplayer Coding Game',
+              description: 'Devception is a real-time multiplayer social deduction coding platform. Enhance your developer skills, practice code review, and collaborate on real programming challenges with 4–8 players while hunting a hidden imposter.',
+              url: 'https://devception.xyz',
+              applicationCategory: 'GameApplication',
+              genre: ['Multiplayer', 'Social Deduction', 'Coding', 'Educational'],
               operatingSystem: 'Web Browser',
+              browserRequirements: 'Requires a modern web browser and JavaScript enabled.',
               offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-              keywords: 'multiplayer coding game, social deduction game, coding game with friends, developer party game',
+              creator: {
+                '@type': 'Organization',
+                name: 'Devception Team',
+                url: 'https://devception.xyz'
+              },
+              keywords: 'multiplayer coding game, social deduction game, coding game with friends, developer party game, improve programming skills, collaborative coding',
             }),
           }}
         />

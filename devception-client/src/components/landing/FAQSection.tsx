@@ -80,6 +80,19 @@ const FAQS = [
 export default function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.a,
+      },
+    })),
+  };
+
   return (
     <section
       id="faq"
@@ -88,6 +101,10 @@ export default function FAQSection() {
         borderTop: '2px solid rgba(28,25,23,0.12)',
       }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <motion.div
         className="section-container"
         initial={{ opacity: 0, y: 30 }}

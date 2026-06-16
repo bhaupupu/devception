@@ -1,19 +1,19 @@
 import type { Metadata } from 'next';
-import BlogIndexClient from '@/components/landing/BlogIndexClient';
+import DevlogClient from '@/components/landing/DevlogClient';
 
 export const metadata: Metadata = {
-  title: 'Blog | Intel Dispatch — Devception',
+  title: 'Devlog | System Logs — Devception',
   description:
-    'Game design, developer psychology, technical deep-dives, and growth strategies from the team behind Devception — the multiplayer social deduction coding game.',
+    'Patch notes, feature updates, and developer logs for Devception — the multiplayer social deduction coding game.',
   openGraph: {
-    title: 'Devception Blog — Intel Dispatch',
+    title: 'Devception Devlog — System Logs',
     description:
-      'Insights on social deduction, developer skills, game psychology, and the future of collaborative coding.',
+      'Patch notes, feature updates, and developer logs for Devception.',
     type: 'website',
   },
 };
 
-export default function BlogPage() {
+export default function DevlogPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -27,8 +27,8 @@ export default function BlogPage() {
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'Blog',
-        item: 'https://devception.xyz/blog',
+        name: 'Devlog',
+        item: 'https://devception.xyz/devlog',
       },
     ],
   };
@@ -39,7 +39,7 @@ export default function BlogPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <BlogIndexClient />
+      <DevlogClient />
     </>
   );
 }

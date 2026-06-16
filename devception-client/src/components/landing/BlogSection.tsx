@@ -3,53 +3,31 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-const POSTS = [
-  {
-    slug: 'social-deduction-coding-collaboration',
-    title: 'How Social Deduction Changes Coding Collaboration',
-    excerpt: 'The neuroscience of suspicion, collaboration under pressure, and why the imposter mechanic changes everything about how we approach problem-solving.',
-    date: '2025-01-15',
-    readTime: '8 MIN READ',
-    tag: 'GAME DESIGN',
-    color: '#2563eb',
-  },
-  {
-    slug: 'how-we-built-devception',
-    title: 'How We Built Devception: A Student Developer\'s Journey',
-    excerpt: 'From a Discord conversation to a full-stack multiplayer coding game: the messy, thrilling story behind Devception\'s creation.',
-    date: '2025-01-10',
-    readTime: '12 MIN READ',
-    tag: 'BEHIND THE SCENES',
-    color: '#16a34a',
-  },
-  {
-    slug: 'psychology-finding-imposter',
-    title: 'The Psychology of Finding the Imposter',
-    excerpt: 'Behavioral patterns, micro-tells in code edits, and the cognitive biases that make social deduction games endlessly fascinating.',
-    date: '2025-01-05',
-    readTime: '10 MIN READ',
-    tag: 'PSYCHOLOGY',
-    color: '#dc2626',
-  },
-  {
-    slug: 'games-improve-programming-skills',
-    title: 'Can Games Actually Improve Your Programming Skills?',
-    excerpt: 'New research suggests game-based coding platforms improve retention, problem-solving speed, and collaborative skills faster than traditional practice.',
-    date: '2024-12-28',
-    readTime: '7 MIN READ',
-    tag: 'RESEARCH',
-    color: '#ca8a04',
-  },
-  {
-    slug: 'multiplayer-learning-works-better',
-    title: 'Why Multiplayer Learning Beats Solo Study',
-    excerpt: 'From pair programming to mob programming: the science behind why developers learn faster when they code together.',
-    date: '2024-12-20',
-    readTime: '9 MIN READ',
-    tag: 'EDUCATION',
-    color: '#7c3aed',
-  },
-];
+import { blogPosts } from '@/lib/blog-data';
+
+// Map the blogPosts to the format needed for the landing page
+const POSTS = blogPosts.slice(0, 10).map(post => ({
+  slug: post.slug,
+  title: post.title,
+  excerpt: post.excerpt,
+  date: new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+  readTime: `${post.readTime} MIN READ`,
+  tag: post.category.toUpperCase(),
+  color: getCategoryColor(post.category),
+}));
+
+function getCategoryColor(category: string) {
+  const colors: Record<string, string> = {
+    'Game Design': '#2563eb',
+    'Developer Growth': '#16a34a',
+    'Game Psychology': '#dc2626',
+    'Developer Life': '#ca8a04',
+    'Behind the Scenes': '#7c3aed',
+    'Technical': '#0891b2',
+    'Guides': '#059669',
+  };
+  return colors[category] || '#2563eb';
+}
 
 export default function BlogSection() {
   return (

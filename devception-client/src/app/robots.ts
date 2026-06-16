@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/game/', '/lobby/', '/results/'],
       },
     ],
-    sitemap: 'https://devception.com/sitemap.xml',
+    sitemap: 'https://devception.xyz/sitemap.xml',
   };
 }
