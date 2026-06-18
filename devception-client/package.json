@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "check:sitemap": "node scripts/check-sitemap.mjs",
+    "prebuild": "node scripts/check-sitemap.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
