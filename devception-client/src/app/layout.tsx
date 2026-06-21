@@ -3,6 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { SITE, AUTHOR } from '@/lib/site';
 import { Press_Start_2P, Space_Mono } from 'next/font/google';
+import EzoicScripts from '@/components/EzoicScripts';
 
 const pressStart = Press_Start_2P({
   weight: '400',
@@ -80,6 +81,7 @@ export default function RootLayout({
       className={`${pressStart.variable} ${spaceMono.variable}`}
     >
       <head>
+        <EzoicScripts />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8046507549517323"
