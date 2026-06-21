@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
       </p>
       <p>
         You may delete your account at any time by contacting us at{' '}
-        <a href="mailto:team@devception.com">team@devception.com</a>. Upon deletion, your personal data
+        <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a>. Upon deletion, your personal data
         will be purged within 30 days in accordance with our Privacy Policy.
       </p>
 
@@ -147,7 +147,7 @@ export default function TermsOfServicePage() {
         If you have questions about these Terms of Service, please contact us:
       </p>
       <ul>
-        <li><strong>Email:</strong> <a href="mailto:team@devception.com">team@devception.com</a></li>
+        <li><strong>Email:</strong> <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a></li>
         <li><strong>Website:</strong> <a href="/contact">devception.com/contact</a></li>
       </ul>
     </LegalPageLayout>

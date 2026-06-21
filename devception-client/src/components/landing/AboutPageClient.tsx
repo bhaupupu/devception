@@ -34,6 +34,13 @@ const TEAM = [
     bio: AUTHOR.bio,
     color: '#2563eb',
   },
+  {
+    avatar: '👨‍💻',
+    name: 'Pratham Sharma',
+    title: 'Founder',
+    bio: 'Pratham Sharma is a founder of Devception and played a key role in shaping the vision behind the project. From early ideation to refining the gameplay experience, he helped transform a simple classroom idea into a collaborative coding game for developers.',
+    color: '#16a34a',
+  },
 ];
 
 // Shared body-paragraph style for the origin story (kept DRY + consistent rhythm).

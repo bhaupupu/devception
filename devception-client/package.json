@@ -24,6 +24,7 @@
     "lucide-react": "^1.7.0",
     "next": "14.2.35",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.13",
     "react": "^18",
     "react-dom": "^18",
     "socket.io-client": "^4.8.3",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

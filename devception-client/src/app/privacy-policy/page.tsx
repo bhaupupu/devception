@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
         <li><strong>Right to Data Portability:</strong> Request a machine-readable copy of your data</li>
       </ul>
       <p>
-        To exercise any of these rights, please contact us at <a href="mailto:team@devception.com">team@devception.com</a>.
+        To exercise any of these rights, please contact us at <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a>.
         We will respond to all legitimate requests within 30 days.
       </p>
 
@@ -131,7 +131,7 @@ export default function PrivacyPolicyPage() {
       <p>
         Devception is not directed at children under the age of 13, and we do not knowingly collect personal
         information from children under 13. If you believe a child under 13 has provided us with personal information,
-        please contact us immediately at <a href="mailto:team@devception.com">team@devception.com</a> and we will
+        please contact us immediately at <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a> and we will
         take steps to delete that information.
       </p>
 
@@ -157,7 +157,7 @@ export default function PrivacyPolicyPage() {
         If you have questions or comments about this Privacy Policy, please contact us at:
       </p>
       <ul>
-        <li><strong>Email:</strong> <a href="mailto:team@devception.com">team@devception.com</a></li>
+        <li><strong>Email:</strong> <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a></li>
         <li><strong>Website:</strong> <a href="/contact">devception.com/contact</a></li>
       </ul>
     </LegalPageLayout>

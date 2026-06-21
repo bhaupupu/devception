@@ -206,7 +206,7 @@ export default function CookiePolicyPage() {
       <h2>7. Contact Us</h2>
       <p>
         If you have questions about our use of cookies, please contact us at{' '}
-        <a href="mailto:team@devception.com">team@devception.com</a> or visit our{' '}
+        <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a> or visit our{' '}
         <a href="/contact">contact page</a>.
       </p>
     </LegalPageLayout>

@@ -292,10 +292,10 @@ export default function ContactForm() {
                       EMAIL
                     </div>
                     <a
-                      href="mailto:team@devception.xyz"
-                      style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: '#2563eb' }}
+                      href="mailto:guptadiwanshu2007@gmail.com"
+                      style={{ color: '#2563eb', textDecoration: 'none' }}
                     >
-                      team@devception.xyz
+                      guptadiwanshu2007@gmail.com
                     </a>
                   </div>
                   <div>

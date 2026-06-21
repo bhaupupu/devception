@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
 export const runtime = 'nodejs';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Contact form handler.
-// To actually deliver messages, set CONTACT_WEBHOOK_URL in your environment to a
-// Formspree / Zapier / Discord / custom webhook endpoint. If it is not set, the
-// submission is accepted gracefully (logged server-side) so the form never breaks.
 export async function POST(req: Request) {
   let body: { name?: string; email?: string; type?: string; message?: string };
   try {
@@ -28,20 +25,45 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Message must be 20–2000 characters.' }, { status: 400 });
   }
 
-  const webhook = process.env.CONTACT_WEBHOOK_URL;
-  if (webhook) {
+  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  
+  if (smtpUser && smtpPass) {
     try {
-      await fetch(webhook, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: 'devception-contact', name, email, type, message }),
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Devception Contact" <${smtpUser}>`,
+        to: 'guptadiwanshu2007@gmail.com',
+        replyTo: email,
+        subject: `[Devception Contact] ${type} from ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\nType: ${type}\n\nMessage:\n${message}`,
       });
     } catch (err) {
-      // A downstream hiccup should not fail the user's submission.
-      console.error('[contact] webhook forward failed:', err);
+      console.error('[contact] email delivery failed:', err);
     }
   } else {
-    console.log('[contact] message received (set CONTACT_WEBHOOK_URL to deliver):', { name, email, type });
+    // Fallback to webhook if SMTP is not configured
+    const webhook = process.env.CONTACT_WEBHOOK_URL;
+    if (webhook) {
+      try {
+        await fetch(webhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'devception-contact', name, email, type, message }),
+        });
+      } catch (err) {
+        console.error('[contact] webhook forward failed:', err);
+      }
+    } else {
+      console.log('[contact] message received (SMTP/Webhook not configured):', { name, email, type });
+    }
   }
 
   return NextResponse.json({ ok: true });

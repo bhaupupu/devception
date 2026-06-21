@@ -94,6 +94,12 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           padding: 2px 6px;
           color: #1c1917;
         }
+        .blog-content pre code {
+          background: transparent;
+          border: none;
+          padding: 0;
+          color: inherit;
+        }
         .blog-content strong {
           color: #1c1917;
           font-weight: 700;
