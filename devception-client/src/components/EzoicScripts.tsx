@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
+import { useEffect } from 'react';
 
 // List of routes where ads should NEVER be displayed
 const BLOCKED_ROUTES = [
@@ -22,6 +23,17 @@ export default function EzoicScripts() {
   const isBlocked = BLOCKED_ROUTES.some((route) => 
     pathname.startsWith(route) || pathname === route
   );
+
+  useEffect(() => {
+    if (!isBlocked && typeof window !== 'undefined' && window.ezstandalone && window.ezstandalone.cmd) {
+      window.ezstandalone.cmd.push(() => {
+        if (typeof window.ezstandalone.showAds === 'function') {
+          // By not passing an ID, Ezoic will find and fill all placeholders on the current page
+          window.ezstandalone.showAds();
+        }
+      });
+    }
+  }, [pathname, isBlocked]);
 
   if (isBlocked) {
     return null;
