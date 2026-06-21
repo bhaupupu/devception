@@ -25,11 +25,13 @@ export default function EzoicScripts() {
   );
 
   useEffect(() => {
-    if (!isBlocked && typeof window !== 'undefined' && window.ezstandalone && window.ezstandalone.cmd) {
-      window.ezstandalone.cmd.push(() => {
-        if (typeof window.ezstandalone.showAds === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+    if (!isBlocked && typeof window !== 'undefined' && win.ezstandalone && win.ezstandalone.cmd) {
+      win.ezstandalone.cmd.push(() => {
+        if (typeof win.ezstandalone.showAds === 'function') {
           // By not passing an ID, Ezoic will find and fill all placeholders on the current page
-          window.ezstandalone.showAds();
+          win.ezstandalone.showAds();
         }
       });
     }
