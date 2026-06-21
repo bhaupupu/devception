@@ -57,6 +57,66 @@ body {
   border-radius: 0;
 }
 
+/* ---------- SHARED LAYOUT UTILITIES (used across every route) ---------- */
+/* Centered, max-width page container with responsive horizontal gutters.
+   Lives here (not landing.css) so /about, /devlog, etc. align identically. */
+.section-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .section-container {
+    padding: 0 16px;
+  }
+}
+
+/* Section eyebrow labels */
+.section-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #2563eb;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #2563eb;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.section-label-red {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #dc2626;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #dc2626;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.section-label-yellow {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #92400e;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid #92400e;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .section-label,
+  .section-label-red,
+  .section-label-yellow {
+    font-size: 7px;
+  }
+}
+
 /* Pixel button base */
 .pixel-btn {
   font-family: 'Press Start 2P', monospace;

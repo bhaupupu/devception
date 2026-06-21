@@ -36,6 +36,15 @@ const TEAM = [
   },
 ];
 
+// Shared body-paragraph style for the origin story (kept DRY + consistent rhythm).
+const STORY_PARAGRAPH: React.CSSProperties = {
+  fontFamily: "'Space Mono', monospace",
+  fontSize: 15,
+  color: '#44403c',
+  lineHeight: 1.85,
+  margin: '0 0 20px',
+};
+
 export default function AboutPageClient() {
   const [mounted, setMounted] = useState(false);
   const { triggerCinematic } = useCinematic();
@@ -90,104 +99,78 @@ export default function AboutPageClient() {
       </section>
 
       {/* ─── Origin Story ─── */}
-      <section style={{ padding: '80px 0' }}>
-        <div className="section-container" style={{ maxWidth: 900 }}>
-          <div className="section-label">// THE ORIGIN</div>
-          <h2
+      <section style={{ padding: 'clamp(56px, 9vw, 80px) 0' }}>
+        <div className="section-container">
+          {/* Readable measure column (~68 chars/line), centred within the page container */}
+          <div
             style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: 'clamp(13px, 1.8vw, 20px)',
-              color: '#1c1917',
-              lineHeight: 1.6,
-              marginBottom: 32,
+              maxWidth: '68ch',
+              margin: '0 auto',
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 15,
             }}
           >
-            IT STARTED IN AN ALGORITHMS LECTURE
-          </h2>
-
-          <div
-            className="game-panel"
-            style={{ padding: 40, marginBottom: 32, borderLeft: '4px solid #2563eb' }}
-          >
-            <p
+            <div className="section-label">// THE ORIGIN</div>
+            <h2
               style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 15,
+                fontFamily: "'Press Start 2P', monospace",
+                fontSize: 'clamp(13px, 1.8vw, 20px)',
                 color: '#1c1917',
-                lineHeight: 1.9,
-                fontStyle: 'italic',
-                marginBottom: 0,
+                lineHeight: 1.6,
+                margin: '0 0 28px',
               }}
             >
-              &ldquo;What if the tasks were actual code?&rdquo;
+              IT STARTED IN AN ALGORITHMS LECTURE
+            </h2>
+
+            <blockquote
+              className="game-panel"
+              style={{
+                padding: 'clamp(20px, 4vw, 36px)',
+                margin: '0 0 32px',
+                borderLeft: '4px solid #2563eb',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 'clamp(15px, 2.2vw, 17px)',
+                  color: '#1c1917',
+                  lineHeight: 1.7,
+                  fontStyle: 'italic',
+                  margin: 0,
+                }}
+              >
+                &ldquo;What if the tasks were actual code?&rdquo;
+              </p>
+            </blockquote>
+
+            <p style={STORY_PARAGRAPH}>
+              It started in an algorithms lecture. A couple of bored computer science students
+              stumbled onto a thread about Among Us, and within minutes one message kicked the whole
+              thing off: <em>&ldquo;what if the tasks were actual code?&rdquo;</em>
+            </p>
+            <p style={STORY_PARAGRAPH}>
+              That was the whole idea. Simple. Obvious in retrospect. And somehow nobody had done it yet.
+            </p>
+            <p style={STORY_PARAGRAPH}>
+              We spent the rest of that lecture sketching out how it would work: a shared code editor that
+              everyone could see and edit simultaneously. One or two hidden imposters whose job was to
+              introduce subtle bugs without being caught. An emergency meeting mechanic for calling out
+              suspicious behaviour. A voting system to eliminate the suspected imposter.
+            </p>
+            <p style={STORY_PARAGRAPH}>
+              We went home and built the first prototype over a weekend using plain WebSockets and a
+              {' '}<code style={{ background: '#e4dfd3', padding: '2px 6px', fontFamily: 'monospace' }}>textarea</code>.
+              It was terrible. It crashed constantly, had no authentication, and the code synchronisation
+              was basically just &ldquo;last write wins&rdquo; — which caused complete chaos. But when
+              we got four of our friends to play it over Discord, something magical happened: everyone was
+              laughing, accusing each other, typing furiously, and having the time of their lives.
+            </p>
+            <p style={{ ...STORY_PARAGRAPH, margin: 0 }}>
+              We knew we had something.
             </p>
           </div>
-
-          <p
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 14,
-              color: '#44403c',
-              lineHeight: 1.9,
-              marginBottom: 20,
-            }}
-          >
-            It started in an algorithms lecture. A couple of bored computer science students
-            stumbled onto a thread about Among Us, and within minutes one message kicked the whole
-            thing off: <em>&ldquo;what if the tasks were actual code?&rdquo;</em>
-          </p>
-          <p
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 14,
-              color: '#44403c',
-              lineHeight: 1.9,
-              marginBottom: 20,
-            }}
-          >
-            That was the whole idea. Simple. Obvious in retrospect. And somehow nobody had done it yet.
-          </p>
-          <p
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 14,
-              color: '#44403c',
-              lineHeight: 1.9,
-              marginBottom: 20,
-            }}
-          >
-            We spent the rest of that lecture sketching out how it would work: a shared code editor that
-            everyone could see and edit simultaneously. One or two hidden imposters whose job was to
-            introduce subtle bugs without being caught. An emergency meeting mechanic for calling out
-            suspicious behaviour. A voting system to eliminate the suspected imposter.
-          </p>
-          <p
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 14,
-              color: '#44403c',
-              lineHeight: 1.9,
-              marginBottom: 20,
-            }}
-          >
-            We went home and built the first prototype over a weekend using plain WebSockets and a
-            {' '}<code style={{ background: '#e4dfd3', padding: '2px 6px', fontFamily: 'monospace' }}>textarea</code>.
-            It was terrible. It crashed constantly, had no authentication, and the code synchronisation
-            was basically just &ldquo;last write wins&rdquo; — which caused complete chaos. But when
-            we got four of our friends to play it over Discord, something magical happened: everyone was
-            laughing, accusing each other, typing furiously, and having the time of their lives.
-          </p>
-          <p
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 14,
-              color: '#44403c',
-              lineHeight: 1.9,
-              marginBottom: 0,
-            }}
-          >
-            We knew we had something.
-          </p>
         </div>
       </section>
 
