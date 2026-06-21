@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Devlog | System Logs — Devception',
   description:
     'Patch notes, feature updates, and developer logs for Devception — the multiplayer social deduction coding game.',
+  alternates: { canonical: '/devlog' },
   openGraph: {
     title: 'Devception Devlog — System Logs',
     description:

@@ -221,8 +221,8 @@ export default function BlogIndexClient() {
               margin: '0 auto',
             }}
           >
-            Game design, developer psychology, technical deep-dives, and growth strategies
-            from the team behind Devception.
+            Game design, developer psychology, and technical deep-dives
+            from the developer behind Devception.
           </p>
         </div>
       </div>

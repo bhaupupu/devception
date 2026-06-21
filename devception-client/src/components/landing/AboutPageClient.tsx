@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useCinematic } from './CinematicProvider';
+import { AUTHOR } from '@/lib/site';
 
 const VALUES = [
   {
@@ -28,17 +29,10 @@ const VALUES = [
 const TEAM = [
   {
     avatar: '👨‍💻',
-    name: 'Lead Developer',
-    title: 'Co-Founder & Full-Stack Engineer',
-    bio: 'Obsessed with multiplayer architecture, real-time systems, and pixel art. Responsible for the Socket.IO game engine, shared editor, and imposter mechanics.',
+    name: AUTHOR.name,
+    title: AUTHOR.role,
+    bio: AUTHOR.bio,
     color: '#2563eb',
-  },
-  {
-    avatar: '👩‍💻',
-    name: 'Product Designer',
-    title: 'Co-Founder & UX Engineer',
-    bio: 'Turns complex game states into intuitive interfaces. Designed every panel, animation, and pixel in Devception. Also the one who stays up fixing CSS at 2am.',
-    color: '#7c3aed',
   },
 ];
 
@@ -138,9 +132,9 @@ export default function AboutPageClient() {
               marginBottom: 20,
             }}
           >
-            It started in an algorithms lecture. Two computer science students — both bored, both
-            scrolling their phones — stumbled onto the same Twitter thread about Among Us at the
-            same time. One of them sent a message to the other: <em>&ldquo;what if the tasks were actual code?&rdquo;</em>
+            It started in an algorithms lecture. A couple of bored computer science students
+            stumbled onto a thread about Among Us, and within minutes one message kicked the whole
+            thing off: <em>&ldquo;what if the tasks were actual code?&rdquo;</em>
           </p>
           <p
             style={{
@@ -246,8 +240,8 @@ export default function AboutPageClient() {
             The hardest problem was the shared code editor. When 4–8 people type simultaneously, you
             need an algorithm that merges their changes without losing anyone&apos;s work and without
             producing nonsense. We stayed up until 3am more times than we can count. We shipped features
-            during study breaks. We tested with our Discord servers, university programming clubs, and
-            anyone else who would try it.
+            during study breaks. We tested it with friends and small groups of fellow students —
+            anyone who would sit down and play a round with us.
           </p>
 
           {/* Tech stack badges */}

@@ -41,7 +41,7 @@ const FAQS = [
   },
   {
     q: 'How is the imposter selected?',
-    a: 'The imposter is selected randomly and secretly by the server at the start of each match. Players receive their role assignments privately through an encrypted overlay that only they can see. The selection algorithm is fair and weighted to ensure all players rotate through the imposter role over time, though individual match assignments remain purely random.',
+    a: 'The imposter is chosen randomly and secretly by the server at the start of each match. Your role is shown only to you — no other player can see it. Assignments are independent each match, so who ends up as the imposter varies from game to game.',
   },
   {
     q: 'What makes the coding challenges interesting for multiple players?',
@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: 'Is there a ranking or competitive system?',
-    a: 'Yes. Devception features an ELO-style ranking system that tracks your performance across all matches. Points are awarded for wins, successful imposter identifications, accurate votes, completed tasks, and consistent contribution to the shared codebase. Rankings reset each season, and top-ranked players receive recognition on the global leaderboard and in community events.',
+    a: 'A points and ranking system is on the roadmap — it is not live yet. The plan is to award points for wins, correct imposter calls, accurate votes, and completed tasks, with seasonal resets and a leaderboard. Devception is pre-launch, so we would rather ship ranking properly than fake a leaderboard before it exists.',
   },
   {
     q: 'What technology powers Devception?',
@@ -61,19 +61,19 @@ const FAQS = [
   },
   {
     q: 'Can I spectate a match without playing?',
-    a: "Spectator mode is on our roadmap for Q3 2025. In the current version, all room participants must be active players. Once spectator mode launches, observers will be able to watch live matches from a privileged view — seeing all players' code contributions in real time and receiving role reveals that in-game players don't have access to.",
+    a: "Not yet. Right now everyone in a room is an active player. Spectator mode — watching a live match with full visibility into every player's edits — is something we want to build, but it is not available in the current pre-launch version.",
   },
   {
     q: 'Where can I report bugs or suggest features?',
-    a: 'Bug reports and feature suggestions are welcome through our GitHub repository. For real-time discussion, our Discord server has dedicated channels for feedback, bug reporting, and feature voting. The development team actively monitors both channels and provides regular updates on the roadmap based on community input.',
+    a: 'Use the contact form on our Contact page and choose "Bug Report" or "General Question" as the subject. Every message is read by a real person — no auto-replies. Public community channels are planned for after launch.',
   },
   {
     q: 'Is Devception suitable for team building or educational use?',
-    a: 'Extremely. Devception has been used by software teams for technical interviews, onboarding sessions, hackathon warm-ups, and developer retreats. Universities and coding bootcamps have begun incorporating it into curricula for its unique blend of collaborative coding and interpersonal communication skill development. The 15-20 minute match format is ideal for structured events.',
+    a: 'That is exactly who we are designing it for. The 15–20 minute match format suits hackathon warm-ups, onboarding ice-breakers, classrooms, and study groups, and the mechanics exercise real skills — reading unfamiliar code, code review, and communicating under pressure. To be clear, this is a new pre-launch project, so we are not claiming any company or school uses it yet.',
   },
   {
     q: 'Will there be more languages, features, and content in the future?',
-    a: 'Yes — the roadmap is active and ambitious. Planned additions include additional programming languages (Go, Rust, TypeScript, Java), a custom challenge builder, team accounts, tournament infrastructure, a VS Code extension, university partnership programs, and a mobile-responsive overhaul. Community voting shapes our development priorities. Join Discord to participate.',
+    a: 'Yes. Planned additions include more languages (Go, Rust, TypeScript, Java), a custom challenge builder, private team accounts, a points-and-ranking system, and spectator mode. Want to shape what comes next? Send suggestions through the Contact page.',
   },
 ];
 

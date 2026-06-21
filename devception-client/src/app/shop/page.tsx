@@ -29,7 +29,7 @@ export default function ShopPage() {
           <div>
             <h1 className="text-3xl font-black gradient-text">Shop</h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              Customize your Devception experience
+              A preview of planned cosmetics — nothing is purchasable yet
             </p>
           </div>
           <div className="game-panel px-4 py-2">
@@ -66,7 +66,7 @@ export default function ShopPage() {
         </div>
 
         <p className="text-center text-sm mt-10" style={{ color: 'var(--text-muted)' }}>
-          Earn coins by winning games. Shop functionality coming soon!
+          Cosmetics are planned for after launch. Devception will always be free to play — cosmetics will never affect gameplay or give any advantage.
         </p>
       </div>
     </main>

@@ -1,37 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
+// Honest build log for a pre-launch project. No invented metrics, users, or
+// shipped-but-not-real features — these are the actual development milestones.
 const DEVLOG_ENTRIES = [
   {
-    version: 'v1.1.0',
-    date: '2025-06-15',
-    title: 'The Great Optimization Update',
-    content: 'We\'ve completely rewritten our code synchronization engine using CRDTs. You should notice a massive reduction in latency and zero cursor conflicts when multiple people are typing on the same line. We also added syntax highlighting support for Python.',
+    version: 'v0.3.0',
+    date: '2026-06-10',
+    title: 'Conflict-free shared editor (Yjs CRDTs)',
+    content: 'Replaced the early "last write wins" sync with Yjs, a CRDT library, wired into the Monaco editor. Multiple people can now type on the same line without overwriting each other or fighting the cursor. This was the single hardest problem in the project and the change that finally made collaborative coding feel real.',
   },
   {
-    version: 'v1.0.5',
-    date: '2025-05-22',
-    title: 'New Sabotage Mechanics',
-    content: 'Imposters felt a bit underpowered in the late game, so we added two new abilities: "Variable Scrambler" (temporarily renames local variables on a victim\'s screen) and "Silent Syntax Error" (inserts a missing semicolon that only compiles locally for 30 seconds).',
+    version: 'v0.2.0',
+    date: '2026-05-08',
+    title: 'Imposter mechanics + emergency meetings',
+    content: 'Added the social-deduction layer: hidden imposter roles, subtle sabotage actions, the emergency-meeting flow, and anonymous voting. Sabotage is intentionally subtle — the goal is plausible deniability, not screen-wrecking. Still actively balancing how much power an imposter should have.',
   },
   {
-    version: 'v1.0.0',
-    date: '2025-05-01',
-    title: 'Welcome to Devception 1.0',
-    content: 'After 6 months of beta testing, Devception is officially live! Huge thanks to the 5,000+ developers who helped us refine the core loop. This release includes the ELO ranking system, private lobbies, and the highly requested dark mode terminal theme.',
+    version: 'v0.1.0',
+    date: '2026-03-22',
+    title: 'First playable build',
+    content: 'The first end-to-end loop: a lobby, random role assignment, a shared code editor, and real-time state over Socket.IO. Rough around the edges, but enough to play a full match start to finish. Devception is in active development and pre-launch — this devlog is where the real changes get written down.',
   },
 ];
 
 export default function DevlogClient() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
-
   return (
     <div style={{ background: '#faf8f4', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />

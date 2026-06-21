@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getBlogPost, blogPosts } from '@/lib/blog-data';
+import { SITE, AUTHOR } from '@/lib/site';
 import BlogPostClient from '@/components/landing/BlogPostClient';
 
 interface Props {
@@ -18,18 +19,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${post.title} | Devception Blog`,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
+      url: `${SITE.url}/blog/${post.slug}`,
       publishedTime: post.date,
       authors: [post.author],
       tags: post.tags,
+      images: ['/opengraph-image'],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: ['/opengraph-image'],
     },
   };
 }
@@ -45,17 +50,20 @@ export default function BlogPostPage({ params }: Props) {
         '@type': 'BlogPosting',
         headline: post.title,
         description: post.excerpt,
+        image: SITE.ogImage,
         datePublished: post.date,
+        dateModified: post.date,
         author: {
           '@type': 'Person',
           name: post.author,
+          url: AUTHOR.url,
         },
         publisher: {
           '@type': 'Organization',
-          name: 'Devception Team',
+          name: SITE.name,
           logo: {
             '@type': 'ImageObject',
-            url: 'https://devception.xyz/logo.png',
+            url: SITE.logo,
           },
         },
         mainEntityOfPage: {

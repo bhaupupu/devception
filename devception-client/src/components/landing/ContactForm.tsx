@@ -30,6 +30,8 @@ export default function ContactForm() {
   const [form, setForm] = useState<FormData>({ name: '', email: '', type: '', message: '' });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   function validate(): boolean {
     const e: FormErrors = {};
@@ -42,9 +44,28 @@ export default function ContactForm() {
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (validate()) setSubmitted(true);
+    if (!validate()) return;
+    setSending(true);
+    setApiError(null);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        const data = await res.json().catch(() => null);
+        setApiError(data?.error || 'Something went wrong. Please try again.');
+      }
+    } catch {
+      setApiError('Network error. Please try again, or email us directly.');
+    } finally {
+      setSending(false);
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -236,8 +257,16 @@ export default function ContactForm() {
                   {errors.message && <span style={errorStyle}>{errors.message}</span>}
                 </div>
 
-                <button type="submit" className="pixel-btn pixel-btn-blue" style={{ fontSize: 9, width: '100%' }}>
-                  SEND MESSAGE →
+                {apiError && (
+                  <div style={{ ...errorStyle, fontSize: 7, marginTop: 0, marginBottom: 12 }}>{apiError}</div>
+                )}
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="pixel-btn pixel-btn-blue"
+                  style={{ fontSize: 9, width: '100%', opacity: sending ? 0.6 : 1, cursor: sending ? 'not-allowed' : 'pointer' }}
+                >
+                  {sending ? 'SENDING…' : 'SEND MESSAGE →'}
                 </button>
               </form>
             </div>
@@ -263,10 +292,10 @@ export default function ContactForm() {
                       EMAIL
                     </div>
                     <a
-                      href="mailto:team@devception.com"
+                      href="mailto:team@devception.xyz"
                       style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: '#2563eb' }}
                     >
-                      team@devception.com
+                      team@devception.xyz
                     </a>
                   </div>
                   <div>

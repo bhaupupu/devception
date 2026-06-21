@@ -4,7 +4,8 @@ import BlogIndexClient from '@/components/landing/BlogIndexClient';
 export const metadata: Metadata = {
   title: 'Blog | Intel Dispatch — Devception',
   description:
-    'Game design, developer psychology, technical deep-dives, and growth strategies from the team behind Devception — the multiplayer social deduction coding game.',
+    'Game design, developer psychology, and technical deep-dives from the developer behind Devception — the multiplayer social deduction coding game.',
+  alternates: { canonical: '/blog' },
   openGraph: {
     title: 'Devception Blog — Intel Dispatch',
     description:

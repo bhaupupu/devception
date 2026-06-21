@@ -1,5 +1,4 @@
 'use client';
-import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
 import HeroSection from './HeroSection';
 import WhatIsSection from './WhatIsSection';
@@ -13,10 +12,6 @@ import Footer from './Footer';
 import './landing.css';
 
 export default function LandingPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  if (!mounted) return null;
-
   return (
     <div className="landing-root">
       <Navbar />

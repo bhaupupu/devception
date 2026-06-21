@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import { SITE, AUTHOR } from '@/lib/site';
 import { Press_Start_2P, Space_Mono } from 'next/font/google';
 
 const pressStart = Press_Start_2P({
@@ -33,24 +34,27 @@ export const metadata: Metadata = {
     'developer game',
     'coding imposter game',
   ],
-  metadataBase: new URL('https://devception.xyz'),
-  authors: [{ name: 'Devception Team' }],
-  creator: 'Devception',
-  publisher: 'Devception',
+  metadataBase: new URL(SITE.url),
+  alternates: { canonical: '/' },
+  authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
+  creator: AUTHOR.name,
+  publisher: SITE.name,
   openGraph: {
     title: 'Devception — One Of Your Teammates Is Lying.',
     description:
       'A multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.',
-    url: 'https://devception.xyz',
-    siteName: 'Devception',
+    url: SITE.url,
+    siteName: SITE.name,
     type: 'website',
     locale: 'en_US',
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Devception — One Of Your Teammates Is Lying.',
     description:
       'A multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.',
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,
@@ -86,22 +90,38 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'WebApplication',
-              name: 'Devception',
-              alternateName: 'Devception Multiplayer Coding Game',
-              description: 'Devception is a real-time multiplayer social deduction coding platform. Enhance your developer skills, practice code review, and collaborate on real programming challenges with 4–8 players while hunting a hidden imposter.',
-              url: 'https://devception.xyz',
-              applicationCategory: 'GameApplication',
-              genre: ['Multiplayer', 'Social Deduction', 'Coding', 'Educational'],
-              operatingSystem: 'Web Browser',
-              browserRequirements: 'Requires a modern web browser and JavaScript enabled.',
-              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-              creator: {
-                '@type': 'Organization',
-                name: 'Devception Team',
-                url: 'https://devception.xyz'
-              },
-              keywords: 'multiplayer coding game, social deduction game, coding game with friends, developer party game, improve programming skills, collaborative coding',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': `${SITE.url}/#organization`,
+                  name: SITE.name,
+                  url: SITE.url,
+                  logo: { '@type': 'ImageObject', url: SITE.logo, width: 512, height: 512 },
+                  foundingDate: SITE.founded,
+                  founder: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url },
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': `${SITE.url}/#website`,
+                  name: SITE.name,
+                  url: SITE.url,
+                  publisher: { '@id': `${SITE.url}/#organization` },
+                },
+                {
+                  '@type': 'WebApplication',
+                  name: 'Devception',
+                  alternateName: 'Devception Multiplayer Coding Game',
+                  description: 'Devception is a real-time multiplayer social deduction coding game. Practice code review and collaborate on real programming challenges with 4–8 players while hunting a hidden imposter.',
+                  url: SITE.url,
+                  applicationCategory: 'GameApplication',
+                  genre: ['Multiplayer', 'Social Deduction', 'Coding', 'Educational'],
+                  operatingSystem: 'Web Browser',
+                  browserRequirements: 'Requires a modern web browser and JavaScript enabled.',
+                  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+                  publisher: { '@id': `${SITE.url}/#organization` },
+                  keywords: 'multiplayer coding game, social deduction game, coding game with friends, developer party game, improve programming skills, collaborative coding',
+                },
+              ],
             }),
           }}
         />

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Devception logo">
+  <rect width="512" height="512" rx="72" fill="#1c1917"/>
+  <rect x="44" y="44" width="424" height="424" rx="48" fill="none" stroke="#2563eb" stroke-width="20"/>
+  <path d="M150 176 L236 256 L150 336" fill="none" stroke="#2563eb" stroke-width="38" stroke-linecap="square" stroke-linejoin="miter"/>
+  <rect x="268" y="312" width="120" height="34" fill="#faf8f4"/>
+</svg>

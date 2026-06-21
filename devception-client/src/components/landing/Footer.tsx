@@ -6,7 +6,7 @@ import { useCinematic } from './CinematicProvider';
 const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
   PRODUCT: [
     { label: 'About', href: '/about' },
-    { label: 'How To Play', href: '#how-it-works' },
+    { label: 'How To Play', href: '/#how-it-works' },
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
   ],
@@ -94,37 +94,22 @@ export default function Footer() {
                 Multiplayer social deduction coding game. Code together. Find the imposter. Trust no one.
               </p>
 
-              {/* Social buttons */}
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  { label: 'DISCORD', color: '#7c3aed', href: '#' },
-                  { label: 'GITHUB', color: '#e5e0d5', href: '#' },
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    style={{
-                      fontFamily: "'Press Start 2P', monospace",
-                      fontSize: 7,
-                      color: social.color,
-                      border: `2px solid ${social.color}`,
-                      padding: '6px 12px',
-                      textDecoration: 'none',
-                      boxShadow: `2px 2px 0 ${social.color}60`,
-                      transition: 'opacity 0.2s',
-                      display: 'inline-block',
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.opacity = '0.75';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.opacity = '1';
-                    }}
-                  >
-                    {social.label}
-                  </a>
-                ))}
-              </div>
+              {/* Real contact link only — placeholder social links removed */}
+              <Link
+                href="/contact"
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 7,
+                  color: '#2563eb',
+                  border: '2px solid #2563eb',
+                  padding: '6px 12px',
+                  textDecoration: 'none',
+                  boxShadow: '2px 2px 0 rgba(37,99,235,0.4)',
+                  display: 'inline-block',
+                }}
+              >
+                CONTACT US
+              </Link>
             </div>
 
             {/* Link columns */}
@@ -215,7 +200,7 @@ export default function Footer() {
                 letterSpacing: '0.06em',
               }}
             >
-              © 2025 DEVCEPTION. ALL RIGHTS RESERVED.
+              © 2026 DEVCEPTION. ALL RIGHTS RESERVED.
             </div>
 
             <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -226,7 +211,7 @@ export default function Footer() {
                   color: '#44403c',
                 }}
               >
-                v1.0.0-beta
+                v0.3.0 · PRE-LAUNCH
               </span>
               <span
                 style={{
@@ -241,7 +226,7 @@ export default function Footer() {
                   gap: 6,
                 }}
               >
-                ■ ALL SYSTEMS OPERATIONAL
+                ■ IN ACTIVE DEVELOPMENT
               </span>
             </div>
           </div>

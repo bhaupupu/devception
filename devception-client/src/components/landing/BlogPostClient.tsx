@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BlogPost, blogPosts } from '@/lib/blog-data';
+import { AUTHOR } from '@/lib/site';
 import { useCinematic } from '@/components/landing/CinematicProvider';
 
 const categoryColors: Record<string, string> = {
@@ -312,6 +313,34 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             ))}
           </div>
         </article>
+
+        {/* Author bio — real named author for E-E-A-T */}
+        <div
+          style={{
+            background: '#faf8f4',
+            border: '3px solid #1c1917',
+            boxShadow: '4px 4px 0 #1c1917',
+            padding: '28px',
+            marginBottom: '48px',
+            display: 'flex',
+            gap: '20px',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div style={{ fontSize: 40, lineHeight: 1, flexShrink: 0 }}>👨‍💻</div>
+          <div>
+            <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: '#1c1917', marginBottom: 6 }}>
+              {AUTHOR.name}
+            </div>
+            <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: '#2563eb', marginBottom: 12 }}>
+              {AUTHOR.role.toUpperCase()}
+            </div>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#44403c', lineHeight: 1.7, margin: 0 }}>
+              {AUTHOR.bio}{' '}
+              <Link href="/about" style={{ color: '#2563eb' }}>More about the team →</Link>
+            </p>
+          </div>
+        </div>
 
         {/* CTA */}
         <div
