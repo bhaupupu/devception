@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { BlogPost, blogPosts } from '@/lib/blog-data';
 import { AUTHOR } from '@/lib/site';
 import { useCinematic } from '@/components/landing/CinematicProvider';
-import EzoicAdPlaceholder from '@/components/EzoicAdPlaceholder';
 
 const categoryColors: Record<string, string> = {
   'Game Design': '#2563eb',
@@ -280,9 +279,6 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             className="blog-content"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
-
-          {/* Ezoic In-content Ad */}
-          <EzoicAdPlaceholder id={101} />
 
           {/* Tags */}
           <div
