@@ -708,7 +708,7 @@ function ResultPhase({ onReset }: { onReset: () => void }) {
             <button onClick={onReset} className="pixel-btn pixel-btn-light" style={{ fontSize: 8 }}>
               ↺ PLAY DEMO AGAIN
             </button>
-            <button onClick={() => triggerCinematic('/play')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
+            <button onClick={() => triggerCinematic('/lobby')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
               ▶ PLAY NOW
             </button>
           </div>

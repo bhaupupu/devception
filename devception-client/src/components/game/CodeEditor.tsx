@@ -7,7 +7,10 @@ import type { Monaco } from '@monaco-editor/react';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 
+import { useSession } from 'next-auth/react';
 import type { editor } from 'monaco-editor';
+
+const DEMO_ACCOUNTS = ['demo1@devception.com', 'demo2@devception.com', 'demo3@devception.com', 'demo4@devception.com'];
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -61,6 +64,10 @@ interface Props {
 }
 
 export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
+  const { data: session } = useSession();
+  const canBypassProtection = DEMO_ACCOUNTS.includes(session?.user?.email ?? '');
+  const finalReadOnly = readOnly || !canBypassProtection;
+
   const { protectedRanges, cursors } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
@@ -73,6 +80,24 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
   const protectedRef = useRef(protectedRanges);
   useEffect(() => { protectedRef.current = protectedRanges; }, [protectedRanges]);
+
+  useEffect(() => {
+    if (canBypassProtection) return;
+    const handleCopy = (e: ClipboardEvent) => e.preventDefault();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'x' || e.key === 'X')) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('cut', handleCopy);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('cut', handleCopy);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [canBypassProtection]);
 
   // NOTE: The Y.Doc is the single source of truth for editor content.
   // Hard-resync via resetNonce has been removed — it caused a cascade where
@@ -257,7 +282,10 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
           fontSize: 14,
           lineHeight: 22,
           tabSize: 2,
-          readOnly,
+          readOnly: finalReadOnly,
+          domReadOnly: !canBypassProtection,
+          contextmenu: canBypassProtection,
+          selectionHighlight: canBypassProtection,
           automaticLayout: true,
           scrollBeyondLastLine: false,
           wordWrap: 'on',

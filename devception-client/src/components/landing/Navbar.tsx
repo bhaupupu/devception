@@ -141,7 +141,7 @@ export default function Navbar() {
             </button>
 
             <button
-              onClick={() => triggerCinematic('/play')}
+              onClick={() => triggerCinematic('/lobby')}
               style={{
                 fontFamily: "'Press Start 2P', monospace",
                 fontSize: 8,
@@ -247,7 +247,7 @@ export default function Navbar() {
                 LOGIN
               </button>
               <button
-                onClick={() => { setMenuOpen(false); triggerCinematic('/play'); }}
+                onClick={() => { setMenuOpen(false); triggerCinematic('/lobby'); }}
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
                   fontSize: 8,

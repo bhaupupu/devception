@@ -461,7 +461,7 @@ export default function AboutPageClient() {
           </div>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <button onClick={() => triggerCinematic('/play')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 10, textDecoration: 'none' }}>
+            <button onClick={() => triggerCinematic('/lobby')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 10, textDecoration: 'none' }}>
               ▶ PLAY NOW
             </button>
             <a href="/blog" className="pixel-btn pixel-btn-light" style={{ fontSize: 10, textDecoration: 'none' }}>

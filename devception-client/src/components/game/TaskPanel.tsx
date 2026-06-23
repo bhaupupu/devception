@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { AppSocket } from '@/lib/socket';
 import type { TaskVerdict } from '@/types/socket';
+import { useSession } from 'next-auth/react';
+
+const DEMO_ACCOUNTS = ['demo1@devception.com', 'demo2@devception.com', 'demo3@devception.com', 'demo4@devception.com'];
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -26,6 +29,9 @@ interface Props {
 }
 
 export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javascript' }: Props) {
+  const { data: session } = useSession();
+  const canBypassProtection = DEMO_ACCOUNTS.includes(session?.user?.email ?? '');
+  const selectStyle: 'auto' | 'none' = canBypassProtection ? 'auto' : 'none';
   const [selected, setSelected] = useState<Task | null>(null);
   const [code, setCode] = useState('');
   const [feedback, setFeedback] = useState<{ passed: boolean; text: string; verdicts: TaskVerdict[]; supported: boolean } | null>(null);
@@ -74,7 +80,11 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
   return (
     <>
       {/* Task list (always visible in right panel) */}
-      <div className="h-full flex flex-col game-panel overflow-hidden">
+      <div 
+        className="h-full flex flex-col game-panel overflow-hidden" 
+        style={{ userSelect: selectStyle, WebkitUserSelect: selectStyle }}
+        onContextMenu={(e) => !canBypassProtection && e.preventDefault()}
+      >
         <div className="p-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
           <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
             My Tasks
@@ -132,10 +142,13 @@ export function TaskPanel({ tasks, myUserId, socket, roomCode, language = 'javas
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
               className="w-full max-w-3xl flex flex-col rounded-xl overflow-hidden"
+              onContextMenu={(e) => !canBypassProtection && e.preventDefault()}
               style={{
                 background: 'var(--bg-card)',
                 border: '2px solid var(--border)',
                 height: '85vh',
+                userSelect: selectStyle,
+                WebkitUserSelect: selectStyle,
               }}
             >
               {/* Header */}

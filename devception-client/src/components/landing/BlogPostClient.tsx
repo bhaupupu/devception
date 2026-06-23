@@ -381,7 +381,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             Join a match and see how social deduction changes coding forever.
           </p>
           <button
-            onClick={() => triggerCinematic('/play')}
+            onClick={() => triggerCinematic('/lobby')}
             style={{
               display: 'block',
               background: '#2563eb',

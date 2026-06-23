@@ -201,7 +201,7 @@ export default function FinalCTASection() {
           }}
         >
           <button
-            onClick={() => triggerCinematic('/play')}
+            onClick={() => triggerCinematic('/lobby')}
             className="pixel-btn pixel-btn-blue"
             style={{ fontSize: 10, textDecoration: 'none', padding: '20px 44px' }}
           >

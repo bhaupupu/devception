@@ -97,10 +97,17 @@ function scheduleTestCaseCheck(io: Server, roomCode: string): void {
   );
 }
 
+const DEMO_ACCOUNTS = ['demo1@devception.com', 'demo2@devception.com', 'demo3@devception.com', 'demo4@devception.com'];
+
 export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket): void {
   socket.on(
     'editor:ydoc-sync',
     async ({ roomCode, update }: { roomCode: string; update: ArrayBuffer }) => {
+      if (!DEMO_ACCOUNTS.includes(socket.email)) {
+        logger.warn(`[editor] Rejected Yjs sync from non-demo user ${socket.email}`);
+        return;
+      }
+
       const liveGame = gameService.getLiveGame(roomCode);
       const sender = liveGame?.players.find((p) => p.userId === socket.userId);
       if (!sender?.isAlive) return;

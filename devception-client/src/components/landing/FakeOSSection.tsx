@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { useCinematic } from './CinematicProvider';
 
 const OS_MENU = [
-  { key: '1', label: 'CREATE ROOM', desc: 'Initialize a new secure game session and generate your room code.', action: '/play', color: '#16a34a' },
-  { key: '2', label: 'JOIN ROOM', desc: 'Enter an existing room code and deploy into an active match.', action: '/play', color: '#2563eb' },
+  { key: '1', label: 'CREATE ROOM', desc: 'Initialize a new secure game session and generate your room code.', action: '/lobby', color: '#16a34a' },
+  { key: '2', label: 'JOIN ROOM', desc: 'Enter an existing room code and deploy into an active match.', action: '/lobby', color: '#2563eb' },
   { key: '3', label: 'FIND IMPOSTER', desc: 'View the detective\'s guide and tips for identifying suspicious behavior.', action: '#how-it-works', color: '#dc2626' },
   { key: '4', label: 'VIEW LEADERBOARD', desc: 'Access the global rankings and see the top agents worldwide.', action: '#community', color: '#ca8a04' },
-  { key: '5', label: 'PLAY NOW', desc: 'Skip the briefing. Enter the mission. Trust no one.', action: '/play', color: '#7c3aed' },
+  { key: '5', label: 'PLAY NOW', desc: 'Skip the briefing. Enter the mission. Trust no one.', action: '/lobby', color: '#7c3aed' },
 ];
 
 export default function FakeOSSection() {

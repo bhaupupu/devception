@@ -16,7 +16,7 @@ const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
     { label: 'Cookie Policy', href: '/cookie-policy' },
   ],
   PLAY: [
-    { label: 'PLAY NOW', href: '/play' },
+    { label: 'PLAY NOW', href: '/lobby' },
     { label: 'Login', href: '/login' },
   ],
 };
@@ -129,7 +129,7 @@ export default function Footer() {
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: 12, listStyle: 'none', padding: 0, margin: 0 }}>
                   {links.map((link) => (
                     <li key={link.label}>
-                      {link.href.startsWith('/play') || link.href.startsWith('/login') ? (
+                      {link.href.startsWith('/lobby') || link.href.startsWith('/login') ? (
                         <button
                           onClick={() => triggerCinematic(link.href)}
                           style={{
