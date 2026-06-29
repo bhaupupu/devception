@@ -103,10 +103,6 @@ export function registerEditorHandlers(io: Server, socket: AuthenticatedSocket):
   socket.on(
     'editor:ydoc-sync',
     async ({ roomCode, update }: { roomCode: string; update: ArrayBuffer }) => {
-      if (!DEMO_ACCOUNTS.includes(socket.email)) {
-        logger.warn(`[editor] Rejected Yjs sync from non-demo user ${socket.email}`);
-        return;
-      }
 
       const liveGame = gameService.getLiveGame(roomCode);
       const sender = liveGame?.players.find((p) => p.userId === socket.userId);
