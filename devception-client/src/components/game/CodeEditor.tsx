@@ -66,7 +66,7 @@ interface Props {
 export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false, onProtectedViolation }: Props) {
   const { data: session } = useSession();
   const canBypassProtection = DEMO_ACCOUNTS.includes(session?.user?.email ?? '');
-  const finalReadOnly = readOnly || !canBypassProtection;
+  const finalReadOnly = readOnly;
 
   const { protectedRanges, cursors } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -83,19 +83,19 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
 
   useEffect(() => {
     if (canBypassProtection) return;
-    const handleCopy = (e: ClipboardEvent) => e.preventDefault();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'x' || e.key === 'X')) {
+    const handleCopyCut = (e: ClipboardEvent) => {
+      if (!editorRef.current) return;
+      const selection = editorRef.current.getSelection();
+      if (selection && selection.startLineNumber !== selection.endLineNumber) {
         e.preventDefault();
+        onViolationRef.current?.('Copying or cutting multiple lines is not allowed.');
       }
     };
-    document.addEventListener('copy', handleCopy);
-    document.addEventListener('cut', handleCopy);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('copy', handleCopyCut);
+    document.addEventListener('cut', handleCopyCut);
     return () => {
-      document.removeEventListener('copy', handleCopy);
-      document.removeEventListener('cut', handleCopy);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('copy', handleCopyCut);
+      document.removeEventListener('cut', handleCopyCut);
     };
   }, [canBypassProtection]);
 
@@ -249,6 +249,15 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
       model.onDidChangeContent((e: editor.IModelContentChangedEvent) => {
         if (e.isFlush) return;
 
+        if (!canBypassProtection) {
+          const isMultiLineDelete = e.changes.some((ch: editor.IModelContentChange) => ch.range.startLineNumber !== ch.range.endLineNumber);
+          if (isMultiLineDelete) {
+            onViolationRef.current?.('Deleting or modifying multiple lines at once is not allowed.');
+            editorInstance.trigger('multiline-guard', 'undo', null);
+            return;
+          }
+        }
+
         const ranges = protectedRef.current;
         if (ranges && ranges.length > 0) {
           const overlaps = e.changes.some((ch: editor.IModelContentChange) => {
@@ -283,9 +292,9 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
           lineHeight: 22,
           tabSize: 2,
           readOnly: finalReadOnly,
-          domReadOnly: !canBypassProtection,
-          contextmenu: canBypassProtection,
-          selectionHighlight: canBypassProtection,
+          domReadOnly: false,
+          contextmenu: true,
+          selectionHighlight: true,
           automaticLayout: true,
           scrollBeyondLastLine: false,
           wordWrap: 'on',
