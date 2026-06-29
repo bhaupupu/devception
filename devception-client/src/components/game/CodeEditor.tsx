@@ -75,6 +75,7 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
   const bindingRef = useRef<MonacoBinding | null>(null);
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
   const widgetsRef = useRef<Map<string, RemoteCursorWidget>>(new Map());
+  const isApplyingRemoteRef = useRef(false);
 
   const onViolationRef = useRef(onProtectedViolation);
   useEffect(() => { onViolationRef.current = onProtectedViolation; }, [onProtectedViolation]);
@@ -193,7 +194,12 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
 
     // Listen for incoming Yjs updates from the server
     const onYDocSync = (data: { update: ArrayBuffer }) => {
-      Y.applyUpdate(ydoc, new Uint8Array(data.update), 'server');
+      isApplyingRemoteRef.current = true;
+      try {
+        Y.applyUpdate(ydoc, new Uint8Array(data.update), 'server');
+      } finally {
+        isApplyingRemoteRef.current = false;
+      }
     };
 
     // Legacy resync for protected violation
@@ -247,13 +253,13 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
       }
 
       model.onDidChangeContent((e: editor.IModelContentChangedEvent) => {
-        if (e.isFlush) return;
+        if (e.isFlush || isApplyingRemoteRef.current) return;
 
         if (!canBypassProtection) {
           const isMultiLineDelete = e.changes.some((ch: editor.IModelContentChange) => ch.range.startLineNumber !== ch.range.endLineNumber);
           if (isMultiLineDelete) {
             onViolationRef.current?.('Deleting or modifying multiple lines at once is not allowed.');
-            editorInstance.trigger('multiline-guard', 'undo', null);
+            setTimeout(() => editorInstance.trigger('multiline-guard', 'undo', null), 0);
             return;
           }
         }
@@ -268,7 +274,7 @@ export function CodeEditor({ roomCode, onCursorMove, language, readOnly = false,
           if (overlaps) {
             onViolationRef.current?.('Protected region cannot be modified.');
             // Undo local edit immediately
-            editorInstance.trigger('protected-guard', 'undo', null);
+            setTimeout(() => editorInstance.trigger('protected-guard', 'undo', null), 0);
           }
         }
       });
