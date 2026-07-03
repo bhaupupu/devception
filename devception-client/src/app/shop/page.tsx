@@ -7,7 +7,7 @@ const SHOP_ITEMS = [
   { id: 'skin-neon', name: 'Neon Coder', category: 'Skin', price: 500, icon: '🟢', owned: false },
   { id: 'skin-hacker', name: 'Dark Hacker', category: 'Skin', price: 750, icon: '💻', owned: false },
   { id: 'hat-crown', name: 'Gold Crown', category: 'Hat', price: 1000, icon: '👑', owned: false },
-  { id: 'hat-headphones', name: 'Headphones', category: 'Hat', price: 300, icon: '🎧', owned: true },
+  { id: 'hat-headphones', name: 'Headphones', category: 'Hat', price: 300, icon: '🎧', owned: false },
   { id: 'theme-matrix', name: 'Matrix Theme', category: 'Theme', price: 500, icon: '🌐', owned: false },
   { id: 'theme-retro', name: 'Retro Terminal', category: 'Theme', price: 400, icon: '📟', owned: false },
   { id: 'effect-trail', name: 'Cursor Trail', category: 'Effect', price: 800, icon: '✨', owned: false },
@@ -25,17 +25,11 @@ export default function ShopPage() {
           ← Back
         </button>
 
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-black gradient-text">Shop</h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              A preview of planned cosmetics — nothing is purchasable yet
-            </p>
-          </div>
-          <div className="game-panel px-4 py-2">
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Your balance</p>
-            <p className="font-bold text-lg" style={{ color: '#eab308' }}>0 Coins</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-black gradient-text">Shop</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            A preview of planned cosmetics — nothing is purchasable yet
+          </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

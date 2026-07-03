@@ -10,12 +10,12 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout
       title="PRIVACY POLICY"
-      subtitle="Last updated: January 1, 2025. We take your privacy seriously."
+      subtitle="Last updated: July 3, 2026. We take your privacy seriously."
     >
       <h2>1. Introduction</h2>
       <p>
         Welcome to Devception (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). Devception is a multiplayer social deduction coding game
-        accessible at <a href="https://devception.com">devception.com</a>. We are operated by the Devception team,
+        accessible at <a href="https://devception.xyz">devception.xyz</a>. We are operated by the Devception team,
         a group of student developers. This Privacy Policy explains how we collect, use, disclose, and safeguard your
         information when you visit our website and use our game. Please read this policy carefully. If you disagree
         with its terms, please discontinue use of the site immediately.
@@ -39,12 +39,13 @@ export default function PrivacyPolicyPage() {
           generated, and in-game actions. Role assignments are anonymized after 90 days and match details after 12 months.
         </li>
         <li>
-          <strong>Usage Data:</strong> Pages you visit, time spent on pages, links clicked, browser type, operating
-          system, referring URLs, and IP address. This is collected automatically through server logs and Google Analytics.
+          <strong>Usage Data:</strong> Pages you visit, browser type, operating system, referring URLs, and IP
+          address. This is collected automatically through server logs. We do not currently run any client-side
+          analytics service.
         </li>
         <li>
-          <strong>Cookies and Tracking Technologies:</strong> Session cookies, preference cookies, analytics cookies
-          (Google Analytics), and advertising cookies (Google AdSense). See Section 5 for details.
+          <strong>Cookies and Tracking Technologies:</strong> Session cookies, preference cookies, and advertising
+          cookies (Google AdSense). See Section 5 for details.
         </li>
       </ul>
 
@@ -88,7 +89,7 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul>
         <li><strong>Essential Cookies:</strong> Required for the website to function. These include your authentication session cookie (next-auth.session-token) and CSRF protection token. You cannot opt out of essential cookies.</li>
-        <li><strong>Analytics Cookies:</strong> Google Analytics cookies (_ga, _gid) help us understand how visitors interact with the site. These can be disabled in your browser settings.</li>
+        <li><strong>Analytics Cookies:</strong> We do not currently use any analytics cookies. If we adopt an analytics service in the future, we will update this policy and our Cookie Policy before doing so.</li>
         <li><strong>Advertising Cookies:</strong> Google AdSense cookies serve personalised advertisements. You can opt out via Google&apos;s Ads Settings.</li>
       </ul>
 
@@ -158,7 +159,7 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul>
         <li><strong>Email:</strong> <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a></li>
-        <li><strong>Website:</strong> <a href="/contact">devception.com/contact</a></li>
+        <li><strong>Website:</strong> <a href="/contact">devception.xyz/contact</a></li>
       </ul>
     </LegalPageLayout>
   );

@@ -10,11 +10,11 @@ export default function TermsOfServicePage() {
   return (
     <LegalPageLayout
       title="TERMS OF SERVICE"
-      subtitle="Last updated: January 1, 2025. Please read these terms carefully before using Devception."
+      subtitle="Last updated: July 3, 2026. Please read these terms carefully before using Devception."
     >
       <h2>1. Acceptance of Terms</h2>
       <p>
-        By accessing or using Devception at <a href="https://devception.com">devception.com</a> (the
+        By accessing or using Devception at <a href="https://devception.xyz">devception.xyz</a> (the
         &quot;Service&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you
         do not agree to these Terms in their entirety, you may not access or use the Service. These Terms
         constitute a binding legal agreement between you and the Devception team (&quot;Devception,&quot;
@@ -129,7 +129,7 @@ export default function TermsOfServicePage() {
 
       <h2>11. Governing Law</h2>
       <p>
-        These Terms shall be governed by and construed in accordance with applicable laws, without regard to
+        These Terms shall be governed by and construed in accordance with the laws of India, without regard to
         conflict of law principles. Any disputes arising from these Terms or your use of the Service shall be
         resolved through good-faith negotiation wherever possible.
       </p>
@@ -148,7 +148,7 @@ export default function TermsOfServicePage() {
       </p>
       <ul>
         <li><strong>Email:</strong> <a href="mailto:guptadiwanshu2007@gmail.com">guptadiwanshu2007@gmail.com</a></li>
-        <li><strong>Website:</strong> <a href="/contact">devception.com/contact</a></li>
+        <li><strong>Website:</strong> <a href="/contact">devception.xyz/contact</a></li>
       </ul>
     </LegalPageLayout>
   );

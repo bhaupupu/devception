@@ -10,7 +10,7 @@ export default function CookiePolicyPage() {
   return (
     <LegalPageLayout
       title="COOKIE POLICY"
-      subtitle="Last updated: January 1, 2025. This policy explains what cookies are and how we use them."
+      subtitle="Last updated: July 3, 2026. This policy explains what cookies are and how we use them."
     >
       <h2>1. What Are Cookies?</h2>
       <p>
@@ -29,7 +29,6 @@ export default function CookiePolicyPage() {
       <ul>
         <li><strong>Essential functionality:</strong> To keep you logged in and maintain your session securely</li>
         <li><strong>Security:</strong> To prevent cross-site request forgery (CSRF) attacks</li>
-        <li><strong>Analytics:</strong> To understand how visitors use our website so we can improve it</li>
         <li><strong>Advertising:</strong> To serve relevant advertisements through Google AdSense</li>
       </ul>
 
@@ -73,40 +72,11 @@ export default function CookiePolicyPage() {
 
       <h2>3.2 Analytics Cookies</h2>
       <p>
-        These cookies help us understand how visitors interact with Devception by collecting and reporting
-        information anonymously. This helps us improve the site over time. You can opt out via your browser
-        settings or the Google Analytics opt-out browser add-on.
+        We do not currently use any analytics cookies. Devception does not run Google Analytics or any
+        similar analytics service today — usage information comes only from anonymised server logs. If we
+        adopt an analytics service in the future, we will list its cookies here and update the date at the
+        top of this policy before it goes live.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cookie Name</th>
-            <th>Purpose</th>
-            <th>Duration</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>_ga</td>
-            <td>Google Analytics — distinguishes unique users</td>
-            <td>2 years</td>
-            <td>Analytics</td>
-          </tr>
-          <tr>
-            <td>_gid</td>
-            <td>Google Analytics — distinguishes users within 24 hours</td>
-            <td>24 hours</td>
-            <td>Analytics</td>
-          </tr>
-          <tr>
-            <td>_gat</td>
-            <td>Google Analytics — throttles request rate</td>
-            <td>1 minute</td>
-            <td>Analytics</td>
-          </tr>
-        </tbody>
-      </table>
 
       <h2>3.3 Advertising Cookies (Google AdSense)</h2>
       <p>
@@ -178,13 +148,6 @@ export default function CookiePolicyPage() {
         <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471" target="_blank" rel="noopener noreferrer">Apple Safari</a></li>
         <li><a href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" rel="noopener noreferrer">Microsoft Edge</a></li>
       </ul>
-      <p>
-        For analytics cookies specifically, you can install the{' '}
-        <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">
-          Google Analytics Opt-out Browser Add-on
-        </a>.
-      </p>
-
       <h2>5. Third-Party Cookies</h2>
       <p>
         In addition to our own cookies, we may also use various third-party cookies to report usage statistics,
@@ -192,7 +155,7 @@ export default function CookiePolicyPage() {
         privacy policies of those providers:
       </p>
       <ul>
-        <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a> (Analytics &amp; AdSense)</li>
+        <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a> (AdSense)</li>
         <li><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel Privacy Policy</a> (Hosting)</li>
       </ul>
 
