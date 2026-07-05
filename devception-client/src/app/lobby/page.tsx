@@ -79,52 +79,55 @@ function LobbyContent() {
           </p>
         </motion.div>
 
-        {/* Pixel character / avatar area */}
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="game-panel p-6 flex flex-col items-center gap-3"
-          style={{ minWidth: 200 }}
-        >
-          {/* Simple pixel character */}
-          <div className="relative w-16 h-16 flex items-center justify-center"
-            style={{ border: '3px solid var(--border)', background: '#dbeafe', fontSize: 36 }}>
-            👤
-          </div>
-          <p className="pixel-font text-xs text-center" style={{ color: 'var(--text-primary)' }}>
-            {user?.name ?? 'Player'}
-          </p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
-        </motion.div>
+        {/* Responsive Container for Desktop Layout */}
+        <div className="flex flex-col md:flex-row items-stretch justify-center gap-8 w-full max-w-2xl">
+          {/* Pixel character / avatar area */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="game-panel p-8 flex flex-col items-center justify-center gap-4 flex-1"
+            style={{ minWidth: 200 }}
+          >
+            {/* Simple pixel character */}
+            <div className="relative w-20 h-20 flex items-center justify-center mb-2"
+              style={{ border: '4px solid var(--border)', background: '#dbeafe', fontSize: 48 }}>
+              👤
+            </div>
+            <p className="pixel-font text-sm text-center" style={{ color: 'var(--text-primary)' }}>
+              {user?.name ?? 'Player'}
+            </p>
+            <p className="text-xs text-center break-all" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
+          </motion.div>
 
-        {/* Main menu buttons */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-col gap-4 w-full max-w-xs"
-        >
-          <button
-            onClick={() => router.push('/play')}
-            className="pixel-btn pixel-btn-blue w-full py-4 text-base"
-            style={{ fontSize: '12px' }}
+          {/* Main menu buttons */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col gap-4 w-full flex-1 justify-center"
           >
-            ▶  PLAY
-          </button>
-          <button
-            onClick={() => router.push('/profile')}
-            className="pixel-btn pixel-btn-light w-full py-3"
-          >
-            👤  PROFILE
-          </button>
-          <button
-            onClick={() => router.push('/shop')}
-            className="pixel-btn pixel-btn-light w-full py-3"
-          >
-            🛒  SHOP
-          </button>
-        </motion.div>
+            <button
+              onClick={() => router.push('/play')}
+              className="pixel-btn pixel-btn-blue w-full py-5 text-base"
+              style={{ fontSize: '12px' }}
+            >
+              ▶  PLAY
+            </button>
+            <button
+              onClick={() => router.push('/profile')}
+              className="pixel-btn pixel-btn-light w-full py-4"
+            >
+              👤  PROFILE
+            </button>
+            <button
+              onClick={() => router.push('/shop')}
+              className="pixel-btn pixel-btn-light w-full py-4"
+            >
+              🛒  SHOP
+            </button>
+          </motion.div>
+        </div>
 
         {/* Version tag */}
         <p className="pixel-font" style={{ fontSize: 8, color: 'var(--text-muted)' }}>v0.1.0 — MVP</p>

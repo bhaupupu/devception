@@ -52,7 +52,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full flex flex-col md:flex-row gap-4 md:gap-6 items-start md:max-w-4xl"
+      className="w-full flex flex-col md:flex-row gap-4 md:gap-8 items-start md:max-w-4xl lg:max-w-6xl mx-auto"
     >
       {/* Left column: room + players */}
       <div className="flex-1 min-w-0 w-full">
@@ -126,7 +126,7 @@ export function WaitingRoom({ game, myUserId: _myUserId, onReady, onForceStart, 
 
       {/* Right column: Game Settings — admin only */}
       {isAdmin && (
-        <div className="w-full md:w-72 md:flex-shrink-0">
+        <div className="w-full md:w-80 lg:w-96 md:flex-shrink-0">
           <div className="game-panel p-4 md:p-5">
             <p className="pixel-font mb-4" style={{ fontSize: 9 }}>GAME SETTINGS</p>
 

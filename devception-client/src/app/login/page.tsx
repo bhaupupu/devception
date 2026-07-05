@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 type Tab = 'guest' | 'google' | 'email';
 type EmailMode = 'signin' | 'signup';
@@ -22,6 +23,7 @@ function LoginContent() {
   const [mode, setMode] = useState<EmailMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -218,16 +220,26 @@ function LoginContent() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <input
-                className="pixel-input w-full"
-                style={{ fontSize: '11px' }}
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
+              <div className="relative w-full">
+                <input
+                  className="pixel-input w-full pr-10"
+                  style={{ fontSize: '11px' }}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
 
               {error && (
                 <p className="text-xs text-red-500 font-mono">{error}</p>
