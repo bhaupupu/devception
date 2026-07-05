@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { scryptSync, randomBytes, timingSafeEqual } from 'crypto';
 import { env } from '../config/env';
@@ -17,7 +17,7 @@ function checkPassword(password: string, stored: string): boolean {
   return timingSafeEqual(hashBuf, supplied);
 }
 
-export async function verifyToken(req: Request, res: Response): Promise<void> {
+export async function verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { token } = req.body;
   if (!token) {
     res.status(400).json({ error: 'Token required' });
@@ -32,7 +32,10 @@ export async function verifyToken(req: Request, res: Response): Promise<void> {
       picture?: string;
     };
 
-    if (!decoded.sub) throw new Error('No sub');
+    if (!decoded.sub) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
 
     const user = await User.findOneAndUpdate(
       { googleId: decoded.sub },
@@ -49,63 +52,82 @@ export async function verifyToken(req: Request, res: Response): Promise<void> {
     );
 
     res.json({ userId: user._id, displayName: user.displayName });
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ error: 'Invalid token' });
+    } else {
+      next(error);
+    }
   }
 }
 
-export async function signupEmail(req: Request, res: Response): Promise<void> {
-  const { email, password, displayName } = req.body;
-  if (!email || !password) {
-    res.status(400).json({ error: 'Email and password required' });
-    return;
-  }
-  if (password.length < 6) {
-    res.status(400).json({ error: 'Password must be at least 6 characters' });
-    return;
-  }
+export async function signupEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, password, displayName } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password required' });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ error: 'Password must be at least 6 characters' });
+      return;
+    }
 
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    res.status(409).json({ error: 'Email already registered' });
-    return;
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
+    }
+
+    const hashed = hashPassword(password);
+    const user = await User.create({
+      googleId: `email:${email.toLowerCase()}`,
+      email: email.toLowerCase(),
+      displayName: displayName?.trim() || email.split('@')[0],
+      avatarUrl: '',
+      password: hashed,
+    });
+
+    res.status(201).json({ ok: true, userId: user._id });
+  } catch (error) {
+    next(error);
   }
-
-  const hashed = hashPassword(password);
-  const user = await User.create({
-    googleId: `email:${email.toLowerCase()}`,
-    email: email.toLowerCase(),
-    displayName: displayName?.trim() || email.split('@')[0],
-    avatarUrl: '',
-    password: hashed,
-  });
-
-  res.status(201).json({ ok: true, userId: user._id });
 }
 
-export async function loginEmail(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    res.status(400).json({ error: 'Email and password required' });
-    return;
-  }
+export async function loginEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password required' });
+      return;
+    }
 
-  const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-  if (!user || !user.password) {
-    res.status(401).json({ error: 'Invalid email or password' });
-    return;
-  }
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user || !user.password) {
+      res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
 
-  const valid = checkPassword(password, user.password);
-  if (!valid) {
-    res.status(401).json({ error: 'Invalid email or password' });
-    return;
-  }
+    const valid = checkPassword(password, user.password);
+    if (!valid) {
+      res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
 
-  res.json({
-    sub: user.googleId,
-    name: user.displayName,
-    email: user.email,
-    picture: user.avatarUrl || '',
-  });
+    const payload = {
+      sub: user.googleId,
+      name: user.displayName,
+      email: user.email,
+      picture: user.avatarUrl || '',
+    };
+    
+    const token = jwt.sign(payload, env.NEXTAUTH_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      ...payload,
+      token,
+    });
+  } catch (error) {
+    next(error);
+  }
 }

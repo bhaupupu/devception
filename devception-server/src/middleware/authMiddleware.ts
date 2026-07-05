@@ -32,11 +32,13 @@ export async function authMiddleware(
     const user = await User.findOneAndUpdate(
       { googleId: decoded.sub },
       {
-        $setOnInsert: {
-          googleId: decoded.sub,
+        $set: {
           email: decoded.email ?? `${decoded.sub}@codecrew.dev`,
           displayName: decoded.name ?? 'Player',
           avatarUrl: decoded.picture ?? '',
+        },
+        $setOnInsert: {
+          googleId: decoded.sub,
         },
       },
       { upsert: true, new: true }

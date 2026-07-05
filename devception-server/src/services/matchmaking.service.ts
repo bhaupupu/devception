@@ -2,6 +2,18 @@ import { env } from '../config/env';
 import { createRoom, addPlayerToGame, getLiveGame } from './game.service';
 import { logger } from '../utils/logger';
 
+export const matchedPlayers = new Map<string, string>();
+
+setInterval(() => {
+  for (const key of getAllQueueKeys()) {
+    tryMatchPlayers(key, (roomCode, players) => {
+      for (const p of players) {
+        matchedPlayers.set(p.userId, roomCode);
+      }
+    }).catch(err => logger.error('Matchmaking error', err));
+  }
+}, 3000);
+
 interface QueueEntry {
   userId: string;
   socketId: string;
@@ -36,7 +48,13 @@ export function leaveQueue(userId: string): void {
   }
 }
 
-export function getQueueStatus(userId: string): { position: number; total: number } | null {
+export function getQueueStatus(userId: string): { position: number; total: number; roomCode?: string } | null {
+  if (matchedPlayers.has(userId)) {
+    const roomCode = matchedPlayers.get(userId)!;
+    matchedPlayers.delete(userId);
+    return { position: 0, total: 0, roomCode };
+  }
+
   for (const queue of queues.values()) {
     const idx = queue.findIndex((e) => e.userId === userId);
     if (idx >= 0) return { position: idx + 1, total: queue.length };

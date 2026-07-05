@@ -18,7 +18,7 @@ export function createSocketServer(httpServer: HttpServer): Server {
     cors: {
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if ([env.CLIENT_ORIGIN, 'http://localhost:3000'].includes(origin) || origin.endsWith('.vercel.app')) {
+        if ([env.CLIENT_ORIGIN, 'http://localhost:3000'].includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error(`CORS: origin ${origin} not allowed`));

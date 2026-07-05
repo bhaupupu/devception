@@ -33,5 +33,9 @@ export function getQueueStatus(req: AuthRequest, res: Response): void {
     res.json({ inQueue: false });
     return;
   }
-  res.json({ inQueue: true, ...status });
+  if (status.roomCode) {
+    res.json({ inQueue: false, roomCode: status.roomCode });
+    return;
+  }
+  res.json({ inQueue: true, position: status.position, total: status.total });
 }
