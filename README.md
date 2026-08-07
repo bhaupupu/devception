@@ -1,36 +1,36 @@
-# 🚀 Devception
+#  Devception
 
 > **The Social Deception Game Built for Developers.**  
 > Collaborate on code in real-time, solve programming tasks, and hunt down the Impostor before your codebase gets destroyed!
 
 ---
 
-## 🎮 About Devception
+##  About Devception
 
 **Devception** is an online multiplayer social deception coding game inspired by *Among Us*. 
 
 Players are split into two teams:
-* **💻 Developers:** Must work together in a real-time collaborative code editor to complete assigned coding tasks, fix bugs, and achieve 100% completion before time runs out.
-* **🕵️ Impostors:** Must covertly sabotage the code, inject subtle bugs, blur teammates' editors, send fake hints, and eliminate developers without getting caught.
+* ** Developers:** Must work together in a real-time collaborative code editor to complete assigned coding tasks, fix bugs, and achieve 100% completion before time runs out.
+* ** Impostors:** Must covertly sabotage the code, inject subtle bugs, blur teammates' editors, send fake hints, and eliminate developers without getting caught.
 
 When suspicious activity is detected, players can call **Emergency Meetings** to discuss, accuse, and vote off suspected Impostors!
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-* **⚡ Real-Time Collaborative Editor:** Powered by **Monaco Editor** and **Yjs CRDTs**, allowing seamless multi-cursor real-time code editing and live synchronization.
-* **😈 Impostor Sabotage System:** Impostors can trigger special cooldown abilities:
+* ** Real-Time Collaborative Editor:** Powered by **Monaco Editor** and **Yjs CRDTs**, allowing seamless multi-cursor real-time code editing and live synchronization.
+* ** Impostor Sabotage System:** Impostors can trigger special cooldown abilities:
   * Injected Syntax/Logic Bugs
   * Screen / Editor Blurs
   * Fake AI Hints & Distractions
-* **🚨 Emergency Meetings & Voting:** Real-time text chat, discussion phases, and secret/public voting system to eliminate suspects.
-* **🏠 Customizable Lobbies & Game Settings:** Host private or public rooms with custom game duration, player limits (4–8 players), meeting timers, and sabotage cooldowns.
-* **🔒 Authentication & Profiles:** Secure authentication powered by NextAuth.js, JWT, and MongoDB user profiles.
+* ** Emergency Meetings & Voting:** Real-time text chat, discussion phases, and secret/public voting system to eliminate suspects.
+* ** Customizable Lobbies & Game Settings:** Host private or public rooms with custom game duration, player limits (4–8 players), meeting timers, and sabotage cooldowns.
+* ** Authentication & Profiles:** Secure authentication powered by NextAuth.js, JWT, and MongoDB user profiles.
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### **Frontend (`devception-client`)**
 * **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
@@ -52,7 +52,7 @@ When suspicious activity is detected, players can call **Emergency Meetings** to
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 devception/
@@ -81,7 +81,7 @@ devception/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -155,7 +155,7 @@ Ensure you have the following installed on your machine:
 
 ---
 
-## 📜 Available Scripts
+##  Available Scripts
 
 ### `devception-client`
 * `npm run dev` — Starts the Next.js development server.
@@ -170,7 +170,7 @@ Ensure you have the following installed on your machine:
 
 ---
 
-## 🐳 Docker & Deployment
+##  Docker & Deployment
 
 ### Server Docker Deployment
 The backend includes a production-ready `Dockerfile`:
