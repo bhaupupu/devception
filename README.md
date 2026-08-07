@@ -1,6 +1,6 @@
 # Devception
 
-> **The Social Deception Game Built for Developers.**  
+> **The Social Deception Game Built for Developers**  
 > Collaborate on code in real-time, solve programming tasks, and hunt down the Impostor before your codebase gets destroyed!
 
 ---
