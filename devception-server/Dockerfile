@@ -35,9 +35,9 @@ COPY --from=builder /app/dist/ ./dist/
 
 RUN npm ci --omit=dev --ignore-scripts
 
-# Verify runtimes are present — fail the Docker build loudly if missing
+# Verify runtimes are present and compiler works — fail the Docker build loudly if missing
 # rather than discovering it at game runtime.
-RUN python3 --version && g++ --version && node --version
+RUN python3 --version && g++ --version && node --version && echo 'int main(){return 0;}' | g++ -x c++ - -o /dev/null
 
 ENV PORT=4000
 ENV NODE_ENV=production

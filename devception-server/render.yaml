@@ -1,7 +1,7 @@
 services:
   - type: web
     name: devception-server
-    runtime: node
+    runtime: docker
     # Render's Oregon (US West) region — closest to MongoDB Atlas US East clusters.
     # Change to "frankfurt" if your Atlas cluster is in EU.
     region: oregon
@@ -9,9 +9,7 @@ services:
 
     # The repo root is the monorepo. Tell Render the backend lives here.
     rootDir: devception-server
-
-    buildCommand: npm ci && npm run build
-    startCommand: node dist/index.js
+    dockerfilePath: ./Dockerfile
 
     # Render pings this path every 30 s. Returns 200 while the process is alive.
     # We use the liveness probe (/health) NOT the DB probe (/health/db) so that

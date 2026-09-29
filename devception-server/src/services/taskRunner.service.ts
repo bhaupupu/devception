@@ -36,9 +36,14 @@ if (PYTHON_BIN) {
 function detectCpp(): string | null {
   for (const bin of ['g++', 'c++', 'clang++']) {
     try {
-      const r = spawnSync(bin, ['--version'], { timeout: 2000 });
+      // Test compilation of a minimal snippet to ensure cc1plus and the toolchain work
+      const r = spawnSync(bin, ['-fsyntax-only', '-x', 'c++', '-'], {
+        input: 'int main(){return 0;}\n',
+        timeout: 3000,
+        env: process.env,
+      });
       if (r.status === 0) return bin;
-    } catch { /* not installed */ }
+    } catch { /* not installed or cannot compile */ }
   }
   return null;
 }
@@ -48,7 +53,7 @@ if (CPP_BIN) {
   console.log(`[taskRunner] C++ sandbox enabled via ${CPP_BIN}`);
 } else {
   // eslint-disable-next-line no-console
-  console.warn('[taskRunner] C++ compiler not found on PATH; C++ test execution disabled.');
+  console.warn('[taskRunner] C++ compiler not found on PATH or cannot compile; C++ test execution disabled.');
 }
 
 const COMPILE_TIMEOUT_MS = 5000;
@@ -385,10 +390,20 @@ export function runCppTestCases(code: string, testCases: TestCase[]): RunResult 
   try {
     fs.writeFileSync(srcPath, code, 'utf-8');
 
+    // Preserve toolchain paths (PATH, COMPILER_PATH, etc.) while stripping application secrets
+    const compileEnv: NodeJS.ProcessEnv = {
+      PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+      ...process.env,
+    };
+    delete compileEnv.MONGODB_URI;
+    delete compileEnv.NEXTAUTH_SECRET;
+    delete compileEnv.DISCORD_CLIENT_SECRET;
+    delete compileEnv.GOOGLE_CLIENT_SECRET;
+
     const compile = spawnSync(
       CPP_BIN,
       ['-O1', '-std=c++17', '-o', binPath, srcPath],
-      { timeout: COMPILE_TIMEOUT_MS, encoding: 'utf-8', env: {} }
+      { timeout: COMPILE_TIMEOUT_MS, encoding: 'utf-8', env: compileEnv }
     );
 
     if (compile.error || compile.status !== 0) {
@@ -405,6 +420,17 @@ export function runCppTestCases(code: string, testCases: TestCase[]): RunResult 
       };
     }
 
+    // Sanitize runtime environment for user code: keep loader and system paths, strip secrets
+    const runEnv: NodeJS.ProcessEnv = {
+      PATH: process.env.PATH || '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+      ...(process.env.LD_LIBRARY_PATH ? { LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH } : {}),
+      ...(process.env.SYSTEMROOT ? { SYSTEMROOT: process.env.SYSTEMROOT } : {}),
+      ...(process.env.SYSTEMDRIVE ? { SYSTEMDRIVE: process.env.SYSTEMDRIVE } : {}),
+      TMPDIR: os.tmpdir(),
+      TEMP: os.tmpdir(),
+      TMP: os.tmpdir(),
+    };
+
     const verdicts: TestVerdict[] = [];
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
@@ -415,7 +441,7 @@ export function runCppTestCases(code: string, testCases: TestCase[]): RunResult 
           timeout: EXEC_TIMEOUT_MS,
           maxBuffer: 256 * 1024,
           encoding: 'utf-8',
-          env: {},
+          env: runEnv,
         });
         if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
           verdicts.push({ index: i, input: tc.input, expected, actual: '', passed: false, error: 'Execution timed out (>2s).' });
