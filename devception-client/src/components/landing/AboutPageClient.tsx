@@ -1,6 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useCinematic } from './CinematicProvider';
@@ -54,22 +53,11 @@ const STORY_PARAGRAPH: React.CSSProperties = {
 };
 
 export default function AboutPageClient() {
-  const [mounted, setMounted] = useState(false);
   const { triggerCinematic } = useCinematic();
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <div style={{ background: '#f0ece2', minHeight: '100vh' }}>

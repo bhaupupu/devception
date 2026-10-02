@@ -57,7 +57,13 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60,
   },
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, user, account, profile }) {
+      if (user) {
+        token.sub = user.id ?? token.sub;
+        token.name = user.name ?? token.name;
+        token.email = user.email ?? token.email;
+        token.picture = (user as { image?: string }).image ?? token.picture;
+      }
       if (account && profile) {
         token.sub = profile.sub ?? token.sub;
         token.picture = (profile as { picture?: string }).picture ?? token.picture;
@@ -67,6 +73,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.sub ?? '';
+        if (token.picture) {
+          session.user.image = token.picture as string;
+        }
       }
       const accessToken = jwt.sign(
         {

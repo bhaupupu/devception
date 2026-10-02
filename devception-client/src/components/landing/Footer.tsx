@@ -136,16 +136,12 @@ export default function Footer() {
                         <button
                           onClick={() => {
                             if (link.href === '/lobby') {
-                              if (isLoggedIn) {
-                                triggerCinematic('/lobby');
-                              } else {
-                                triggerCinematic('/login?callbackUrl=/lobby');
-                              }
+                              triggerCinematic('/lobby');
                             } else if (link.href === '/login') {
                               if (isLoggedIn) {
                                 triggerCinematic('/lobby');
                               } else {
-                                triggerCinematic('/login?callbackUrl=/');
+                                triggerCinematic('/login?callbackUrl=/lobby');
                               }
                             } else {
                               triggerCinematic(link.href);

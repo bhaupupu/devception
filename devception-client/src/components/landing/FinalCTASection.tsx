@@ -1,22 +1,15 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 
 export default function FinalCTASection() {
   const [glitch, setGlitch] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
   const { triggerCinematic } = useCinematic();
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
 
   useEffect(() => {

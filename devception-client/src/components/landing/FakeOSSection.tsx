@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 
 const OS_MENU = [
@@ -11,25 +10,25 @@ const OS_MENU = [
   { key: '5', label: 'PLAY NOW', desc: 'Skip the briefing. Enter the mission. Trust no one.', action: '/lobby', color: '#7c3aed' },
 ];
 
+const BOOT_LINES = [
+  'DEVCEPTION OS v1.0.7 [RETRO BUILD]',
+  'Copyright (c) 2024 Devception Corp. All rights reserved.',
+  '',
+  'Initializing game kernel...',
+  'Loading player registry...    OK',
+  'Establishing Socket.IO bridge...    OK',
+  'Mounting challenge database...    OK',
+  'Starting social deduction engine...    OK',
+  '',
+  '[ SYSTEM READY ]',
+  '',
+  'Select an option below to continue:',
+];
+
 export default function FakeOSSection() {
   const [selected, setSelected] = useState<string | null>(null);
-  const [bootLines, setBootLines] = useState([
-    'DEVCEPTION OS v1.0.7 [RETRO BUILD]',
-    'Copyright (c) 2024 Devception Corp. All rights reserved.',
-    '',
-    'Initializing game kernel...',
-    'Loading player registry...    OK',
-    'Establishing Socket.IO bridge...    OK',
-    'Mounting challenge database...    OK',
-    'Starting social deduction engine...    OK',
-    '',
-    '[ SYSTEM READY ]',
-    '',
-    'Select an option below to continue:',
-  ]);
+  const bootLines = BOOT_LINES;
   const { triggerCinematic } = useCinematic();
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   return (
     <section
@@ -118,11 +117,7 @@ export default function FakeOSSection() {
                         <button
                           onClick={() => {
                             if (item.action === '/lobby') {
-                              if (isLoggedIn) {
-                                triggerCinematic('/lobby');
-                              } else {
-                                triggerCinematic('/login?callbackUrl=/lobby');
-                              }
+                              triggerCinematic('/lobby');
                             } else {
                               triggerCinematic(item.action);
                             }

@@ -1,7 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { BlogPost, blogPosts } from '@/lib/blog-data';
 import { AUTHOR } from '@/lib/site';
 import { useCinematic } from '@/components/landing/CinematicProvider';
@@ -17,22 +15,11 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function BlogPostClient({ post }: { post: BlogPost }) {
-  const [mounted, setMounted] = useState(false);
   const { triggerCinematic } = useCinematic();
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const color = categoryColors[post.category] || '#2563eb';
   const formattedDate = new Date(post.date).toLocaleDateString('en-US', {

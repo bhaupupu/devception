@@ -44,15 +44,11 @@ export default function Navbar() {
   }, []);
 
   const handleLogin = () => {
-    triggerCinematic('/login?callbackUrl=/');
+    triggerCinematic('/login?callbackUrl=/lobby');
   };
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
 
   return (

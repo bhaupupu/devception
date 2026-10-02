@@ -28,7 +28,7 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<'idle' | 'entering' | 'exiting'>('idle');
   const router = useRouter();
 
-  const triggerCinematic = (url = '/login') => {
+  const triggerCinematic = (url = '/lobby') => {
     if (phase !== 'idle') return;
     setPhase('entering');
     

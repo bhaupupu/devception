@@ -21,8 +21,14 @@ function LoginContent() {
   const { status } = useSession();
   const reason = searchParams?.get('reason') ?? '';
   const reasonMessage = reason ? (REASON_COPY[reason] ?? 'Your session ended. Sign in again to continue.') : '';
-  const rawCallbackUrl = searchParams?.get('callbackUrl') || '/';
-  const callbackUrl = rawCallbackUrl.startsWith('/') && !rawCallbackUrl.startsWith('//') ? rawCallbackUrl : '/';
+  const rawCallbackUrl = searchParams?.get('callbackUrl');
+  const callbackUrl =
+    rawCallbackUrl &&
+    rawCallbackUrl !== '/' &&
+    rawCallbackUrl.startsWith('/') &&
+    !rawCallbackUrl.startsWith('//')
+      ? rawCallbackUrl
+      : '/lobby';
 
   const [tab, setTab] = useState<Tab>('guest');
   const [mode, setMode] = useState<EmailMode>('signin');

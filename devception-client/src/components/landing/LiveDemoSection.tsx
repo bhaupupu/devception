@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 import { motion } from 'framer-motion';
 
@@ -614,15 +613,9 @@ function MeetingPhase({ onNext }: { onNext: () => void }) {
 function ResultPhase({ onReset }: { onReset: () => void }) {
   const [reveal, setReveal] = useState(false);
   const { triggerCinematic } = useCinematic();
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
 
   useEffect(() => {

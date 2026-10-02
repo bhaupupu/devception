@@ -269,11 +269,7 @@ export default function HeroSection() {
   const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   const handlePlayNow = () => {
-    if (isLoggedIn) {
-      triggerCinematic('/lobby');
-    } else {
-      triggerCinematic('/login?callbackUrl=/lobby');
-    }
+    triggerCinematic('/lobby');
   };
 
   // Parallax background scroll effect
