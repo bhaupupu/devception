@@ -29,3 +29,12 @@ yarn-error.log*
 *.tsbuildinfo
 
 .vercel
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+.ignore
+
+# Presentation & helper scripts
+*.pptx
+fill_pptx.py
+

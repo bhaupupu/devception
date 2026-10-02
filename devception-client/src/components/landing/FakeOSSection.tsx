@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 
 const OS_MENU = [
@@ -27,6 +28,8 @@ export default function FakeOSSection() {
     'Select an option below to continue:',
   ]);
   const { triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   return (
     <section
@@ -113,7 +116,17 @@ export default function FakeOSSection() {
                       }}>
                         <div style={{ marginBottom: 8 }}>{item.desc}</div>
                         <button
-                          onClick={() => triggerCinematic(item.action)}
+                          onClick={() => {
+                            if (item.action === '/lobby') {
+                              if (isLoggedIn) {
+                                triggerCinematic('/lobby');
+                              } else {
+                                triggerCinematic('/login?callbackUrl=/lobby');
+                              }
+                            } else {
+                              triggerCinematic(item.action);
+                            }
+                          }}
                           style={{
                             color: item.color,
                             background: 'none',

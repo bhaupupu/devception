@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
@@ -264,6 +265,16 @@ function MissionBriefCard() {
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const { isEntering, triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+
+  const handlePlayNow = () => {
+    if (isLoggedIn) {
+      triggerCinematic('/lobby');
+    } else {
+      triggerCinematic('/login?callbackUrl=/lobby');
+    }
+  };
 
   // Parallax background scroll effect
   const { scrollY } = useScroll();
@@ -407,8 +418,44 @@ export default function HeroSection() {
               hidden among the team.
             </p>
 
+            {isLoggedIn && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 12px',
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  border: '2px solid #22c55e',
+                  boxShadow: '3px 3px 0 rgba(34, 197, 94, 0.25)',
+                  marginBottom: 20,
+                  width: 'fit-content',
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#22c55e',
+                    boxShadow: '0 0 6px #22c55e',
+                    display: 'inline-block',
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "'Press Start 2P', monospace",
+                    fontSize: 8,
+                    color: '#15803d',
+                  }}
+                >
+                  ONLINE: {session?.user?.name || 'AGENT'}
+                </span>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <button onClick={() => triggerCinematic('/login')} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
+              <button onClick={handlePlayNow} className="pixel-btn pixel-btn-blue" style={{ textDecoration: 'none' }}>
                 ▶ PLAY NOW
               </button>
               <a href="#how-it-works" className="pixel-btn pixel-btn-light">

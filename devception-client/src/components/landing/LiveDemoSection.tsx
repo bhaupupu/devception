@@ -1,4 +1,6 @@
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 import { motion } from 'framer-motion';
 
@@ -612,6 +614,16 @@ function MeetingPhase({ onNext }: { onNext: () => void }) {
 function ResultPhase({ onReset }: { onReset: () => void }) {
   const [reveal, setReveal] = useState(false);
   const { triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+
+  const handlePlayNow = () => {
+    if (isLoggedIn) {
+      triggerCinematic('/lobby');
+    } else {
+      triggerCinematic('/login?callbackUrl=/lobby');
+    }
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setReveal(true), 600);
@@ -708,7 +720,7 @@ function ResultPhase({ onReset }: { onReset: () => void }) {
             <button onClick={onReset} className="pixel-btn pixel-btn-light" style={{ fontSize: 8 }}>
               ↺ PLAY DEMO AGAIN
             </button>
-            <button onClick={() => triggerCinematic('/lobby')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
+            <button onClick={handlePlayNow} className="pixel-btn pixel-btn-blue" style={{ fontSize: 8 }}>
               ▶ PLAY NOW
             </button>
           </div>

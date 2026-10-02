@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useCinematic } from './CinematicProvider';
 
 const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
@@ -23,6 +24,8 @@ const FOOTER_LINKS: Record<string, { label: string; href: string }[]> = {
 
 export default function Footer() {
   const { triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
 
   return (
     <>
@@ -131,7 +134,23 @@ export default function Footer() {
                     <li key={link.label}>
                       {link.href.startsWith('/lobby') || link.href.startsWith('/login') ? (
                         <button
-                          onClick={() => triggerCinematic(link.href)}
+                          onClick={() => {
+                            if (link.href === '/lobby') {
+                              if (isLoggedIn) {
+                                triggerCinematic('/lobby');
+                              } else {
+                                triggerCinematic('/login?callbackUrl=/lobby');
+                              }
+                            } else if (link.href === '/login') {
+                              if (isLoggedIn) {
+                                triggerCinematic('/lobby');
+                              } else {
+                                triggerCinematic('/login?callbackUrl=/');
+                              }
+                            } else {
+                              triggerCinematic(link.href);
+                            }
+                          }}
                           style={{
                             fontFamily: "'Space Mono', monospace",
                             fontSize: 12,
@@ -151,7 +170,7 @@ export default function Footer() {
                             (e.currentTarget as HTMLElement).style.color = '#78716c';
                           }}
                         >
-                          {link.label}
+                          {link.label === 'Login' && isLoggedIn ? 'Dashboard' : link.label}
                         </button>
                       ) : (
                         <Link

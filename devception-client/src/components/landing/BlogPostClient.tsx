@@ -1,7 +1,7 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { BlogPost, blogPosts } from '@/lib/blog-data';
 import { AUTHOR } from '@/lib/site';
 import { useCinematic } from '@/components/landing/CinematicProvider';
@@ -19,6 +19,16 @@ const categoryColors: Record<string, string> = {
 export default function BlogPostClient({ post }: { post: BlogPost }) {
   const [mounted, setMounted] = useState(false);
   const { triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+
+  const handlePlayNow = () => {
+    if (isLoggedIn) {
+      triggerCinematic('/lobby');
+    } else {
+      triggerCinematic('/login?callbackUrl=/lobby');
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -381,7 +391,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             Join a match and see how social deduction changes coding forever.
           </p>
           <button
-            onClick={() => triggerCinematic('/lobby')}
+            onClick={handlePlayNow}
             style={{
               display: 'block',
               background: '#2563eb',

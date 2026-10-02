@@ -1,8 +1,8 @@
 'use client';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -17,8 +17,13 @@ const REASON_COPY: Record<string, string> = {
 
 function LoginContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { status } = useSession();
   const reason = searchParams?.get('reason') ?? '';
   const reasonMessage = reason ? (REASON_COPY[reason] ?? 'Your session ended. Sign in again to continue.') : '';
+  const rawCallbackUrl = searchParams?.get('callbackUrl') || '/';
+  const callbackUrl = rawCallbackUrl.startsWith('/') && !rawCallbackUrl.startsWith('//') ? rawCallbackUrl : '/';
+
   const [tab, setTab] = useState<Tab>('guest');
   const [mode, setMode] = useState<EmailMode>('signin');
   const [email, setEmail] = useState('');
@@ -28,9 +33,16 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // If already authenticated and not currently submitting, redirect to destination
+  useEffect(() => {
+    if (status === 'authenticated' && !loading) {
+      router.replace(callbackUrl);
+    }
+  }, [status, callbackUrl, router, loading]);
+
   async function handleGoogleSignIn() {
     setLoading(true);
-    await signIn('google', { callbackUrl: '/' });
+    await signIn('google', { callbackUrl });
   }
 
   async function handleGuestSubmit(e: React.FormEvent) {
@@ -53,7 +65,7 @@ function LoginContent() {
         setError('Failed to join as guest');
         setLoading(false);
       } else {
-        window.location.href = '/';
+        window.location.href = callbackUrl;
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -79,7 +91,7 @@ function LoginContent() {
         setError('Invalid email or password');
         setLoading(false);
       } else {
-        window.location.href = '/';
+        window.location.href = callbackUrl;
       }
     } catch {
       setError('Something went wrong. Please try again.');

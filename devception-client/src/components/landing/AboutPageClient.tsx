@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useCinematic } from './CinematicProvider';
@@ -55,6 +56,16 @@ const STORY_PARAGRAPH: React.CSSProperties = {
 export default function AboutPageClient() {
   const [mounted, setMounted] = useState(false);
   const { triggerCinematic } = useCinematic();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+
+  const handlePlayNow = () => {
+    if (isLoggedIn) {
+      triggerCinematic('/lobby');
+    } else {
+      triggerCinematic('/login?callbackUrl=/lobby');
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -461,7 +472,7 @@ export default function AboutPageClient() {
           </div>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <button onClick={() => triggerCinematic('/lobby')} className="pixel-btn pixel-btn-blue" style={{ fontSize: 10, textDecoration: 'none' }}>
+            <button onClick={handlePlayNow} className="pixel-btn pixel-btn-blue" style={{ fontSize: 10, textDecoration: 'none' }}>
               ▶ PLAY NOW
             </button>
             <a href="/blog" className="pixel-btn pixel-btn-light" style={{ fontSize: 10, textDecoration: 'none' }}>

@@ -2,14 +2,28 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Suspense } from 'react';
+import { useEffect, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 function LobbyContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = session?.user;
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/login?callbackUrl=/lobby');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen pixel-bg flex items-center justify-center">
+        <LoadingSpinner size={48} />
+      </div>
+    );
+  }
 
   const hasConflict = searchParams.get('error') === 'active-game-conflict';
 
