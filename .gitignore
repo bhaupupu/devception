@@ -36,5 +36,6 @@ yarn-error.log*
 
 # Presentation & helper scripts
 *.pptx
+*.mp4
 fill_pptx.py
 
